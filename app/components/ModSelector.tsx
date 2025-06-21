@@ -16,6 +16,9 @@ export default function ModSelector({ selectedMods, onModsChange, maxMods = 3, l
   const [loading, setLoading] = useState(true)
   const [isOpen, setIsOpen] = useState(false)
 
+  // 确保selectedMods始终是数组
+  const safeSelectedMods = Array.isArray(selectedMods) ? selectedMods : []
+
   useEffect(() => {
     async function loadMods() {
       try {
@@ -33,7 +36,7 @@ export default function ModSelector({ selectedMods, onModsChange, maxMods = 3, l
   }, [])
 
   const handleModToggle = (modName: string) => {
-    const currentMods = [...selectedMods]
+    const currentMods = [...safeSelectedMods]
     const modIndex = currentMods.indexOf(modName)
     
     if (modIndex >= 0) {
@@ -75,13 +78,13 @@ export default function ModSelector({ selectedMods, onModsChange, maxMods = 3, l
   return (
     <div className="space-y-2">
       <label className="block text-sm font-medium text-gray-700">
-        {label} ({selectedMods.length}/{maxMods})
+        {label} ({safeSelectedMods.length}/{maxMods})
       </label>
       
       {/* 已选择的改装 */}
-      {selectedMods.length > 0 && (
+      {safeSelectedMods.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-2">
-          {selectedMods.map((modName) => (
+          {safeSelectedMods.map((modName) => (
             <span
               key={modName}
               className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-torn-primary text-white"
@@ -104,11 +107,11 @@ export default function ModSelector({ selectedMods, onModsChange, maxMods = 3, l
           type="button"
           onClick={() => setIsOpen(!isOpen)}
           className="w-full bg-white border border-gray-300 rounded-md px-3 py-2 text-left focus:outline-none focus:ring-2 focus:ring-torn-primary focus:border-transparent"
-          disabled={selectedMods.length >= maxMods}
+          disabled={safeSelectedMods.length >= maxMods}
         >
           <div className="flex justify-between items-center">
             <span className="text-gray-500">
-              {selectedMods.length >= maxMods ? '已达到最大改装数' : '选择改装...'}
+              {safeSelectedMods.length >= maxMods ? '已达到最大改装数' : '选择改装...'}
             </span>
             <svg className={`w-5 h-5 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -119,8 +122,8 @@ export default function ModSelector({ selectedMods, onModsChange, maxMods = 3, l
         {isOpen && (
           <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
             {availableMods.map((modName) => {
-              const isSelected = selectedMods.includes(modName)
-              const canSelect = !isSelected && selectedMods.length < maxMods
+              const isSelected = safeSelectedMods.includes(modName)
+              const canSelect = !isSelected && safeSelectedMods.length < maxMods
               
               return (
                 <button

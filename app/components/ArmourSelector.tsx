@@ -132,6 +132,29 @@ export default function ArmourSelector({ armourType, selectedArmour, onArmourCha
           </div>
         )}
       </div>
+
+      {/* 护甲值调整 */}
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-700">护甲值</label>
+        <input
+          type="number"
+          value={selectedArmour.armour || 0}
+          onChange={(e) => {
+            const armour = parseFloat(e.target.value) || 0
+            const updatedArmour = { ...selectedArmour, armour }
+            onArmourChange(updatedArmour)
+          }}
+          className="input w-full"
+          min="0"
+          max="100"
+          step="0.1"
+          placeholder="护甲值"
+          aria-label={`${label}护甲值`}
+        />
+        <div className="text-xs text-gray-500">
+          护甲的防护值，影响伤害减免
+        </div>
+      </div>
     </div>
   )
 } 

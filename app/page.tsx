@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import SimulationResults from './components/SimulationResults'
 import PlayerConfig from './components/PlayerConfig'
 import BattleLog from './components/BattleLog'
+import BattleLogExport from './components/BattleLogExport'
 import LifeHistogram from './components/LifeHistogram'
 import { getDefaultWeapon, getDefaultArmour, loadGameData } from './lib/dataLoader'
 import { WeaponData, ArmourData, BattleStats, EducationPerks, FactionPerks, CompanyPerks, PropertyPerks, MeritPerks } from './lib/fightSimulatorTypes'
@@ -73,6 +74,7 @@ interface SimulationResult {
   lastFightLog: string[]
   heroLifeDistribution: number[]
   villainLifeDistribution: number[]
+  allBattleLogs?: any[] // 可选的战斗日志数组
 }
 
 const createDefaultPlayer = (name: string, isAttacker: boolean): Player => {
@@ -84,10 +86,10 @@ const createDefaultPlayer = (name: string, isAttacker: boolean): Player => {
   }
 
   const defaultPassives: BattleStats = {
-    strength: 0,
-    speed: 0,
-    defense: 0,
-    dexterity: 0
+    strength: 10,
+    speed: 10,
+    defense: 10,
+    dexterity: 10
   }
 
   const defaultEducation: EducationPerks = {
@@ -112,11 +114,11 @@ const createDefaultPlayer = (name: string, isAttacker: boolean): Player => {
 
   const defaultFaction: FactionPerks = {
     accuracy: 0,
-    damage: 0
+    damage: 2
   }
 
   const defaultCompany: CompanyPerks = {
-    name: "None",
+    name: "n/a",
     star: 0
   }
 
@@ -125,7 +127,120 @@ const createDefaultPlayer = (name: string, isAttacker: boolean): Player => {
   }
 
   const defaultMerit: MeritPerks = {
-    critrate: 0
+    critrate: 2,
+    riflemastery: 2,
+    smgmastery: 2,
+    piercingmastery: 1,
+    temporarymastery: 2
+  }
+
+  // 默认武器配置
+  const defaultPrimary: WeaponData = {
+    name: "ArmaLite M-15A4",
+    category: "Rifle",
+    clipsize: 15,
+    rateoffire: [3, 5] as [number, number],
+    bonus: {
+      name: "n/a",
+      proc: 0
+    },
+    accuracy: 57,
+    damage: 68,
+    experience: 5,
+    ammo: "",
+    mods: ["1mW Laser", "ACOG Sight"]
+  }
+
+  const defaultSecondary: WeaponData = {
+    name: "BT MP9",
+    category: "SMG",
+    clipsize: 30,
+    rateoffire: [2, 25] as [number, number],
+    bonus: {
+      name: "n/a",
+      proc: 0
+    },
+    accuracy: 55,
+    damage: 61.4,
+    experience: 12,
+    ammo: "",
+    mods: ["Thermal Sight", "Skeet Choke"]
+  }
+
+  const defaultMelee: WeaponData = {
+    name: "Macana",
+    category: "Piercing",
+    clipsize: 0,
+    rateoffire: [1, 1] as [number, number],
+    bonus: {
+      name: "n/a",
+      proc: 0
+    },
+    accuracy: 65,
+    damage: 57,
+    experience: 16,
+    ammo: "",
+    mods: []
+  }
+
+  const defaultTemporary: WeaponData = {
+    name: "HEG",
+    category: "Throwable",
+    clipsize: 1,
+    rateoffire: [1, 1] as [number, number],
+    bonus: {
+      name: "n/a",
+      proc: 0
+    },
+    accuracy: 116,
+    damage: 90,
+    experience: 7,
+    ammo: "",
+    mods: []
+  }
+
+  // 默认护甲配置
+  const defaultArmour = {
+    head: {
+      set: "n/a",
+      type: "Motorcycle Helmet",
+      armour_range: [30, 35],
+      default: true,
+      id: "642",
+      armour: 32.5
+    },
+    body: {
+      set: "n/a",
+      type: "Full Body Armor",
+      armour_range: [31, 36],
+      default: true,
+      id: "49",
+      armour: 33.5
+    },
+    hands: {
+      set: "Combat",
+      type: "Combat Gloves",
+      armour_range: [38, 43],
+      default: true,
+      id: "654",
+      armour: 40.5
+    },
+    legs: {
+      set: "Combat",
+      type: "Combat Pants",
+      armour_range: [38, 43],
+      default: true,
+      id: "652",
+      armour: 40.5
+    },
+    feet: {
+      set: "Combat",
+      type: "Combat Boots",
+      armour_range: [38, 43],
+      default: true,
+      id: "653",
+      armour: 40.5
+    }
   }
 
   return {
@@ -134,23 +249,17 @@ const createDefaultPlayer = (name: string, isAttacker: boolean): Player => {
     stats: defaultStats,
     passives: defaultPassives,
     weapons: {
-      primary: { ...getDefaultWeapon('primary'), mods: [] },
-      secondary: { ...getDefaultWeapon('secondary'), mods: [] },
-      melee: { ...getDefaultWeapon('melee'), mods: [] },
-      temporary: { ...getDefaultWeapon('temporary'), mods: [] }
+      primary: defaultPrimary,
+      secondary: defaultSecondary,
+      melee: defaultMelee,
+      temporary: defaultTemporary
     },
-    armour: {
-      head: getDefaultArmour('head'),
-      body: getDefaultArmour('body'),
-      hands: getDefaultArmour('hands'),
-      legs: getDefaultArmour('legs'),
-      feet: getDefaultArmour('feet')
-    },
+    armour: defaultArmour,
     attacksettings: {
       primary: { setting: isAttacker ? 1 : 0, reload: true },
-      secondary: { setting: isAttacker ? 2 : 0, reload: true },
-      melee: { setting: isAttacker ? 3 : 0, reload: false },
-      temporary: { setting: isAttacker ? 4 : 0, reload: false }
+      secondary: { setting: isAttacker ? 0 : 0, reload: true },
+      melee: { setting: isAttacker ? 2 : 0, reload: false },
+      temporary: { setting: isAttacker ? 0 : 0, reload: false }
     },
     defendsettings: {
       primary: { setting: isAttacker ? 0 : 5, reload: true },
@@ -174,6 +283,7 @@ export default function Home() {
   const [results, setResults] = useState<SimulationResult | null>(null)
   const [dataLoaded, setDataLoaded] = useState(false)
   const [battleLogs, setBattleLogs] = useState<BattleLogEntry[]>([])
+  const [allBattleLogs, setAllBattleLogs] = useState<any[]>([]) // 存储所有战斗日志
   const [lifeData, setLifeData] = useState<{player1: number[], player2: number[]}>({
     player1: [],
     player2: []
@@ -183,9 +293,10 @@ export default function Home() {
     enableLog: false,
     enableLifeHisto: false
   })
+  const [battleResult, setBattleResult] = useState<'player1' | 'player2' | 'stalemate' | null>(null)
 
-  const [player1, setPlayer1] = useState<Player>(createDefaultPlayer('英雄', true))
-  const [player2, setPlayer2] = useState<Player>(createDefaultPlayer('反派', false))
+  const [player1, setPlayer1] = useState<Player>(createDefaultPlayer('Attacker', true))
+  const [player2, setPlayer2] = useState<Player>(createDefaultPlayer('Defender', false))
 
   useEffect(() => {
     async function initializeData() {
@@ -193,8 +304,8 @@ export default function Home() {
         await loadGameData()
         
         // 重新创建默认玩家，这次使用加载的数据
-        setPlayer1(createDefaultPlayer('英雄', true))
-        setPlayer2(createDefaultPlayer('反派', false))
+        setPlayer1(createDefaultPlayer('Attacker', true))
+        setPlayer2(createDefaultPlayer('Defender', false))
 
         setDataLoaded(true)
       } catch (error) {
@@ -208,7 +319,9 @@ export default function Home() {
   const handleSimulate = async () => {
     setIsSimulating(true)
     setBattleLogs([])
+    setAllBattleLogs([]) // 清空所有战斗日志
     setLifeData({ player1: [], player2: [] })
+    setBattleResult(null)
     
     try {
       const response = await fetch('/api/simulate', {
@@ -229,6 +342,20 @@ export default function Home() {
       
       if (data.success) {
         setResults(data.results)
+        
+        // 如果启用了战斗日志，设置所有战斗日志数据
+        if (simulationSettings.enableLog && data.results.allBattleLogs) {
+          setAllBattleLogs(data.results.allBattleLogs)
+        }
+        
+        // 根据模拟结果设置战斗结果
+        if (data.results.heroWinRate > data.results.villainWinRate) {
+          setBattleResult('player1') // Attacker赢
+        } else if (data.results.villainWinRate > data.results.heroWinRate) {
+          setBattleResult('player2') // Defender赢
+        } else {
+          setBattleResult('stalemate') // 平局
+        }
         
         // 如果启用了生命值分布，设置数据
         if (simulationSettings.enableLifeHisto && data.results.heroLifeDistribution) {
@@ -252,7 +379,7 @@ export default function Home() {
   const copyPlayer = (from: Player, to: 1 | 2) => {
     const copiedPlayer = { 
       ...from, 
-      name: to === 1 ? '英雄' : '反派'
+      name: to === 1 ? 'Attacker' : 'Defender'
     }
     if (to === 1) {
       setPlayer1(copiedPlayer)
@@ -263,6 +390,7 @@ export default function Home() {
 
   const clearBattleLogs = () => {
     setBattleLogs([])
+    setBattleResult(null)
   }
 
   if (!dataLoaded) {
@@ -311,16 +439,16 @@ export default function Home() {
                     onChange={(e) => setSimulationSettings(prev => ({ ...prev, enableLog: e.target.checked }))}
                     className="rounded"
                   />
-                  <span className="text-sm text-gray-700">启用战斗日志</span>
+                  <span className="text-sm text-gray-700">启用战斗日志记录</span>
                 </label>
                 <label className="flex items-center space-x-2">
-                  <input
+                  {/* <input
                     type="checkbox"
                     checked={simulationSettings.enableLifeHisto}
                     onChange={(e) => setSimulationSettings(prev => ({ ...prev, enableLifeHisto: e.target.checked }))}
                     className="rounded"
                   />
-                  <span className="text-sm text-gray-700">启用生命值分布</span>
+                  <span className="text-sm text-gray-700">启用生命值分布</span> */}
                 </label>
               </div>
             </div>
@@ -330,13 +458,13 @@ export default function Home() {
                 onClick={() => copyPlayer(player2, 1)}
                 className="btn-secondary"
               >
-                复制反派→英雄
+                复制Defender→Attacker
               </button>
               <button
                 onClick={() => copyPlayer(player1, 2)}
                 className="btn-secondary"
               >
-                复制英雄→反派
+                复制Attacker→Defender
               </button>
               <button
                 onClick={handleSimulate}
@@ -355,7 +483,7 @@ export default function Home() {
             <PlayerConfig
               player={player1}
               onPlayerChange={setPlayer1}
-              playerName="英雄"
+              playerName="Attacker"
               isAttacker={true}
             />
           </div>
@@ -365,7 +493,7 @@ export default function Home() {
             <PlayerConfig
               player={player2}
               onPlayerChange={setPlayer2}
-              playerName="反派"
+              playerName="Defender"
               isAttacker={false}
             />
           </div>
@@ -373,7 +501,11 @@ export default function Home() {
           {/* 结果显示 */}
           <div>
             {results ? (
-              <SimulationResults results={results} />
+              <SimulationResults 
+                results={results}
+                player1Name={player1.name}
+                player2Name={player2.name}
+              />
             ) : (
               <div className="card text-center">
                 <div className="py-12">
@@ -393,10 +525,22 @@ export default function Home() {
         {/* 战斗日志 */}
         {simulationSettings.enableLog && (
           <div className="mt-8">
+            {/* 隐藏原先的战斗日志组件，因为它不能正常工作
             <BattleLog
               logs={battleLogs}
               isActive={isSimulating}
               onClear={clearBattleLogs}
+              player1Name={player1.name}
+              player2Name={player2.name}
+              battleResult={battleResult}
+            />
+            */}
+            
+            {/* 战斗日志导出 */}
+            <BattleLogExport
+              allBattleLogs={allBattleLogs}
+              player1Name={player1.name}
+              player2Name={player2.name}
             />
           </div>
         )}

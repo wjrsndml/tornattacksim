@@ -302,7 +302,20 @@ export function maxDamage(strength: number): number {
  * 计算伤害减免
  */
 export function damageMitigation(defense: number, strength: number): number {
-  return Math.min(defense / (defense + strength), 0.9) * 100
+  const ratio = defense / strength
+  let mitigation: number
+
+  if (ratio >= 14) {
+    mitigation = 100  // 完全免疫伤害
+  } else if (ratio >= 1 && ratio < 14) {
+    mitigation = 50 + MATH_LOG_14_UNDER_50 * Math.log(ratio)
+  } else if (ratio > 1/32 && ratio < 1) {
+    mitigation = 50 + MATH_LOG_32_UNDER_50 * Math.log(ratio)
+  } else {
+    mitigation = 0
+  }
+
+  return mitigation
 }
 
 /**
@@ -318,26 +331,46 @@ export function weaponDamageMulti(displayDamage: number, perks: any): number {
  * 计算命中几率
  */
 export function hitChance(speed: number, dexterity: number): number {
-  const accuracy = 0.425 + Math.atan(speed / 200) / Math.PI + Math.atan(dexterity / 200) / Math.PI
-  return Math.min(accuracy, 0.995)
+  const ratio = speed / dexterity
+  let hitChance: number
+
+  if (ratio >= 64) {
+    hitChance = 100
+  } else if (ratio >= 1 && ratio < 64) {
+    hitChance = 100 - 50 / 7 * (8 * Math.sqrt(1/ratio) - 1)
+  } else if (ratio > 1/64 && ratio < 1) {
+    hitChance = 50 / 7 * (8 * Math.sqrt(ratio) - 1)
+  } else {
+    hitChance = 0
+  }
+
+  return hitChance
 }
 
 /**
  * 应用精准度修正
  */
 export function applyAccuracy(hitChance: number, displayAccuracy: number, perks: any): number {
-  let accuracy = hitChance + (displayAccuracy - 50) / 100
-  if (perks && perks.bonus) {
-    accuracy += perks.bonus / 100
+  let accuracy = displayAccuracy + perks.bonus
+  if (accuracy < 0) {
+    accuracy = 0
   }
-  return Math.max(0.005, Math.min(accuracy, 0.995))
+
+  if (hitChance > 50) {
+    hitChance = hitChance + ((accuracy - 50) / 50) * (100 - hitChance)
+  } else {
+    hitChance = hitChance + ((accuracy - 50) / 50) * hitChance
+  }
+
+  return hitChance
 }
 
 /**
  * 判断是否命中
  */
 export function hitOrMiss(hitChance: number): boolean {
-  return Math.random() < hitChance
+  const rng = Math.floor(Math.random() * 10000 + 1)
+  return rng >= 1 && rng <= 1 + hitChance * 100
 }
 
 /**
@@ -386,9 +419,22 @@ export function sRounding(x: number): number {
  * 计算发射轮数
  */
 export function roundsFired(weapon: WeaponData, weaponState: any): number {
-  const min = weapon.rateoffire[0]
-  const max = weapon.rateoffire[1]
-  return Math.floor(Math.random() * (max - min + 1)) + min
+  let rof = weaponState.rof
+  rof = [sRounding(rof[0]), sRounding(rof[1])]
+
+  let rounds
+  if (rof[1] - rof[0] === 0) {
+    rounds = rof[0]
+  } else {
+    rounds = Math.round(Math.random() * (rof[1] - rof[0]) + rof[0])
+  }
+
+  // 关键修复：检查剩余弹药，不能消耗超过实际剩余的弹药
+  if (rounds > weaponState.ammoleft) {
+    rounds = weaponState.ammoleft
+  }
+
+  return rounds
 }
 
 /**
@@ -543,11 +589,19 @@ function action(
   // 最大生命值用于灼烧和血清素
   let xML = x.life, yML = y.life
 
-  // 检查是否需要重�?
+  // 检查是否需要重装
   if (xWS[xCW as keyof WeaponState].ammoleft === 0 && x_set[xCW].reload === true) {
-    // 添加重装日志
-    log.push(x.name + " reloaded their " + xW[xCW as keyof typeof xW].name)
-    ;(xWS[xCW as keyof WeaponState] as any).ammoleft = (xWS[xCW as keyof WeaponState] as any).maxammo
+    // 检查武器是否存在且有效
+    const weaponName = xW[xCW as keyof typeof xW].name
+    if (weaponName && weaponName !== "Unknown" && weaponName !== "" && weaponName !== "n/a") {
+      // 添加重装日志
+      log.push(x.name + " reloaded their " + weaponName)
+      ;(xWS[xCW as keyof WeaponState] as any).ammoleft = (xWS[xCW as keyof WeaponState] as any).maxammo
+    } else {
+      // 武器无效，停止使用该武器
+      x_set[xCW].setting = 0
+      return [log, xCL, yCL, xWS, yWS, xSE, ySE, xDOT, yDOT, x_set, y_set, x_temps, y_temps]
+    }
 
     // 加油站技能：灼烧
     if (y.perks.company.name === "Gas Station" && y.perks.company.star >= 5) {

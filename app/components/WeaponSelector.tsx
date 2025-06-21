@@ -149,6 +149,55 @@ export default function WeaponSelector({ weaponType, selectedWeapon, onWeaponCha
         </div>
       </div>
 
+      {/* 武器属性调整（临时武器除外） */}
+      {weaponType !== 'temporary' && (
+        <>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">武器伤害</label>
+            <input
+              type="number"
+              value={selectedWeapon.damage || 0}
+              onChange={(e) => {
+                const damage = parseFloat(e.target.value) || 0
+                const updatedWeapon = { ...selectedWeapon, damage }
+                onWeaponChange(updatedWeapon)
+              }}
+              className="input w-full"
+              min="0"
+              max="1000"
+              step="0.1"
+              placeholder="伤害值"
+              aria-label={`${label}伤害`}
+            />
+            <div className="text-xs text-gray-500">
+              武器的基础伤害值
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">武器精准</label>
+            <input
+              type="number"
+              value={selectedWeapon.accuracy || 0}
+              onChange={(e) => {
+                const accuracy = parseFloat(e.target.value) || 0
+                const updatedWeapon = { ...selectedWeapon, accuracy }
+                onWeaponChange(updatedWeapon)
+              }}
+              className="input w-full"
+              min="0"
+              max="200"
+              step="0.1"
+              placeholder="精准值"
+              aria-label={`${label}精准`}
+            />
+            <div className="text-xs text-gray-500">
+              武器的基础精准值
+            </div>
+          </div>
+        </>
+      )}
+
       {/* 弹药类型（仅主武器和副武器支持） */}
       {supportsModifications && (
         <div className="space-y-2">

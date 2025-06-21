@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
     }
     
     const body = await request.json()
-    const { player1, player2, simulations = 1000 } = body
+    const { player1, player2, simulations = 1000, enableLog = false } = body
 
     // 创建玩家数据
     const hero = convertToFightPlayer(player1, "attack", 1)
@@ -141,9 +141,78 @@ export async function POST(request: NextRequest) {
       []    // vLifeStats
     ]
 
+    // 用于存储所有战斗日志的数组
+    let allBattleLogs: any[] = []
+
     // 运行模拟
     for (let i = 0; i < simulations; i++) {
-      results = fight(hero, villain, results)
+      // 创建单次战斗的结果数组
+      let singleFightResults: FightResults = [
+        0,    // heroWins
+        0,    // villainWins  
+        0,    // stalemates
+        0,    // totalTurns
+        0,    // heroLifeLeft
+        0,    // villainLifeLeft
+        [],   // fightLog
+        0,    // hProcs
+        [],   // hLifeStats
+        []    // vLifeStats
+      ]
+      
+      const fightResults = fight(hero, villain, singleFightResults)
+      
+      // 如果启用了日志记录，收集这场战斗的数据
+      if (enableLog) {
+        // 确定胜利者
+        let winner = 'Stalemate'
+        if (fightResults[1] > 0) {
+          winner = player2.name // villain wins
+        } else if (fightResults[0] > 0) {
+          winner = player1.name // hero wins
+        }
+        
+        allBattleLogs.push({
+          battleNumber: i + 1,
+          winner: winner,
+          turns: fightResults[3], // 这场战斗的回合数
+          heroDamageDealt: hero.life - fightResults[5], // 初始生命 - 对手剩余生命
+          villainDamageDealt: villain.life - fightResults[4], // 初始生命 - 对手剩余生命
+          heroFinalLife: fightResults[4], // 英雄剩余生命
+          villainFinalLife: fightResults[5], // 反派剩余生命
+          battleLog: fightResults[6] // 具体的战斗日志
+        })
+      }
+      
+      // 累积到总结果中
+      results[0] += fightResults[0] // hero wins
+      results[1] += fightResults[1] // villain wins
+      results[2] += fightResults[2] // stalemates
+      results[3] += fightResults[3] // total turns
+      results[4] += fightResults[4] // hero life left
+      results[5] += fightResults[5] // villain life left
+      results[6] = fightResults[6]  // last fight log
+      
+      // 累积生命值分布
+      if (fightResults[8]) {
+        for (let life in fightResults[8]) {
+          if (results[8][life] === undefined) {
+            results[8][life] = fightResults[8][life]
+          } else {
+            results[8][life] += fightResults[8][life]
+          }
+        }
+      }
+      
+      if (fightResults[9]) {
+        for (let life in fightResults[9]) {
+          if (results[9][life] === undefined) {
+            results[9][life] = fightResults[9][life]
+          } else {
+            results[9][life] += fightResults[9][life]
+          }
+        }
+      }
     }
 
     // 计算统计数据
@@ -170,7 +239,8 @@ export async function POST(request: NextRequest) {
         averageVillainLifeRemaining: parseInt(avgVillainLife),
         lastFightLog: results[6],
         heroLifeDistribution: results[8],
-        villainLifeDistribution: results[9]
+        villainLifeDistribution: results[9],
+        allBattleLogs: enableLog ? allBattleLogs : null
       }
     })
 

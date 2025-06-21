@@ -17,9 +17,6 @@ export default function RootLayout({
         <header className="bg-torn-600 text-white shadow-lg">
           <div className="container mx-auto px-4 py-6">
             <h1 className="text-3xl font-bold">Torn 战斗模拟器</h1>
-            <p className="text-torn-100 mt-2">
-              由 Proxima 开发，811 维护的战斗模拟器
-            </p>
           </div>
         </header>
         
