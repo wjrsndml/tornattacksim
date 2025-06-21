@@ -27,6 +27,16 @@ let h: FightPlayer, v: FightPlayer
 let cachedModData: { [key: string]: ModData } = {}
 
 /**
+ * 获取弹药显示名称
+ */
+function getAmmoDisplayName(ammo: string | undefined): string {
+  if (!ammo || ammo === "Standard") {
+    return "standard"
+  }
+  return ammo
+}
+
+/**
  * 设置改装数据
  */
 export function setModData(modData: { [key: string]: ModData }) {
@@ -424,7 +434,7 @@ export function applyPMbefore(p: FightPlayer, p_mods: string[]): number[] {
     }
   }
 
-  // 公司技能：Gun Shop 7星+增加1个额外弹夹
+  // 公司技能：Gun Shop 7星增加1个额外弹夹
   if (p_comp.name === "Gun Shop" && p_comp.star >= 7) {
     clips += 1
   }
@@ -478,7 +488,7 @@ function action(
   let xW = Object.assign({}, x.weapons)
   let yA = JSON.parse(JSON.stringify(y.armour))
 
-  // 公司技能：服装店
+  // 公司技能：服装
   if (y.perks.company.name === "Clothing Store" && y.perks.company.star === 10) {
     for (let i in yA) {
       yA[i].armour *= 1.2
@@ -510,6 +520,7 @@ function action(
   let yCW = chooseWeapon(y, y_set)
 
   // 应用技能、改装、临时效果
+  // 应用技能、改装、临时效�?
   let pmt = applyPMT(x, y, xCW, yCW, xWS, yWS, x_set, y_set, x_temps, y_temps, xSE, ySE, turn)
 
   let xSTR = pmt[0][0], xSPD = pmt[0][1], xDEF = pmt[0][2], xDEX = pmt[0][3]
@@ -532,7 +543,7 @@ function action(
   // 最大生命值用于灼烧和血清素
   let xML = x.life, yML = y.life
 
-  // 检查是否需要重装
+  // 检查是否需要重�?
   if (xWS[xCW as keyof WeaponState].ammoleft === 0 && x_set[xCW].reload === true) {
     // 添加重装日志
     log.push(x.name + " reloaded their " + xW[xCW as keyof typeof xW].name)
@@ -618,7 +629,7 @@ function action(
     let xBHC: number, xFHC: number, xBP: any, xMD: number, yDM: number, xWDM: number, yAM: number, xHOM: boolean, xDV: number, xDMG = 0
     let x_pen = 1, x_ammo_dmg = 1
 
-    // 非伤害性临时武器不产生命中率和伤害值
+    // 非伤害性临时武器不产生命中率和伤害�?
     if (xW[xCW as keyof typeof xW].category !== "Non-Damaging") {
       // 弹药类型效果
       if ((xW[xCW as keyof typeof xW] as any).ammo === "TR") {
@@ -626,7 +637,7 @@ function action(
       } else if ((xW[xCW as keyof typeof xW] as any).ammo === "PI") {
         x_pen = 2
       } else if ((xW[xCW as keyof typeof xW] as any).ammo === "HP") {
-        x_pen = 1 / 1.5
+        x_pen = x_pen / 1.5
         x_ammo_dmg = 1.5
       } else if ((xW[xCW as keyof typeof xW] as any).ammo === "IN") {
         x_ammo_dmg = 1.4
@@ -671,9 +682,9 @@ function action(
 
           xRF = (xWS[xCW] as any).maxammo
           if (xHOM) {
-            log.push(x.name + " sprayed " + xRF + " " + (xW[xCW] as any).ammo + " rounds of their " + xW[xCW].name + " hitting " + y.name + " in the " + xBP[0] + " for " + xDMG)
+            log.push(x.name + " sprayed " + xRF + " " + getAmmoDisplayName((xW[xCW] as any).ammo) + " rounds of their " + xW[xCW].name + " hitting " + y.name + " in the " + xBP[0] + " for " + xDMG)
           } else {
-            log.push(x.name + " sprayed " + xRF + " " + (xW[xCW] as any).ammo + " rounds of their " + xW[xCW].name + " missing " + y.name)
+            log.push(x.name + " sprayed " + xRF + " " + getAmmoDisplayName((xW[xCW] as any).ammo) + " rounds of their " + xW[xCW].name + " missing " + y.name)
           }
         } else {
           if (xDMG > yCL) {
@@ -681,9 +692,9 @@ function action(
           }
           xRF = roundsFired(xW[xCW], xWS[xCW])
           if (xHOM) {
-            log.push(x.name + " fired " + xRF + " " + (xW[xCW] as any).ammo + " rounds of their " + xW[xCW].name + " hitting " + y.name + " in the " + xBP[0] + " for " + xDMG)
+            log.push(x.name + " fired " + xRF + " " + getAmmoDisplayName((xW[xCW] as any).ammo) + " rounds of their " + xW[xCW].name + " hitting " + y.name + " in the " + xBP[0] + " for " + xDMG)
           } else {
-            log.push(x.name + " fired " + xRF + " " + (xW[xCW] as any).ammo + " rounds of their " + xW[xCW].name + " missing " + y.name)
+            log.push(x.name + " fired " + xRF + " " + getAmmoDisplayName((xW[xCW] as any).ammo) + " rounds of their " + xW[xCW].name + " missing " + y.name)
           }
         }
       } else {
@@ -693,9 +704,9 @@ function action(
 
         xRF = roundsFired(xW[xCW], xWS[xCW])
         if (xHOM) {
-          log.push(x.name + " fired " + xRF + " " + (xW[xCW] as any).ammo + " rounds of their " + xW[xCW].name + " hitting " + y.name + " in the " + xBP[0] + " for " + xDMG)
+          log.push(x.name + " fired " + xRF + " " + getAmmoDisplayName((xW[xCW] as any).ammo) + " rounds of their " + xW[xCW].name + " hitting " + y.name + " in the " + xBP[0] + " for " + xDMG)
 
-          // 处理主武器特效
+          // 处理主武器特�?
           if ((xW[xCW] as any).bonus?.name === "Demoralize") {
             if (xSE[0][0] < 5) {
               let x_proc = procBonus((xW[xCW] as any).bonus.proc)
@@ -747,9 +758,9 @@ function action(
                 }
 
                 if (xHOM) {
-                  log.push(x.name + " fired " + xRF + " " + (xW[xCW] as any).ammo + " rounds of their " + xW[xCW].name + " hitting " + y.name + " in the " + xBP[0] + " for " + xDMG)
+                  log.push(x.name + " fired " + xRF + " " + getAmmoDisplayName((xW[xCW] as any).ammo) + " rounds of their " + xW[xCW].name + " hitting " + y.name + " in the " + xBP[0] + " for " + xDMG)
                 } else {
-                  log.push(x.name + " fired " + xRF + " " + (xW[xCW] as any).ammo + " rounds of their " + xW[xCW].name + " missing " + y.name)
+                  log.push(x.name + " fired " + xRF + " " + getAmmoDisplayName((xW[xCW] as any).ammo) + " rounds of their " + xW[xCW].name + " missing " + y.name)
                 }
 
                 totalDMG += xDMG
@@ -769,11 +780,11 @@ function action(
             }
           }
         } else {
-          log.push(x.name + " fired " + xRF + " " + (xW[xCW] as any).ammo + " rounds of their " + xW[xCW].name + " missing " + y.name)
+          log.push(x.name + " fired " + xRF + " " + getAmmoDisplayName((xW[xCW] as any).ammo) + " rounds of their " + xW[xCW].name + " missing " + y.name)
         }
       }
 
-      // 更新弹药状态
+      // 更新弹药状�?
       ;(xWS[xCW] as any).ammoleft -= xRF
       if ((xWS[xCW] as any).ammoleft === 0) {
         ;(xWS[xCW] as any).clipsleft -= 1
@@ -782,7 +793,7 @@ function action(
         }
       }
     } 
-    // 副武器攻击
+    // 副武器攻�?
     else if (xCW === "secondary") {
       if (xDMG > yCL) {
         xDMG = yCL
@@ -791,9 +802,9 @@ function action(
       let xRF = roundsFired(xW[xCW], xWS[xCW])
 
       if (xHOM) {
-        log.push(x.name + " fired " + xRF + " " + (xW[xCW] as any).ammo + " rounds of their " + xW[xCW].name + " hitting " + y.name + " in the " + xBP[0] + " for " + xDMG)
+        log.push(x.name + " fired " + xRF + " " + getAmmoDisplayName((xW[xCW] as any).ammo) + " rounds of their " + xW[xCW].name + " hitting " + y.name + " in the " + xBP[0] + " for " + xDMG)
 
-        // 处理副武器特效
+        // 处理副武器特�?
         if ((xW[xCW] as any).bonus?.name === "Burn") {
           let x_proc = procBonus((xW[xCW] as any).bonus.proc)
           if (x_proc === 1) {
@@ -822,10 +833,10 @@ function action(
           }
         }
       } else {
-        log.push(x.name + " fired " + xRF + " " + (xW[xCW] as any).ammo + " rounds of their " + xW[xCW].name + " missing " + y.name)
+        log.push(x.name + " fired " + xRF + " " + getAmmoDisplayName((xW[xCW] as any).ammo) + " rounds of their " + xW[xCW].name + " missing " + y.name)
       }
 
-      // 更新弹药状态
+      // 更新弹药状�?
       ;(xWS[xCW] as any).ammoleft -= xRF
       if ((xWS[xCW] as any).ammoleft === 0) {
         ;(xWS[xCW] as any).clipsleft -= 1
@@ -1008,7 +1019,7 @@ function action(
         }
       }
 
-      // 临时武器使用后停止
+      // 临时武器使用后停�?
       x_set[xCW].setting = 0
 
       // 严重燃烧特效
@@ -1152,7 +1163,7 @@ function applyPMT(
   y_dmg += 0.1 * (y_wep.experience || 0) + y_fac.damage
   y_crit += 0.5 * y_merit.critrate
 
-  // 公司技能
+  // 公司技�?
   if (x_comp.name === "Zoo" && x_comp.star === 10) {
     x_acc += 3
   }
@@ -1160,7 +1171,7 @@ function applyPMT(
     y_acc += 3
   }
 
-  // 教育技能
+  // 教育技�?
   if (x_edu.damage) {
     x_dmg += 1
   }
@@ -1233,7 +1244,7 @@ function applyPMT(
     }
   }
 
-  // 计算最终属性
+  // 计算最终属�?
   let x_passives = { ...x.passives }
   let y_passives = { ...y.passives }
 
@@ -1262,7 +1273,7 @@ function applyPMT(
     }
   }
 
-  // 同样处理y玩家的临时效果
+  // 同样处理y玩家的临时效�?
   for (let i = 0; i < y_temps.length; i++) {
     if (y_temps[i][0] === "epi") {
       y_passives.strength += 500
@@ -1287,7 +1298,7 @@ function applyPMT(
     }
   }
 
-  // 状态效果减益
+  // 状态效果减�?
   x_passives.strength -= (10 * xSE[1][0] + 25 * xSE[1][2])
   x_passives.speed -= (10 * xSE[1][0] + 50 * xSE[1][1] + 25 * xSE[1][3])
   x_passives.defense -= (10 * xSE[1][0] + 25 * xSE[1][4])
@@ -1298,7 +1309,7 @@ function applyPMT(
   y_passives.defense -= (10 * ySE[1][0] + 25 * ySE[1][4])
   y_passives.dexterity -= (10 * ySE[1][0] + 50 * ySE[1][1] + 25 * ySE[1][5])
 
-  // 最终属性计算
+  // 最终属性计�?
   let xSTR = x.battleStats.strength * (1 + x_passives.strength / 100)
   let xSPD = x.battleStats.speed * (1 + x_passives.speed / 100)
   let xDEF = x.battleStats.defense * (1 + x_passives.defense / 100)
@@ -1309,7 +1320,7 @@ function applyPMT(
   let yDEF = y.battleStats.defense * (1 + y_passives.defense / 100)
   let yDEX = y.battleStats.dexterity * (1 + y_passives.dexterity / 100)
 
-  // 处理致盲等效果
+  // 处理致盲等效�?
   let sM = 1, dM = 1
   let flash = 0, sand = 0, smoke = 0, conc = 0, pepper = 0, tear = 0
 
@@ -1363,7 +1374,7 @@ function applyPMT(
   xSPD *= sM
   xDEX *= dM
 
-  // 重置并处理y玩家的致盲效果
+  // 重置并处理y玩家的致盲效�?
   sM = 1; dM = 1
   flash = 0; sand = 0; smoke = 0; conc = 0; pepper = 0; tear = 0
 

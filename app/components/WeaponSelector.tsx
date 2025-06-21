@@ -126,6 +126,51 @@ export default function WeaponSelector({ weaponType, selectedWeapon, onWeaponCha
           label="武器改装"
         />
       )}
+
+      {/* 武器经验值 */}
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-700">武器经验值</label>
+        <input
+          type="number"
+          value={selectedWeapon.experience || 0}
+          onChange={(e) => {
+            const experience = parseInt(e.target.value) || 0
+            const updatedWeapon = { ...selectedWeapon, experience }
+            onWeaponChange(updatedWeapon)
+          }}
+          className="input w-full"
+          min="0"
+          max="100"
+          placeholder="0-100"
+          aria-label={`${label}经验值`}
+        />
+        <div className="text-xs text-gray-500">
+          经验值影响精准度和伤害加成
+        </div>
+      </div>
+
+      {/* 弹药类型（仅主武器和副武器支持） */}
+      {supportsModifications && (
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-700">弹药类型</label>
+          <select
+            value={selectedWeapon.ammo || 'Standard'}
+            onChange={(e) => {
+              const ammo = e.target.value
+              const updatedWeapon = { ...selectedWeapon, ammo }
+              onWeaponChange(updatedWeapon)
+            }}
+            className="input w-full"
+            aria-label={`${label}弹药类型`}
+          >
+            <option value="Standard">标准弹药</option>
+            <option value="TR">追踪弹 (TR) - 精准+10</option>
+            <option value="PI">穿甲弹 (PI) - 穿甲x2</option>
+            <option value="HP">空心弹 (HP) - 伤害+50%, 穿甲/1.5</option>
+            <option value="IN">燃烧弹 (IN) - 伤害+40%</option>
+          </select>
+        </div>
+      )}
     </div>
   )
 } 

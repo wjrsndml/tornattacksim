@@ -36,6 +36,7 @@ export interface WeaponData {
     proc: number
   }
   mods?: string[] // 武器改装列表
+  ammo?: string // 弹药类型：TR(追踪弹), PI(穿甲弹), HP(空心弹), IN(燃烧弹)
 }
 
 // 真实护甲数据接口
@@ -104,22 +105,22 @@ export interface ArmourCoverageData {
 // 教育技能接口
 export interface EducationPerks {
   damage: boolean
-  neckdamage: boolean
   meleedamage: boolean
+  japanesedamage: boolean
   tempdamage: boolean
   needleeffect: boolean
-  japanesedamage: boolean
   fistdamage: boolean
+  neckdamage: boolean
   critchance: boolean
-  machinegunaccuracy: boolean
-  smgaccuracy: boolean
-  pistolaccuracy: boolean
-  rifleaccuracy: boolean
-  heavyartilleryaccuracy: boolean
-  temporaryaccuracy: boolean
-  shotgunaccuracy: boolean
   ammocontrol1: boolean
   ammocontrol2: boolean
+  machinegunaccuracy?: boolean
+  smgaccuracy?: boolean
+  pistolaccuracy?: boolean
+  rifleaccuracy?: boolean
+  heavyartilleryaccuracy?: boolean
+  shotgunaccuracy?: boolean
+  temporaryaccuracy?: boolean
 }
 
 // 派系技能接口

@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import SimulationResults from './components/SimulationResults'
 import PlayerConfig from './components/PlayerConfig'
+import BattleLog from './components/BattleLog'
+import LifeHistogram from './components/LifeHistogram'
 import { getDefaultWeapon, getDefaultArmour, loadGameData } from './lib/dataLoader'
 import { WeaponData, ArmourData, BattleStats, EducationPerks, FactionPerks, CompanyPerks, PropertyPerks, MeritPerks } from './lib/fightSimulatorTypes'
 
@@ -45,6 +47,18 @@ interface Player {
   }
 }
 
+interface BattleLogEntry {
+  turn: number
+  attacker: string
+  action: string
+  target: string
+  damage: number
+  weapon: string
+  bodyPart: string
+  effect?: string
+  timestamp: number
+}
+
 interface SimulationResult {
   totalSimulations: number
   heroWins: number
@@ -78,22 +92,22 @@ const createDefaultPlayer = (name: string, isAttacker: boolean): Player => {
 
   const defaultEducation: EducationPerks = {
     damage: false,
-    neckdamage: false,
     meleedamage: false,
+    japanesedamage: false,
     tempdamage: false,
     needleeffect: false,
-    japanesedamage: false,
     fistdamage: false,
+    neckdamage: false,
     critchance: false,
+    ammocontrol1: false,
+    ammocontrol2: false,
     machinegunaccuracy: false,
     smgaccuracy: false,
     pistolaccuracy: false,
     rifleaccuracy: false,
     heavyartilleryaccuracy: false,
-    temporaryaccuracy: false,
     shotgunaccuracy: false,
-    ammocontrol1: false,
-    ammocontrol2: false
+    temporaryaccuracy: false
   }
 
   const defaultFaction: FactionPerks = {
@@ -159,6 +173,16 @@ export default function Home() {
   const [isSimulating, setIsSimulating] = useState(false)
   const [results, setResults] = useState<SimulationResult | null>(null)
   const [dataLoaded, setDataLoaded] = useState(false)
+  const [battleLogs, setBattleLogs] = useState<BattleLogEntry[]>([])
+  const [lifeData, setLifeData] = useState<{player1: number[], player2: number[]}>({
+    player1: [],
+    player2: []
+  })
+  const [simulationSettings, setSimulationSettings] = useState({
+    fights: 10000,
+    enableLog: false,
+    enableLifeHisto: false
+  })
 
   const [player1, setPlayer1] = useState<Player>(createDefaultPlayer('英雄', true))
   const [player2, setPlayer2] = useState<Player>(createDefaultPlayer('反派', false))
@@ -183,6 +207,9 @@ export default function Home() {
 
   const handleSimulate = async () => {
     setIsSimulating(true)
+    setBattleLogs([])
+    setLifeData({ player1: [], player2: [] })
+    
     try {
       const response = await fetch('/api/simulate', {
         method: 'POST',
@@ -192,7 +219,9 @@ export default function Home() {
         body: JSON.stringify({
           player1,
           player2,
-          simulations,
+          simulations: simulationSettings.fights,
+          enableLog: simulationSettings.enableLog,
+          enableLifeHisto: simulationSettings.enableLifeHisto
         }),
       })
 
@@ -200,6 +229,14 @@ export default function Home() {
       
       if (data.success) {
         setResults(data.results)
+        
+        // 如果启用了生命值分布，设置数据
+        if (simulationSettings.enableLifeHisto && data.results.heroLifeDistribution) {
+          setLifeData({
+            player1: data.results.heroLifeDistribution,
+            player2: data.results.villainLifeDistribution
+          })
+        }
       } else {
         console.error('Simulation failed:', data.error)
         alert('模拟失败: ' + data.error)
@@ -224,6 +261,10 @@ export default function Home() {
     }
   }
 
+  const clearBattleLogs = () => {
+    setBattleLogs([])
+  }
+
   if (!dataLoaded) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -240,19 +281,19 @@ export default function Home() {
       <div className="container mx-auto px-4 py-8">
         {/* 模拟控制 */}
         <div className="card mb-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="flex items-center space-x-4">
+          <div className="flex flex-col lg:flex-row justify-between items-start gap-6">
+            <div className="flex flex-col md:flex-row items-start space-y-4 md:space-y-0 md:space-x-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  模拟次数: {simulations.toLocaleString()}
+                  模拟次数: {simulationSettings.fights.toLocaleString()}
                 </label>
                 <input
                   type="range"
                   min="100"
                   max="100000"
                   step="100"
-                  value={simulations}
-                  onChange={(e) => setSimulations(parseInt(e.target.value))}
+                  value={simulationSettings.fights}
+                  onChange={(e) => setSimulationSettings(prev => ({ ...prev, fights: parseInt(e.target.value) }))}
                   className="w-48"
                   aria-label="模拟次数"
                 />
@@ -260,6 +301,27 @@ export default function Home() {
                   <span>100</span>
                   <span>100,000</span>
                 </div>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={simulationSettings.enableLog}
+                    onChange={(e) => setSimulationSettings(prev => ({ ...prev, enableLog: e.target.checked }))}
+                    className="rounded"
+                  />
+                  <span className="text-sm text-gray-700">启用战斗日志</span>
+                </label>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={simulationSettings.enableLifeHisto}
+                    onChange={(e) => setSimulationSettings(prev => ({ ...prev, enableLifeHisto: e.target.checked }))}
+                    className="rounded"
+                  />
+                  <span className="text-sm text-gray-700">启用生命值分布</span>
+                </label>
               </div>
             </div>
 
@@ -327,6 +389,33 @@ export default function Home() {
             )}
           </div>
         </div>
+
+        {/* 战斗日志 */}
+        {simulationSettings.enableLog && (
+          <div className="mt-8">
+            <BattleLog
+              logs={battleLogs}
+              isActive={isSimulating}
+              onClear={clearBattleLogs}
+            />
+          </div>
+        )}
+
+        {/* 生命值分布 */}
+        {simulationSettings.enableLifeHisto && (
+          <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <LifeHistogram
+              lifeData={lifeData.player1}
+              playerName={player1.name}
+              totalFights={simulationSettings.fights}
+            />
+            <LifeHistogram
+              lifeData={lifeData.player2}
+              playerName={player2.name}
+              totalFights={simulationSettings.fights}
+            />
+          </div>
+        )}
       </div>
     </div>
   )

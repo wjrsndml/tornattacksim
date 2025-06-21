@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import WeaponSelector from './WeaponSelector'
 import ArmourSelector from './ArmourSelector'
+import ArmourCoverage from './ArmourCoverage'
 import { getDefaultWeapon, getDefaultArmour, loadGameData, getCompanyList } from '../lib/dataLoader'
 import { WeaponData, ArmourData, EducationPerks, FactionPerks, CompanyPerks, PropertyPerks, MeritPerks, BattleStats } from '../lib/fightSimulatorTypes'
 
@@ -426,6 +427,9 @@ export default function PlayerConfig({ player, onPlayerChange, playerName, isAtt
         </div>
       </div>
 
+      {/* 护甲覆盖系统 */}
+      <ArmourCoverage playerArmour={player.armour} />
+
       {/* 战斗设置 */}
       <div className="card">
         <h4 className="text-md font-semibold text-gray-800 mb-3">
@@ -602,6 +606,71 @@ export default function PlayerConfig({ player, onPlayerChange, playerName, isAtt
                   />
                   <span>20% 弹药控制</span>
                 </label>
+                
+                {/* 武器类型精准度技能 */}
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={player.perks.education.machinegunaccuracy}
+                    onChange={(e) => updateEducation('machinegunaccuracy', e.target.checked)}
+                    className="rounded"
+                  />
+                  <span>+1.0 机枪精准</span>
+                </label>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={player.perks.education.smgaccuracy}
+                    onChange={(e) => updateEducation('smgaccuracy', e.target.checked)}
+                    className="rounded"
+                  />
+                  <span>+1.0 冲锋枪精准</span>
+                </label>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={player.perks.education.pistolaccuracy}
+                    onChange={(e) => updateEducation('pistolaccuracy', e.target.checked)}
+                    className="rounded"
+                  />
+                  <span>+1.0 手枪精准</span>
+                </label>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={player.perks.education.rifleaccuracy}
+                    onChange={(e) => updateEducation('rifleaccuracy', e.target.checked)}
+                    className="rounded"
+                  />
+                  <span>+1.0 步枪精准</span>
+                </label>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={player.perks.education.heavyartilleryaccuracy}
+                    onChange={(e) => updateEducation('heavyartilleryaccuracy', e.target.checked)}
+                    className="rounded"
+                  />
+                  <span>+1.0 重型火炮精准</span>
+                </label>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={player.perks.education.shotgunaccuracy}
+                    onChange={(e) => updateEducation('shotgunaccuracy', e.target.checked)}
+                    className="rounded"
+                  />
+                  <span>+1.0 霰弹枪精准</span>
+                </label>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={player.perks.education.temporaryaccuracy}
+                    onChange={(e) => updateEducation('temporaryaccuracy', e.target.checked)}
+                    className="rounded"
+                  />
+                  <span>+1.0 临时武器精准</span>
+                </label>
               </div>
             </div>
 
@@ -671,7 +740,7 @@ export default function PlayerConfig({ player, onPlayerChange, playerName, isAtt
 
             {/* 其他技能 */}
             <div>
-              <h5 className="text-sm font-semibold text-gray-700 mb-2">其他技能</h5>
+              <h5 className="text-sm font-semibold text-gray-700 mb-2">荣誉技能</h5>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs text-gray-600 mb-1">暴击率荣誉: {player.perks.merit.critrate}</label>
@@ -695,6 +764,133 @@ export default function PlayerConfig({ player, onPlayerChange, playerName, isAtt
                     />
                     <span className="text-xs">2% 房产伤害</span>
                   </label>
+                </div>
+              </div>
+              
+              {/* 武器精通技能 */}
+              <div className="mt-4">
+                <h6 className="text-xs font-semibold text-gray-600 mb-2">武器精通</h6>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">主武器精通: {player.perks.merit.primarymastery || 0}</label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="5"
+                      value={player.perks.merit.primarymastery || 0}
+                      onChange={(e) => updateMerit('primarymastery', parseInt(e.target.value))}
+                      className="w-full"
+                      aria-label={`${playerName}主武器精通`}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">副武器精通: {player.perks.merit.secondarymastery || 0}</label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="5"
+                      value={player.perks.merit.secondarymastery || 0}
+                      onChange={(e) => updateMerit('secondarymastery', parseInt(e.target.value))}
+                      className="w-full"
+                      aria-label={`${playerName}副武器精通`}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">近战精通: {player.perks.merit.meleemastery || 0}</label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="5"
+                      value={player.perks.merit.meleemastery || 0}
+                      onChange={(e) => updateMerit('meleemastery', parseInt(e.target.value))}
+                      className="w-full"
+                      aria-label={`${playerName}近战精通`}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">临时武器精通: {player.perks.merit.temporarymastery || 0}</label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="5"
+                      value={player.perks.merit.temporarymastery || 0}
+                      onChange={(e) => updateMerit('temporarymastery', parseInt(e.target.value))}
+                      className="w-full"
+                      aria-label={`${playerName}临时武器精通`}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">手枪精通: {player.perks.merit.pistolmastery || 0}</label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="5"
+                      value={player.perks.merit.pistolmastery || 0}
+                      onChange={(e) => updateMerit('pistolmastery', parseInt(e.target.value))}
+                      className="w-full"
+                      aria-label={`${playerName}手枪精通`}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">步枪精通: {player.perks.merit.riflemastery || 0}</label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="5"
+                      value={player.perks.merit.riflemastery || 0}
+                      onChange={(e) => updateMerit('riflemastery', parseInt(e.target.value))}
+                      className="w-full"
+                      aria-label={`${playerName}步枪精通`}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">霰弹枪精通: {player.perks.merit.shotgunmastery || 0}</label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="5"
+                      value={player.perks.merit.shotgunmastery || 0}
+                      onChange={(e) => updateMerit('shotgunmastery', parseInt(e.target.value))}
+                      className="w-full"
+                      aria-label={`${playerName}霰弹枪精通`}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">冲锋枪精通: {player.perks.merit.smgmastery || 0}</label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="5"
+                      value={player.perks.merit.smgmastery || 0}
+                      onChange={(e) => updateMerit('smgmastery', parseInt(e.target.value))}
+                      className="w-full"
+                      aria-label={`${playerName}冲锋枪精通`}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">机枪精通: {player.perks.merit.machinegunmastery || 0}</label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="5"
+                      value={player.perks.merit.machinegunmastery || 0}
+                      onChange={(e) => updateMerit('machinegunmastery', parseInt(e.target.value))}
+                      className="w-full"
+                      aria-label={`${playerName}机枪精通`}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">重型火炮精通: {player.perks.merit.heavyartillerymastery || 0}</label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="5"
+                      value={player.perks.merit.heavyartillerymastery || 0}
+                      onChange={(e) => updateMerit('heavyartillerymastery', parseInt(e.target.value))}
+                      className="w-full"
+                      aria-label={`${playerName}重型火炮精通`}
+                    />
+                  </div>
                 </div>
               </div>
             </div>

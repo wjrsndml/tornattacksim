@@ -44,23 +44,27 @@ export async function loadGameData() {
   try {
     const baseUrl = getBaseUrl()
     
-    const [weaponsRes, armoursRes, modsRes, companiesRes, armourCoverageRes] = await Promise.all([
+    const [weaponsRes, armoursRes, modsRes, companiesRes] = await Promise.all([
       fetch(`${baseUrl}/weapons.json`),
       fetch(`${baseUrl}/armour.json`),
       fetch(`${baseUrl}/mods.json`),
-      fetch(`${baseUrl}/companies.json`),
-      fetch(`${baseUrl}/armourCoverage.json`)
+      fetch(`${baseUrl}/companies.json`)
     ])
 
-    const [weapons, armours, mods, companies, armourCoverage] = await Promise.all([
-      weaponsRes.json() as Promise<WeaponDataSet>,
+    const [weaponsData, armours, mods, companies] = await Promise.all([
+      weaponsRes.json(),
       armoursRes.json() as Promise<ArmourDataSet>,
       modsRes.json() as Promise<ModDataSet>,
-      companiesRes.json() as Promise<CompanyDataSet>,
-      armourCoverageRes.json() as Promise<ArmourCoverageData>
+      companiesRes.json() as Promise<CompanyDataSet>
     ])
 
-    cachedData = { weapons, armours, mods, companies, armourCoverage }
+    // 从weapons数据中提取tempBlock作为护甲覆盖数据
+    const armourCoverage = weaponsData.tempBlock || {}
+    
+    // 提取武器数据（排除tempBlock）
+    const { tempBlock, ...weapons } = weaponsData
+    
+    cachedData = { weapons: weapons as WeaponDataSet, armours, mods, companies, armourCoverage }
     return cachedData
   } catch (error) {
     console.error('Failed to load game data:', error)
@@ -124,15 +128,14 @@ export function getWeaponById(weaponType: 'primary' | 'secondary' | 'melee' | 't
 }
 
 /**
- * 获取指定ID的护甲数据
+ * 根据ID获取护甲数据
  */
-export function getArmourById(armourType: 'head' | 'body' | 'hands' | 'legs' | 'feet', armourId: string): ArmourData | null {
-  if (!cachedData.armours) return null
+export function getArmourById(armourType: 'head' | 'body' | 'hands' | 'legs' | 'feet', id: string): ArmourData | null {
+  if (!cachedData.armours || !cachedData.armours[armourType] || !cachedData.armours[armourType][id]) {
+    return null
+  }
   
-  const realArmour = cachedData.armours[armourType][armourId]
-  if (!realArmour) return null
-  
-  return convertRealArmourData(realArmour)
+  return convertRealArmourData(cachedData.armours[armourType][id])
 }
 
 /**
@@ -206,19 +209,15 @@ export function getWeaponList(weaponType: 'primary' | 'secondary' | 'melee' | 't
 }
 
 /**
- * 获取所有护甲列表（用于UI选择）
+ * 获取护甲列表
  */
 export function getArmourList(armourType: 'head' | 'body' | 'hands' | 'legs' | 'feet'): Array<{id: string, armour: ArmourData}> {
-  if (!cachedData.armours) return []
+  if (!cachedData.armours || !cachedData.armours[armourType]) return []
   
-  const armours = cachedData.armours[armourType]
-  return Object.entries(armours)
-    .filter(([id, armour]) => armour.type !== "") // 过滤掉空名称的护甲
-    .map(([id, armour]) => ({
-      id,
-      armour: convertRealArmourData(armour)
-    }))
-    .sort((a, b) => a.armour.type!.localeCompare(b.armour.type!))
+  return Object.entries(cachedData.armours[armourType]).map(([id, realArmour]) => ({
+    id,
+    armour: convertRealArmourData(realArmour)
+  }))
 }
 
 /**
@@ -244,4 +243,37 @@ export function getModData(modName: string) {
 export function getModList(): string[] {
   if (!cachedData.mods) return []
   return Object.keys(cachedData.mods)
+} 
+
+/**
+ * 获取护甲覆盖数据
+ */
+export function getArmourCoverage(): ArmourCoverageData {
+  return cachedData.armourCoverage || {}
+}
+
+/**
+ * 检查护甲是否能阻挡特定临时武器
+ */
+export function canArmourBlock(armourSet: string, temporaryWeapon: string): boolean {
+  const coverage = getArmourCoverage()
+  return coverage[temporaryWeapon]?.includes(armourSet) || false
+}
+
+/**
+ * 获取所有护甲套装列表（用于护甲覆盖显示）
+ */
+export function getAllArmourSets(): string[] {
+  if (!cachedData.armours) return []
+  
+  const sets = new Set<string>()
+  
+  // 收集所有护甲套装名称
+  Object.values(cachedData.armours).forEach(armourTypeData => {
+    Object.values(armourTypeData).forEach((armour: RealArmourData) => {
+      sets.add(armour.set)
+    })
+  })
+  
+  return Array.from(sets).sort()
 } 

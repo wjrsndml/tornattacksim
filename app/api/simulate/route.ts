@@ -14,7 +14,8 @@ function convertToFightWeapon(weapon: any): WeaponData {
     rateoffire: weapon.rateoffire || [1, 1],
     experience: weapon.experience || 0,
     bonus: weapon.bonus,
-    mods: weapon.mods || []
+    mods: weapon.mods || [],
+    ammo: weapon.ammo // 确保弹药类型被传递
   }
 }
 
