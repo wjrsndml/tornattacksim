@@ -321,12 +321,13 @@ export function damageMitigation(defense: number, strength: number): number {
 }
 
 /**
- * 计算武器伤害倍数
+ * 计算武器伤害倍数 - 按照原版复杂公式实现
  */
 export function weaponDamageMulti(displayDamage: number, perks: any): number {
-  let multi = displayDamage / 100
-  // 这里需要根据技能计算额外的伤害加成
-  return multi
+  let baseDamage = ((Math.exp((displayDamage + 0.005) / 19 + 2) - 13) + (Math.exp((displayDamage - 0.005) / 19 + 2) - 13)) / 2
+  baseDamage = baseDamage * (1 + perks / 100)
+  let damageMulti = 1 + Math.log(Math.round(baseDamage))
+  return damageMulti
 }
 
 /**
@@ -635,18 +636,35 @@ export function armourMitigation(bodyPart: string, armour: ArmourSet): number {
 }
 
 /**
- * 随机变动函数
+ * 伤害波动函数 - 使用Box-Muller算法生成正态分布
+ * 严格按照原版实现，范围限制在0.95-1.05
  */
 export function variance(): number {
-  return Math.random() * 0.4 + 0.8
+  let u = 0, v = 0
+  while(u === 0) u = Math.random() // Converting [0,1) to (0,1)
+  while(v === 0) v = Math.random()
+  let num = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v)
+
+  // num = num / 10.0 + 0.5; // Translate to 0 -> 1
+  num = (20 * (num / 10.0 + 0.5) - 10 + 100) / 100 // Translate to 0.95 -> 1.05?
+  if (num > 1.05 || num < 0.95) return variance() // resample
+  return num
 }
 
 /**
- * 特殊取整函数
+ * 特殊取整函数 - 按照原版实现
  */
 export function sRounding(x: number): number {
-  if (x < 1) return 0
-  return Math.floor(x)
+  let a = Math.floor(x)
+  let b = a + 1
+
+  let rng = Math.round(Math.random() * 1000 * (b - a) + a) / 1000
+  if (rng <= x) {
+    return a
+  } else if (rng > x) {
+    return b
+  }
+  return a // fallback, should not reach here
 }
 
 /**
@@ -1532,9 +1550,157 @@ function applyPMT(
     }
   }
 
-  // 计算最终属�?
+  // 武器类别掌握技能处理 - x玩家
+  if (x_wep.category === "Clubbing") {
+    x_acc += 0.2 * (x_merit.clubbingmastery || 0)
+    x_dmg += (x_merit.clubbingmastery || 0)
+  } else if (x_wep.category === "Heavy Artillery") {
+    x_acc += 0.2 * (x_merit.heavyartillerymastery || 0)
+    x_dmg += (x_merit.heavyartillerymastery || 0)
+    if (x_edu.heavyartilleryaccuracy) {
+      x_acc += 1
+    }
+  } else if (x_wep.category === "Machine Gun") {
+    x_acc += 0.2 * (x_merit.machinegunmastery || 0)
+    x_dmg += (x_merit.machinegunmastery || 0)
+    if (x_edu.machinegunaccuracy) {
+      x_acc += 1
+    }
+  } else if (x_wep.category === "Mechanical") {
+    x_acc += 0.2 * (x_merit.mechanicalmastery || 0)
+    x_dmg += (x_merit.mechanicalmastery || 0)
+  } else if (x_wep.category === "Piercing") {
+    x_acc += 0.2 * (x_merit.piercingmastery || 0)
+    x_dmg += (x_merit.piercingmastery || 0)
+  } else if (x_wep.category === "Pistol") {
+    x_acc += 0.2 * (x_merit.pistolmastery || 0)
+    x_dmg += (x_merit.pistolmastery || 0)
+    if (x_edu.pistolaccuracy) {
+      x_acc += 1
+    }
+  } else if (x_wep.category === "Rifle") {
+    x_acc += 0.2 * (x_merit.riflemastery || 0)
+    x_dmg += (x_merit.riflemastery || 0)
+    if (x_edu.rifleaccuracy) {
+      x_acc += 1
+    }
+  } else if (x_wep.category === "Shotgun") {
+    x_acc += 0.2 * (x_merit.shotgunmastery || 0)
+    x_dmg += (x_merit.shotgunmastery || 0)
+    if (x_edu.shotgunaccuracy) {
+      x_acc += 1
+    }
+  } else if (x_wep.category === "Slashing") {
+    x_acc += 0.2 * (x_merit.slashingmastery || 0)
+    x_dmg += (x_merit.slashingmastery || 0)
+  } else if (x_wep.category === "SMG") {
+    x_acc += 0.2 * (x_merit.smgmastery || 0)
+    x_dmg += (x_merit.smgmastery || 0)
+    if (x_edu.smgaccuracy) {
+      x_acc += 1
+    }
+  }
+
+  // 武器类别掌握技能处理 - y玩家
+  if (y_wep.category === "Clubbing") {
+    y_acc += 0.2 * (y_merit.clubbingmastery || 0)
+    y_dmg += (y_merit.clubbingmastery || 0)
+  } else if (y_wep.category === "Heavy Artillery") {
+    y_acc += 0.2 * (y_merit.heavyartillerymastery || 0)
+    y_dmg += (y_merit.heavyartillerymastery || 0)
+    if (y_edu.heavyartilleryaccuracy) {
+      y_acc += 1
+    }
+  } else if (y_wep.category === "Machine Gun") {
+    y_acc += 0.2 * (y_merit.machinegunmastery || 0)
+    y_dmg += (y_merit.machinegunmastery || 0)
+    if (y_edu.machinegunaccuracy) {
+      y_acc += 1
+    }
+  } else if (y_wep.category === "Mechanical") {
+    y_acc += 0.2 * (y_merit.mechanicalmastery || 0)
+    y_dmg += (y_merit.mechanicalmastery || 0)
+  } else if (y_wep.category === "Piercing") {
+    y_acc += 0.2 * (y_merit.piercingmastery || 0)
+    y_dmg += (y_merit.piercingmastery || 0)
+  } else if (y_wep.category === "Pistol") {
+    y_acc += 0.2 * (y_merit.pistolmastery || 0)
+    y_dmg += (y_merit.pistolmastery || 0)
+    if (y_edu.pistolaccuracy) {
+      y_acc += 1
+    }
+  } else if (y_wep.category === "Rifle") {
+    y_acc += 0.2 * (y_merit.riflemastery || 0)
+    y_dmg += (y_merit.riflemastery || 0)
+    if (y_edu.rifleaccuracy) {
+      y_acc += 1
+    }
+  } else if (y_wep.category === "Shotgun") {
+    y_acc += 0.2 * (y_merit.shotgunmastery || 0)
+    y_dmg += (y_merit.shotgunmastery || 0)
+    if (y_edu.shotgunaccuracy) {
+      y_acc += 1
+    }
+  } else if (y_wep.category === "Slashing") {
+    y_acc += 0.2 * (y_merit.slashingmastery || 0)
+    y_dmg += (y_merit.slashingmastery || 0)
+  } else if (y_wep.category === "SMG") {
+    y_acc += 0.2 * (y_merit.smgmastery || 0)
+    y_dmg += (y_merit.smgmastery || 0)
+    if (y_edu.smgaccuracy) {
+      y_acc += 1
+    }
+  }
+
+  // 计算最终属性
   let x_passives = { ...x.passives }
   let y_passives = { ...y.passives }
+
+  // 武器改装效果处理 - x玩家
+  if (xWS[xCW as keyof WeaponState].ammoleft !== 0 || !x_set[xCW].reload) {
+    if (xCW === "primary" || xCW === "secondary") {
+      const mods = x_wep.mods || []
+      for (const modName of mods) {
+        if (modName && modName !== "n/a") {
+          const modEffects = getModEffects(modName)
+          if (modEffects) {
+            x_acc += modEffects.acc_bonus || 0
+            y_acc += modEffects.enemy_acc_bonus || 0
+            x_crit += modEffects.crit_chance || 0
+            x_dmg += modEffects.dmg_bonus || 0
+            x_passives.dexterity += modEffects.dex_passive || 0
+            // 处理第一回合特殊效果
+            if (modEffects.turn1 && turn === 1) {
+              x_acc += modEffects.turn1.acc_bonus || 0
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // 武器改装效果处理 - y玩家
+  if (yWS[yCW as keyof WeaponState].ammoleft !== 0 || !y_set[yCW].reload) {
+    if (yCW === "primary" || yCW === "secondary") {
+      const mods = y_wep.mods || []
+      for (const modName of mods) {
+        if (modName && modName !== "n/a") {
+          const modEffects = getModEffects(modName)
+          if (modEffects) {
+            y_acc += modEffects.acc_bonus || 0
+            x_acc += modEffects.enemy_acc_bonus || 0
+            y_crit += modEffects.crit_chance || 0
+            y_dmg += modEffects.dmg_bonus || 0
+            y_passives.dexterity += modEffects.dex_passive || 0
+            // 处理第一回合特殊效果
+            if (modEffects.turn1 && turn === 1) {
+              y_acc += modEffects.turn1.acc_bonus || 0
+            }
+          }
+        }
+      }
+    }
+  }
 
   // 临时效果
   for (let i = 0; i < x_temps.length; i++) {
@@ -1561,7 +1727,7 @@ function applyPMT(
     }
   }
 
-  // 同样处理y玩家的临时效�?
+  // 同样处理y玩家的临时效?
   for (let i = 0; i < y_temps.length; i++) {
     if (y_temps[i][0] === "epi") {
       y_passives.strength += 500
@@ -1586,7 +1752,7 @@ function applyPMT(
     }
   }
 
-  // 状态效果减�?
+  // 状态效果减?
   x_passives.strength -= (10 * xSE[1][0] + 25 * xSE[1][2])
   x_passives.speed -= (10 * xSE[1][0] + 50 * xSE[1][1] + 25 * xSE[1][3])
   x_passives.defense -= (10 * xSE[1][0] + 25 * xSE[1][4])
@@ -1597,7 +1763,15 @@ function applyPMT(
   y_passives.defense -= (10 * ySE[1][0] + 25 * ySE[1][4])
   y_passives.dexterity -= (10 * ySE[1][0] + 50 * ySE[1][1] + 25 * ySE[1][5])
 
-  // 最终属性计�?
+  // Adult Novelties公司技能处理
+  if (x_comp.name === "Adult Novelties" && x_comp.star >= 7) {
+    y_passives.speed -= 25
+  }
+  if (y_comp.name === "Adult Novelties" && y_comp.star >= 7) {
+    x_passives.speed -= 25
+  }
+
+  // 最终属性计?
   let xSTR = x.battleStats.strength * (1 + x_passives.strength / 100)
   let xSPD = x.battleStats.speed * (1 + x_passives.speed / 100)
   let xDEF = x.battleStats.defense * (1 + x_passives.defense / 100)
@@ -1608,7 +1782,7 @@ function applyPMT(
   let yDEF = y.battleStats.defense * (1 + y_passives.defense / 100)
   let yDEX = y.battleStats.dexterity * (1 + y_passives.dexterity / 100)
 
-  // 处理致盲等效�?
+  // 处理致盲等效?
   let sM = 1, dM = 1
   let flash = 0, sand = 0, smoke = 0, conc = 0, pepper = 0, tear = 0
 
@@ -1662,7 +1836,7 @@ function applyPMT(
   xSPD *= sM
   xDEX *= dM
 
-  // 重置并处理y玩家的致盲效�?
+  // 重置并处理y玩家的致盲效?
   sM = 1; dM = 1
   flash = 0; sand = 0; smoke = 0; conc = 0; pepper = 0; tear = 0
 
