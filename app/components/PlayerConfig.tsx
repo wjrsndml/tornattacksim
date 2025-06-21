@@ -524,24 +524,28 @@ export default function PlayerConfig({ player, onPlayerChange, playerName, isAtt
                   selectedWeapon={player.weapons.primary}
                   onWeaponChange={(weapon) => updateWeapon('primary', weapon)}
                   label="主武器"
+                  playerId={playerName}
                 />
                 <WeaponSelector
                   weaponType="secondary"
                   selectedWeapon={player.weapons.secondary}
                   onWeaponChange={(weapon) => updateWeapon('secondary', weapon)}
                   label="副武器"
+                  playerId={playerName}
                 />
                 <WeaponSelector
                   weaponType="melee"
                   selectedWeapon={player.weapons.melee}
                   onWeaponChange={(weapon) => updateWeapon('melee', weapon)}
                   label="近战武器"
+                  playerId={playerName}
                 />
                 <WeaponSelector
                   weaponType="temporary"
                   selectedWeapon={player.weapons.temporary}
                   onWeaponChange={(weapon) => updateWeapon('temporary', weapon)}
                   label="临时武器"
+                  playerId={playerName}
                 />
               </div>
             </div>

@@ -2,17 +2,19 @@
 
 import React, { useState, useEffect } from 'react'
 import { getWeaponList, loadGameData } from '../lib/dataLoader'
-import { WeaponData } from '../lib/fightSimulatorTypes'
+import { WeaponData, SelectedWeaponBonus } from '../lib/fightSimulatorTypes'
 import ModSelector from './ModSelector'
+import WeaponBonusSelector from './WeaponBonusSelector'
 
 interface WeaponSelectorProps {
   weaponType: 'primary' | 'secondary' | 'melee' | 'temporary'
   selectedWeapon: WeaponData
   onWeaponChange: (weapon: WeaponData) => void
   label: string
+  playerId: string
 }
 
-export default function WeaponSelector({ weaponType, selectedWeapon, onWeaponChange, label }: WeaponSelectorProps) {
+export default function WeaponSelector({ weaponType, selectedWeapon, onWeaponChange, label, playerId }: WeaponSelectorProps) {
   const [weapons, setWeapons] = useState<Array<{id: string, weapon: WeaponData}>>([])
   const [loading, setLoading] = useState(true)
   const [isOpen, setIsOpen] = useState(false)
@@ -34,10 +36,11 @@ export default function WeaponSelector({ weaponType, selectedWeapon, onWeaponCha
   }, [weaponType])
 
   const handleWeaponSelect = (weaponData: {id: string, weapon: WeaponData}) => {
-    // 保留现有的改装（如果有的话）
+    // 保留现有的改装和武器特效（如果有的话）
     const updatedWeapon = {
       ...weaponData.weapon,
-      mods: selectedWeapon.mods || []
+      mods: selectedWeapon.mods || [],
+      weaponBonuses: selectedWeapon.weaponBonuses || []
     }
     onWeaponChange(updatedWeapon)
     setIsOpen(false)
@@ -47,6 +50,14 @@ export default function WeaponSelector({ weaponType, selectedWeapon, onWeaponCha
     const updatedWeapon = {
       ...selectedWeapon,
       mods
+    }
+    onWeaponChange(updatedWeapon)
+  }
+
+  const handleWeaponBonusesChange = (bonuses: SelectedWeaponBonus[]) => {
+    const updatedWeapon = {
+      ...selectedWeapon,
+      weaponBonuses: bonuses
     }
     onWeaponChange(updatedWeapon)
   }
@@ -220,6 +231,14 @@ export default function WeaponSelector({ weaponType, selectedWeapon, onWeaponCha
           </select>
         </div>
       )}
+
+      {/* 武器特效选择 */}
+      <WeaponBonusSelector
+        weapon={selectedWeapon}
+        onBonusesChange={handleWeaponBonusesChange}
+        playerId={playerId}
+        weaponType={weaponType}
+      />
     </div>
   )
 } 

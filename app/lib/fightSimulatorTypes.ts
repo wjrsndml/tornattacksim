@@ -28,15 +28,16 @@ export interface WeaponData {
   damage: number
   accuracy: number
   category: string
-  clipsize: number
-  rateoffire: [number, number]
+  clipsize?: number
+  rateoffire?: [number, number]
   experience?: number
   bonus?: {
     name: string
     proc: number
   }
-  mods?: string[] // 武器改装列表
-  ammo?: string // 弹药类型：TR(追踪弹), PI(穿甲弹), HP(空心弹), IN(燃烧弹)
+  ammo?: string
+  mods?: string[]
+  weaponBonuses?: SelectedWeaponBonus[] // 新增：武器特效
 }
 
 // 真实护甲数据接口
@@ -267,4 +268,52 @@ export interface FightData {
   mods: ModDataSet
   companies: CompanyDataSet
   armourCoverage: ArmourCoverageData
+} 
+
+// 武器特效类型
+export interface WeaponBonus {
+  name: string
+  type: 'Buff' | 'De-Buff' | 'DOT' | 'Enemy Debuff' | 'Buff / De-Buff'
+  description: string
+  minValue: number
+  maxValue: number
+  applicableWeapons: WeaponCategory[]
+  unit?: string // 单位，如 '%', 'turns', 'seconds' 等
+}
+
+// 武器类别枚举
+export type WeaponCategory = 'CL' | 'HA' | 'MG' | 'MK' | 'PI' | 'PS' | 'RF' | 'SG' | 'SL' | 'SM'
+
+// 武器类别映射
+export const WEAPON_CATEGORY_MAP: { [key: string]: WeaponCategory } = {
+  'Clubbing': 'CL',
+  'Heavy Artillery': 'HA', 
+  'Machine Gun': 'MG',
+  'Mechanical': 'MK',
+  'Piercing': 'PI',
+  'Pistol': 'PS',
+  'Rifle': 'RF',
+  'Shotgun': 'SG',
+  'Slashing': 'SL',
+  'SMG': 'SM'
+}
+
+// 武器类别名称映射
+export const WEAPON_CATEGORY_NAMES: { [key in WeaponCategory]: string } = {
+  'CL': 'Clubbing',
+  'HA': 'Heavy Artillery',
+  'MG': 'Machine Gun', 
+  'MK': 'Mechanical',
+  'PI': 'Piercing',
+  'PS': 'Pistol',
+  'RF': 'Rifle',
+  'SG': 'Shotgun',
+  'SL': 'Slashing',
+  'SM': 'Submachine Gun'
+}
+
+// 选中的武器特效
+export interface SelectedWeaponBonus {
+  name: string
+  value: number
 } 
