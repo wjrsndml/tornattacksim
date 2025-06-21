@@ -7,17 +7,13 @@ import {
   RealWeaponData,
   WeaponData,
   RealArmourData,
-  ArmourData
+  ArmourData,
+  FightData
 } from './fightSimulatorTypes'
 
-// 缓存加载的数据
-let cachedData: {
-  weapons?: WeaponDataSet
-  armours?: ArmourDataSet
-  mods?: ModDataSet
-  companies?: CompanyDataSet
-  armourCoverage?: ArmourCoverageData
-} = {}
+// 全局数据缓存
+let gameData: FightData | null = null
+let tempBlockData: { [weaponName: string]: string[] } = {}
 
 /**
  * 获取基础URL
@@ -34,40 +30,48 @@ function getBaseUrl() {
 }
 
 /**
- * 加载所有游戏数据
+ * 加载游戏数据
  */
-export async function loadGameData() {
-  if (Object.keys(cachedData).length > 0) {
-    return cachedData
+export async function loadGameData(): Promise<FightData> {
+  if (gameData) {
+    return gameData
   }
 
   try {
     const baseUrl = getBaseUrl()
     
-    const [weaponsRes, armoursRes, modsRes, companiesRes, armourCoverageRes] = await Promise.all([
+    const [weaponsResponse, armoursResponse, modsResponse, armourCoverageResponse, companiesResponse] = await Promise.all([
       fetch(`${baseUrl}/weapons.json`),
       fetch(`${baseUrl}/armour.json`),
       fetch(`${baseUrl}/mods.json`),
-      fetch(`${baseUrl}/companies.json`),
-      fetch(`${baseUrl}/armourCoverage.json`)
+      fetch(`${baseUrl}/armourCoverage.json`),
+      fetch(`${baseUrl}/companies.json`)
     ])
 
-    const [weaponsData, armours, mods, companies, armourCoverage] = await Promise.all([
-      weaponsRes.json(),
-      armoursRes.json() as Promise<ArmourDataSet>,
-      modsRes.json() as Promise<ModDataSet>,
-      companiesRes.json() as Promise<CompanyDataSet>,
-      armourCoverageRes.json() as Promise<ArmourCoverageData>
+    const [weaponsData, armoursData, modsData, armourCoverageData, companiesData] = await Promise.all([
+      weaponsResponse.json(),
+      armoursResponse.json(),
+      modsResponse.json(),
+      armourCoverageResponse.json(),
+      companiesResponse.json()
     ])
 
-    // 提取武器数据（排除tempBlock如果存在）
-    const { tempBlock, ...weapons } = weaponsData
-    
-    cachedData = { weapons: weapons as WeaponDataSet, armours, mods, companies, armourCoverage }
-    return cachedData
+    // 提取临时武器阻挡数据
+    tempBlockData = weaponsData.tempBlock || {}
+
+    gameData = {
+      weapons: weaponsData,
+      armours: armoursData,
+      mods: modsData,
+      armourCoverage: armourCoverageData,
+      companies: companiesData,
+      players: {} // 初始化为空对象，将在运行时填充
+    }
+
+    return gameData
   } catch (error) {
     console.error('Failed to load game data:', error)
-    throw new Error('Failed to load game data')
+    throw error
   }
 }
 
@@ -118,9 +122,9 @@ export function convertRealArmourData(realArmour: RealArmourData): ArmourData {
  * 获取指定ID的武器数据
  */
 export function getWeaponById(weaponType: 'primary' | 'secondary' | 'melee' | 'temporary', weaponId: string): WeaponData | null {
-  if (!cachedData.weapons) return null
+  if (!gameData?.weapons) return null
   
-  const realWeapon = cachedData.weapons[weaponType][weaponId]
+  const realWeapon = gameData.weapons[weaponType][weaponId]
   if (!realWeapon) return null
   
   return convertRealWeaponData(realWeapon)
@@ -130,20 +134,20 @@ export function getWeaponById(weaponType: 'primary' | 'secondary' | 'melee' | 't
  * 根据ID获取护甲数据
  */
 export function getArmourById(armourType: 'head' | 'body' | 'hands' | 'legs' | 'feet', id: string): ArmourData | null {
-  if (!cachedData.armours || !cachedData.armours[armourType] || !cachedData.armours[armourType][id]) {
+  if (!gameData?.armours || !gameData.armours[armourType] || !gameData.armours[armourType][id]) {
     return null
   }
   
-  return convertRealArmourData(cachedData.armours[armourType][id])
+  return convertRealArmourData(gameData.armours[armourType][id])
 }
 
 /**
  * 获取默认武器数据
  */
 export function getDefaultWeapon(weaponType: 'primary' | 'secondary' | 'melee' | 'temporary'): WeaponData {
-  if (cachedData.weapons) {
+  if (gameData?.weapons) {
     // 尝试获取ID为"0"的默认武器
-    const defaultWeapon = cachedData.weapons[weaponType]["0"]
+    const defaultWeapon = gameData.weapons[weaponType]["0"]
     if (defaultWeapon) {
       return convertRealWeaponData(defaultWeapon)
     }
@@ -167,9 +171,9 @@ export function getDefaultWeapon(weaponType: 'primary' | 'secondary' | 'melee' |
  * 获取默认护甲数据
  */
 export function getDefaultArmour(armourType: 'head' | 'body' | 'hands' | 'legs' | 'feet'): ArmourData {
-  if (cachedData.armours) {
+  if (gameData?.armours) {
     // 查找标记为default的护甲
-    const armourData = cachedData.armours[armourType]
+    const armourData = gameData.armours[armourType]
     for (const id in armourData) {
       if (armourData[id].default) {
         return convertRealArmourData(armourData[id])
@@ -195,9 +199,9 @@ export function getDefaultArmour(armourType: 'head' | 'body' | 'hands' | 'legs' 
  * 获取所有武器列表（用于UI选择）
  */
 export function getWeaponList(weaponType: 'primary' | 'secondary' | 'melee' | 'temporary'): Array<{id: string, weapon: WeaponData}> {
-  if (!cachedData.weapons) return []
+  if (!gameData?.weapons) return []
   
-  const weapons = cachedData.weapons[weaponType]
+  const weapons = gameData.weapons[weaponType]
   return Object.entries(weapons)
     .filter(([id, weapon]) => weapon.name !== "") // 过滤掉空名称的武器
     .map(([id, weapon]) => ({
@@ -211,9 +215,9 @@ export function getWeaponList(weaponType: 'primary' | 'secondary' | 'melee' | 't
  * 获取护甲列表
  */
 export function getArmourList(armourType: 'head' | 'body' | 'hands' | 'legs' | 'feet'): Array<{id: string, armour: ArmourData}> {
-  if (!cachedData.armours || !cachedData.armours[armourType]) return []
+  if (!gameData?.armours || !gameData.armours[armourType]) return []
   
-  return Object.entries(cachedData.armours[armourType]).map(([id, realArmour]) => ({
+  return Object.entries(gameData.armours[armourType]).map(([id, realArmour]) => ({
     id,
     armour: convertRealArmourData(realArmour)
   }))
@@ -223,52 +227,52 @@ export function getArmourList(armourType: 'head' | 'body' | 'hands' | 'legs' | '
  * 获取公司列表
  */
 export function getCompanyList(): string[] {
-  if (!cachedData.companies) return []
+  if (!gameData?.companies) return []
   
-  return Object.keys(cachedData.companies)
+  return Object.keys(gameData.companies)
 }
 
 /**
  * 获取改装数据
  */
 export function getModData(modName: string) {
-  if (!cachedData.mods) return null
-  return cachedData.mods[modName]
+  if (!gameData?.mods) return null
+  return gameData.mods[modName]
 }
 
 /**
  * 获取所有改装列表
  */
 export function getModList(): string[] {
-  if (!cachedData.mods) return []
-  return Object.keys(cachedData.mods)
+  if (!gameData?.mods) return []
+  return Object.keys(gameData.mods)
 } 
 
 /**
  * 获取护甲覆盖数据
  */
-export function getArmourCoverage(): ArmourCoverageData {
-  return cachedData.armourCoverage || {}
+export function getArmourCoverage(): any {
+  return gameData?.armourCoverage || {}
 }
 
 /**
- * 检查护甲是否能阻挡特定临时武器
+ * 检查护甲是否能阻挡临时武器
  */
-export function canArmourBlock(armourSet: string, temporaryWeapon: string): boolean {
-  const coverage = getArmourCoverage()
-  return coverage[temporaryWeapon]?.includes(armourSet) || false
+export function canArmourBlock(weaponName: string, armourType: string): boolean {
+  const blockingArmours = tempBlockData[weaponName]
+  return blockingArmours ? blockingArmours.includes(armourType) : false
 }
 
 /**
  * 获取所有护甲套装列表（用于护甲覆盖显示）
  */
 export function getAllArmourSets(): string[] {
-  if (!cachedData.armours) return []
+  if (!gameData?.armours) return []
   
   const sets = new Set<string>()
   
   // 收集所有护甲套装名称
-  Object.values(cachedData.armours).forEach(armourTypeData => {
+  Object.values(gameData.armours).forEach(armourTypeData => {
     Object.values(armourTypeData).forEach((armour: RealArmourData) => {
       sets.add(armour.set)
     })

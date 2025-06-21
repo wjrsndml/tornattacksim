@@ -13,7 +13,7 @@ import {
   ModData,
   ArmourSet
 } from './fightSimulatorTypes'
-import { getArmourCoverage } from './dataLoader'
+import { getArmourCoverage, canArmourBlock } from './dataLoader'
 
 // 常量定义
 export const PARTIAL_FREQUENCY = 10000
@@ -22,7 +22,6 @@ export const MATH_LOG_32_UNDER_50 = 50 / Math.log(32)
 
 // 全局变量
 let players: { [key: string]: FightPlayer } = {}
-let a: any, weapons: any, armours: any, m: any, t: any, companies: any
 let h: FightPlayer, v: FightPlayer
 
 // 改装数据缓存
@@ -1272,28 +1271,28 @@ function action(
           x_temps.unshift(["tyro", 25])
         }
       } else if ((xW[xCW] as any).name === "Concussion Grenade") {
-        if ((t as any)["Concussion Grenade"].includes(yA.head.type)) {
+        if (canArmourBlock("Concussion Grenade", yA.head.type)) {
           log.push(x.name + " used a " + (xW[xCW] as any).name + " but it was blocked!")
         } else {
           log.push(x.name + " used a " + (xW[xCW] as any).name)
           y_temps.push(["conc", 25])
         }
       } else if ((xW[xCW] as any).name === "Smoke Grenade") {
-        if ((t as any)["Smoke Grenade"].includes(yA.head.type)) {
+        if (canArmourBlock("Smoke Grenade", yA.head.type)) {
           log.push(x.name + " used a " + (xW[xCW] as any).name + " but it was blocked!")
         } else {
           log.push(x.name + " used a " + (xW[xCW] as any).name)
           y_temps.push(["smoke", 25])
         }
       } else if ((xW[xCW] as any).name === "Tear Gas") {
-        if ((t as any)["Tear Gas"].includes(yA.head.type)) {
+        if (canArmourBlock("Tear Gas", yA.head.type)) {
           log.push(x.name + " used a " + (xW[xCW] as any).name + " but it was blocked!")
         } else {
           log.push(x.name + " used a " + (xW[xCW] as any).name)
           y_temps.push(["tear", 25])
         }
       } else if ((xW[xCW] as any).name === "Flash Grenade") {
-        if ((t as any)["Flash Grenade"].includes(yA.head.type)) {
+        if (canArmourBlock("Flash Grenade", yA.head.type)) {
           log.push(x.name + " used a " + (xW[xCW] as any).name + " but it was blocked!")
         } else {
           log.push(x.name + " used a " + (xW[xCW] as any).name)
@@ -1301,7 +1300,7 @@ function action(
           y_temps.push(["flash", rng])
         }
       } else if ((xW[xCW] as any).name === "Pepper Spray") {
-        if ((t as any)["Pepper Spray"].includes(yA.head.type)) {
+        if (canArmourBlock("Pepper Spray", yA.head.type)) {
           log.push(x.name + " used a " + (xW[xCW] as any).name + " but it was blocked!")
         } else {
           log.push(x.name + " used a " + (xW[xCW] as any).name)
@@ -1309,7 +1308,7 @@ function action(
           y_temps.push(["pepper", rng])
         }
       } else if ((xW[xCW] as any).name === "Sand") {
-        if ((t as any)["Sand"].includes(yA.head.type)) {
+        if (canArmourBlock("Sand", yA.head.type)) {
           log.push(x.name + " used a " + (xW[xCW] as any).name + " but it was blocked!")
         } else {
           log.push(x.name + " used a " + (xW[xCW] as any).name)
