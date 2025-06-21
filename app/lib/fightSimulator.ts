@@ -10,8 +10,10 @@ import {
   FightData,
   WeaponData,
   ArmourData,
-  ModData
+  ModData,
+  ArmourSet
 } from './fightSimulatorTypes'
+import { getArmourCoverage } from './dataLoader'
 
 // 常量定义
 export const PARTIAL_FREQUENCY = 10000
@@ -377,27 +379,239 @@ export function hitOrMiss(hitChance: number): boolean {
  * 选择攻击部位
  */
 export function selectBodyPart(x: FightPlayer, critChance: number): [string, number] {
-  const bodyParts = ["head", "body", "hands", "legs", "feet"]
-  const critMultipliers = [1.75, 1, 0.75, 0.75, 0.5]
+  let bodyPart: [string, number] = ["chest", 1/1.75]
   
-  // 简化版本：随机选择部位，暴击时更倾向于头部
-  if (Math.random() < critChance / 100) {
-    const idx = Math.random() < 0.3 ? 0 : Math.floor(Math.random() * bodyParts.length)
-    return [bodyParts[idx], critMultipliers[idx]]
+  const rng = Math.floor(Math.random() * 1000 + 1)
+  if (rng >= 1 && rng <= 1 + critChance * 10) {
+    // 成功暴击
+    const rng2 = Math.floor(Math.random() * 100 + 1)
+    if (rng2 >= 1 && rng2 <= 11) {
+      bodyPart = ["heart", 1]
+    } else if (rng2 > 11 && rng2 <= 21) {
+      bodyPart = ["throat", 1]
+      // 教育技能：颈部伤害加成
+      if (x.perks.education.neckdamage) {
+        bodyPart[1] *= 1.1
+      }
+    } else if (rng2 > 21 && rng2 <= 101) {
+      bodyPart = ["head", 1]
+    }
+  } else {
+    // 非暴击
+    const rng2 = Math.floor(Math.random() * 100 + 1)
+    if (rng2 >= 1 && rng2 <= 6) {
+      bodyPart = ["groin", 1/1.75]
+    } else if (rng2 > 6 && rng2 <= 11) {
+      bodyPart = ["left arm", 1/3.5]
+    } else if (rng2 > 11 && rng2 <= 16) {
+      bodyPart = ["right arm", 1/3.5]
+    } else if (rng2 > 16 && rng2 <= 21) {
+      bodyPart = ["left hand", 1/5]
+    } else if (rng2 > 21 && rng2 <= 26) {
+      bodyPart = ["right hand", 1/5]
+    } else if (rng2 > 26 && rng2 <= 31) {
+      bodyPart = ["left foot", 1/5]
+    } else if (rng2 > 31 && rng2 <= 36) {
+      bodyPart = ["right foot", 1/5]
+    } else if (rng2 > 36 && rng2 <= 46) {
+      bodyPart = ["left leg", 1/3.5]
+    } else if (rng2 > 46 && rng2 <= 56) {
+      bodyPart = ["right leg", 1/3.5]
+    } else if (rng2 > 56 && rng2 <= 76) {
+      bodyPart = ["stomach", 1/1.75]
+    } else if (rng2 > 76 && rng2 <= 101) {
+      bodyPart = ["chest", 1/1.75]
+    }
   }
-  
-  const idx = Math.floor(Math.random() * bodyParts.length)
-  return [bodyParts[idx], critMultipliers[idx]]
+
+  return bodyPart
 }
 
 /**
- * 计算护甲减伤
+ * 护甲减伤计算
  */
-export function armourMitigation(bodyPart: string, armour: any): number {
-  if (!armour[bodyPart]) return 0
+export function armourMitigation(bodyPart: string, armour: ArmourSet): number {
+  let mitigation = 0
+  let coverage: [number, number][] = []
+  let total = 0
+  let count = 0
+  const rng = Math.floor(Math.random() * 10000 + 1)
+
+  // 获取护甲覆盖数据
+  const armourCoverage = getArmourCoverage()
   
-  const armourValue = armour[bodyPart].armour || 0
-  return armourValue
+  // 遍历所有护甲槽位
+  for (const slot in armour) {
+    const armourPiece = armour[slot as keyof ArmourSet]
+    if (armourPiece && armourPiece.type !== "" && armourCoverage[bodyPart] && armourCoverage[bodyPart][armourPiece.type]) {
+      const coveragePercent = armourCoverage[bodyPart][armourPiece.type]
+      coverage.push([armourPiece.armour, coveragePercent])
+      total += coveragePercent
+      count += 1
+    }
+  }
+
+  if (coverage.length === 0) {
+    return 0
+  }
+
+  // 创建副本用于排序
+  const dummy = [...coverage]
+
+  if (total >= 100) {
+    // 总覆盖率 >= 100%，使用复杂的优先级计算
+    
+    if (count === 4) {
+      // 4件护甲
+      let high = 0, second = 0, third = 0, low = 0
+      
+      // 找出最高和最低护甲值的索引
+      for (let i = 0; i < dummy.length; i++) {
+        if (dummy[i][0] > coverage[high][0]) {
+          high = i
+        }
+        if (dummy[i][0] < coverage[low][0]) {
+          low = i
+        }
+      }
+
+      // 在剩余的护甲中找出第二高和第三高
+      for (let i = 0; i < dummy.length; i++) {
+        if (i !== high && i !== low) {
+          if (dummy[i][0] > coverage[second][0]) {
+            third = second
+            second = i
+          } else if (dummy[i][0] > coverage[third][0]) {
+            third = i
+          }
+        }
+      }
+
+      if (coverage[high][1] >= 100) {
+        mitigation = coverage[high][0]
+      } else if (coverage[high][1] + coverage[second][1] >= 100) {
+        if (rng > 1 && rng <= coverage[high][1] * 100) {
+          mitigation = coverage[high][0]
+        } else if (rng > coverage[high][1] * 100 && rng <= (coverage[high][1] + coverage[second][1]) * 100) {
+          mitigation = coverage[second][0]
+        }
+      } else if (coverage[high][1] + coverage[second][1] + coverage[third][1] >= 100) {
+        if (rng > 1 && rng <= coverage[high][1] * 100) {
+          mitigation = coverage[high][0]
+        } else if (rng > coverage[high][1] * 100 && rng <= (coverage[high][1] + coverage[second][1]) * 100) {
+          mitigation = coverage[second][0]
+        } else if (rng > (coverage[high][1] + coverage[second][1]) * 100 && rng <= (coverage[high][1] + coverage[second][1] + coverage[third][1]) * 100) {
+          mitigation = coverage[third][0]
+        }
+      } else {
+        if (rng > 1 && rng <= coverage[high][1] * 100) {
+          mitigation = coverage[high][0]
+        } else if (rng > coverage[high][1] * 100 && rng <= (coverage[high][1] + coverage[second][1]) * 100) {
+          mitigation = coverage[second][0]
+        } else if (rng > (coverage[high][1] + coverage[second][1]) * 100 && rng <= (coverage[high][1] + coverage[second][1] + coverage[third][1]) * 100) {
+          mitigation = coverage[third][0]
+        } else {
+          mitigation = coverage[low][0]
+        }
+      }
+
+    } else if (count === 3) {
+      // 3件护甲
+      let high = 0, second = 0, low = 0
+      
+      for (let i = 0; i < dummy.length; i++) {
+        if (dummy[i][0] > coverage[high][0]) {
+          high = i
+        }
+        if (dummy[i][0] < coverage[low][0]) {
+          low = i
+        }
+      }
+
+      for (let i = 0; i < dummy.length; i++) {
+        if (i !== high && i !== low && dummy[i][0] > coverage[second][0]) {
+          second = i
+        }
+      }
+
+      if (coverage[high][1] >= 100) {
+        mitigation = coverage[high][0]
+      } else if (coverage[high][1] + coverage[second][1] >= 100) {
+        if (rng > 1 && rng <= coverage[high][1] * 100) {
+          mitigation = coverage[high][0]
+        } else {
+          mitigation = coverage[second][0]
+        }
+      } else {
+        if (rng > 1 && rng <= coverage[high][1] * 100) {
+          mitigation = coverage[high][0]
+        } else if (rng > coverage[high][1] * 100 && rng <= (coverage[high][1] + coverage[second][1]) * 100) {
+          mitigation = coverage[second][0]
+        } else {
+          mitigation = coverage[low][0]
+        }
+      }
+
+    } else if (count === 2) {
+      // 2件护甲
+      let high = 0, low = 0
+      
+      for (let i = 0; i < dummy.length; i++) {
+        if (dummy[i][0] > coverage[high][0]) {
+          high = i
+        }
+        if (dummy[i][0] < coverage[low][0]) {
+          low = i
+        }
+      }
+
+      if (coverage[high][1] >= 100) {
+        mitigation = coverage[high][0]
+      } else {
+        if (rng > 1 && rng <= coverage[high][1] * 100) {
+          mitigation = coverage[high][0]
+        } else {
+          mitigation = coverage[low][0]
+        }
+      }
+
+    } else if (count === 1) {
+      // 1件护甲
+      mitigation = coverage[0][0]
+    }
+
+  } else {
+    // 总覆盖率 < 100%，按覆盖率排序选择
+    coverage.sort((a, b) => b[1] - a[1]) // 按覆盖率从高到低排序
+
+    if (count === 3) {
+      if (rng > 1 && rng <= coverage[0][1] * 100) {
+        mitigation = coverage[0][0]
+      } else if (rng > coverage[0][1] * 100 && rng <= (coverage[0][1] + coverage[1][1]) * 100) {
+        mitigation = coverage[1][0]
+      } else if (rng > (coverage[0][1] + coverage[1][1]) * 100 && rng <= (coverage[0][1] + coverage[1][1] + coverage[2][1]) * 100) {
+        mitigation = coverage[2][0]
+      } else {
+        mitigation = 0
+      }
+    } else if (count === 2) {
+      if (rng > 1 && rng <= coverage[0][1] * 100) {
+        mitigation = coverage[0][0]
+      } else if (rng > coverage[0][1] * 100 && rng <= (coverage[0][1] + coverage[1][1]) * 100) {
+        mitigation = coverage[1][0]
+      } else {
+        mitigation = 0
+      }
+    } else if (count === 1) {
+      if (rng > 1 && rng <= coverage[0][1] * 100) {
+        mitigation = coverage[0][0]
+      } else {
+        mitigation = 0
+      }
+    }
+  }
+
+  return mitigation
 }
 
 /**

@@ -44,24 +44,23 @@ export async function loadGameData() {
   try {
     const baseUrl = getBaseUrl()
     
-    const [weaponsRes, armoursRes, modsRes, companiesRes] = await Promise.all([
+    const [weaponsRes, armoursRes, modsRes, companiesRes, armourCoverageRes] = await Promise.all([
       fetch(`${baseUrl}/weapons.json`),
       fetch(`${baseUrl}/armour.json`),
       fetch(`${baseUrl}/mods.json`),
-      fetch(`${baseUrl}/companies.json`)
+      fetch(`${baseUrl}/companies.json`),
+      fetch(`${baseUrl}/armourCoverage.json`)
     ])
 
-    const [weaponsData, armours, mods, companies] = await Promise.all([
+    const [weaponsData, armours, mods, companies, armourCoverage] = await Promise.all([
       weaponsRes.json(),
       armoursRes.json() as Promise<ArmourDataSet>,
       modsRes.json() as Promise<ModDataSet>,
-      companiesRes.json() as Promise<CompanyDataSet>
+      companiesRes.json() as Promise<CompanyDataSet>,
+      armourCoverageRes.json() as Promise<ArmourCoverageData>
     ])
 
-    // 从weapons数据中提取tempBlock作为护甲覆盖数据
-    const armourCoverage = weaponsData.tempBlock || {}
-    
-    // 提取武器数据（排除tempBlock）
+    // 提取武器数据（排除tempBlock如果存在）
     const { tempBlock, ...weapons } = weaponsData
     
     cachedData = { weapons: weapons as WeaponDataSet, armours, mods, companies, armourCoverage }

@@ -54,6 +54,15 @@ export interface ArmourData {
   type?: string
 }
 
+// 护甲套装接口
+export interface ArmourSet {
+  head: ArmourData
+  body: ArmourData
+  hands: ArmourData
+  legs: ArmourData
+  feet: ArmourData
+}
+
 // 改装数据接口
 export interface ModData {
   acc_bonus: number
@@ -99,7 +108,9 @@ export interface ModDataSet {
 
 // 护甲覆盖数据
 export interface ArmourCoverageData {
-  [itemName: string]: string[]
+  [bodyPart: string]: {
+    [armourType: string]: number
+  }
 }
 
 // 教育技能接口
