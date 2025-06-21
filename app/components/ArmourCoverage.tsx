@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import { getArmourCoverage, getAllArmourSets, loadGameData } from '../lib/dataLoader'
-import { ArmourCoverageData } from '../lib/fightSimulatorTypes'
+import { useState, useEffect } from 'react'
+import { loadGameData, getAllArmourSets, getTempBlockData } from '../lib/dataLoader'
+import { TempBlockData } from '../lib/fightSimulatorTypes'
 
 interface ArmourCoverageProps {
   playerArmour: {
@@ -15,7 +15,7 @@ interface ArmourCoverageProps {
 }
 
 export default function ArmourCoverage({ playerArmour }: ArmourCoverageProps) {
-  const [coverageData, setCoverageData] = useState<ArmourCoverageData>({})
+  const [tempBlockData, setTempBlockData] = useState<TempBlockData>({})
   const [allSets, setAllSets] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [isExpanded, setIsExpanded] = useState(false)
@@ -24,9 +24,9 @@ export default function ArmourCoverage({ playerArmour }: ArmourCoverageProps) {
     async function loadCoverageData() {
       try {
         await loadGameData()
-        const coverage = getArmourCoverage()
+        const blockData = getTempBlockData()
         const sets = getAllArmourSets()
-        setCoverageData(coverage)
+        setTempBlockData(blockData)
         setAllSets(sets)
       } catch (error) {
         console.error('Failed to load armour coverage data:', error)
@@ -57,14 +57,13 @@ export default function ArmourCoverage({ playerArmour }: ArmourCoverageProps) {
 
   // 检查玩家是否能抵御特定临时武器
   const canPlayerBlock = (temporaryWeapon: string): boolean => {
-    const blockedBy = coverageData[temporaryWeapon] || []
-    if (!Array.isArray(blockedBy)) return false
+    const blockedBy = tempBlockData[temporaryWeapon] || []
     return blockedBy.some(armourSet => playerSets.has(armourSet))
   }
 
   // 获取能阻挡临时武器的护甲套装
   const getBlockingSets = (temporaryWeapon: string): string[] => {
-    return coverageData[temporaryWeapon] || []
+    return tempBlockData[temporaryWeapon] || []
   }
 
   // 获取临时武器的显示名称
@@ -98,7 +97,7 @@ export default function ArmourCoverage({ playerArmour }: ArmourCoverageProps) {
     )
   }
 
-  const temporaryWeapons = Object.keys(coverageData)
+  const temporaryWeapons = Object.keys(tempBlockData)
 
   return (
     <div className="card">

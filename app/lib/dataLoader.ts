@@ -3,12 +3,12 @@ import {
   ArmourDataSet, 
   ModDataSet, 
   CompanyDataSet, 
-  ArmourCoverageData,
   RealWeaponData,
   WeaponData,
   RealArmourData,
   ArmourData,
-  FightData
+  FightData,
+  TempBlockData
 } from './fightSimulatorTypes'
 
 // 全局数据缓存
@@ -279,4 +279,11 @@ export function getAllArmourSets(): string[] {
   })
   
   return Array.from(sets).sort()
+} 
+
+/**
+ * 获取临时武器阻挡数据
+ */
+export function getTempBlockData(): TempBlockData {
+  return tempBlockData
 } 

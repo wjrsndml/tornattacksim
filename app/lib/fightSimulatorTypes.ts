@@ -114,6 +114,11 @@ export interface ArmourCoverageData {
   }
 }
 
+// 临时武器阻挡数据
+export interface TempBlockData {
+  [weaponName: string]: string[]
+}
+
 // 教育技能接口
 export interface EducationPerks {
   damage: boolean
