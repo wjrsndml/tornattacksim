@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { fight, setModData } from '../../lib/fightSimulator'
-import { FightPlayer, FightResults, BattleStats, WeaponData, ArmourData, PlayerPerks } from '../../lib/fightSimulatorTypes'
-import { loadGameData, getDefaultWeapon, getDefaultArmour } from '../../lib/dataLoader'
+'use client'
+
+import { fight, setModData } from './fightSimulator'
+import { FightPlayer, FightResults, WeaponData, ArmourData, PlayerPerks } from './fightSimulatorTypes'
+import { loadGameData, getDefaultWeapon, getDefaultArmour } from './dataLoader'
 
 // 转换前端武器数据为战斗武器数据
 function convertToFightWeapon(weapon: any): WeaponData {
@@ -110,7 +111,13 @@ function convertToFightPlayer(playerData: any, position: "attack" | "defend", id
   }
 }
 
-export async function POST(request: NextRequest) {
+// 客户端战斗模拟函数
+export async function runClientSimulation(
+  player1: any,
+  player2: any,
+  simulations: number = 1000,
+  enableLog: boolean = false
+) {
   try {
     // 加载游戏数据
     const gameData = await loadGameData()
@@ -119,9 +126,6 @@ export async function POST(request: NextRequest) {
     if (gameData.mods) {
       setModData(gameData.mods)
     }
-    
-    const body = await request.json()
-    const { player1, player2, simulations = 1000, enableLog = false } = body
 
     // 创建玩家数据
     const hero = convertToFightPlayer(player1, "attack", 1)
@@ -215,40 +219,41 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 计算统计数据
-    const totalFights = results[0] + results[1] + results[2]
-    const heroWinRate = totalFights > 0 ? (results[0] / totalFights * 100).toFixed(2) : '0.00'
-    const villainWinRate = totalFights > 0 ? (results[1] / totalFights * 100).toFixed(2) : '0.00'
-    const stalemateRate = totalFights > 0 ? (results[2] / totalFights * 100).toFixed(2) : '0.00'
-    const avgTurns = totalFights > 0 ? (results[3] / totalFights).toFixed(2) : '0.00'
-    const avgHeroLife = totalFights > 0 ? (results[4] / totalFights).toFixed(0) : '0'
-    const avgVillainLife = totalFights > 0 ? (results[5] / totalFights).toFixed(0) : '0'
+    // 计算平均值
+    const avgTurns = results[3] / simulations
+    const avgHeroLife = results[4] / simulations
+    const avgVillainLife = results[5] / simulations
 
-    return NextResponse.json({
+    // 计算胜率
+    const heroWinRate = (results[0] / simulations) * 100
+    const villainWinRate = (results[1] / simulations) * 100
+    const stalemateRate = (results[2] / simulations) * 100
+
+    // 返回格式化的结果
+    return {
       success: true,
       results: {
         totalSimulations: simulations,
         heroWins: results[0],
         villainWins: results[1],
         stalemates: results[2],
-        heroWinRate: parseFloat(heroWinRate),
-        villainWinRate: parseFloat(villainWinRate),
-        stalemateRate: parseFloat(stalemateRate),
-        averageTurns: parseFloat(avgTurns),
-        averageHeroLifeRemaining: parseInt(avgHeroLife),
-        averageVillainLifeRemaining: parseInt(avgVillainLife),
+        heroWinRate,
+        villainWinRate,
+        stalemateRate,
+        averageTurns: avgTurns,
+        averageHeroLifeRemaining: avgHeroLife,
+        averageVillainLifeRemaining: avgVillainLife,
         lastFightLog: results[6],
         heroLifeDistribution: results[8],
         villainLifeDistribution: results[9],
-        allBattleLogs: enableLog ? allBattleLogs : null
+        allBattleLogs: enableLog ? allBattleLogs : undefined
       }
-    })
-
+    }
   } catch (error) {
-    console.error('Simulation error:', error)
-    return NextResponse.json(
-      { success: false, error: 'Simulation failed: ' + (error as Error).message },
-      { status: 500 }
-    )
+    console.error('Client simulation error:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }
   }
 } 

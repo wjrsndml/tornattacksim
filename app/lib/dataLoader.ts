@@ -19,8 +19,17 @@ let tempBlockData: { [weaponName: string]: string[] } = {}
  * 获取基础URL
  */
 function getBaseUrl() {
-  // 简化URL构建，直接使用相对路径
-  return ''
+  // 在浏览器环境中，总是使用当前域名
+  if (typeof window !== 'undefined') {
+    return window.location.origin
+  }
+  
+  // 在服务器环境中，使用环境变量或默认值
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`
+  }
+  
+  return 'http://localhost:3000'
 }
 
 /**
@@ -32,31 +41,63 @@ export async function loadGameData(): Promise<FightData> {
   }
 
   try {
-    // 使用相对路径直接访问public目录中的文件
-    const [weaponsResponse, armoursResponse, modsResponse, armourCoverageResponse, companiesResponse] = await Promise.all([
-      fetch('/weapons.json'),
-      fetch('/armour.json'),
-      fetch('/mods.json'),
-      fetch('/armourCoverage.json'),
-      fetch('/companies.json')
+    const baseUrl = getBaseUrl()
+    
+    // 构建完整的URL
+    const urls = [
+      `${baseUrl}/weapons.json`,
+      `${baseUrl}/armour.json`,
+      `${baseUrl}/mods.json`,
+      `${baseUrl}/armourCoverage.json`,
+      `${baseUrl}/companies.json`
+    ]
+    
+    console.log('Base URL:', baseUrl)
+    console.log('Loading data from:', urls)
+    
+    const responses = await Promise.all([
+      fetch(urls[0]).catch(err => {
+        console.error('Failed to fetch weapons.json:', err)
+        throw err
+      }),
+      fetch(urls[1]).catch(err => {
+        console.error('Failed to fetch armour.json:', err)
+        throw err
+      }),
+      fetch(urls[2]).catch(err => {
+        console.error('Failed to fetch mods.json:', err)
+        throw err
+      }),
+      fetch(urls[3]).catch(err => {
+        console.error('Failed to fetch armourCoverage.json:', err)
+        throw err
+      }),
+      fetch(urls[4]).catch(err => {
+        console.error('Failed to fetch companies.json:', err)
+        throw err
+      })
     ])
+
+    const [weaponsResponse, armoursResponse, modsResponse, armourCoverageResponse, companiesResponse] = responses
 
     // 检查响应状态
     if (!weaponsResponse.ok) {
-      throw new Error(`Failed to load weapons.json: ${weaponsResponse.status}`)
+      throw new Error(`Failed to load weapons.json: ${weaponsResponse.status} ${weaponsResponse.statusText}`)
     }
     if (!armoursResponse.ok) {
-      throw new Error(`Failed to load armour.json: ${armoursResponse.status}`)
+      throw new Error(`Failed to load armour.json: ${armoursResponse.status} ${armoursResponse.statusText}`)
     }
     if (!modsResponse.ok) {
-      throw new Error(`Failed to load mods.json: ${modsResponse.status}`)
+      throw new Error(`Failed to load mods.json: ${modsResponse.status} ${modsResponse.statusText}`)
     }
     if (!armourCoverageResponse.ok) {
-      throw new Error(`Failed to load armourCoverage.json: ${armourCoverageResponse.status}`)
+      throw new Error(`Failed to load armourCoverage.json: ${armourCoverageResponse.status} ${armourCoverageResponse.statusText}`)
     }
     if (!companiesResponse.ok) {
-      throw new Error(`Failed to load companies.json: ${companiesResponse.status}`)
+      throw new Error(`Failed to load companies.json: ${companiesResponse.status} ${companiesResponse.statusText}`)
     }
+
+    console.log('All responses OK, parsing JSON...')
 
     const [weaponsData, armoursData, modsData, armourCoverageData, companiesData] = await Promise.all([
       weaponsResponse.json(),
@@ -65,6 +106,8 @@ export async function loadGameData(): Promise<FightData> {
       armourCoverageResponse.json(),
       companiesResponse.json()
     ])
+
+    console.log('JSON parsed successfully')
 
     // 提取临时武器阻挡数据
     tempBlockData = weaponsData.tempBlock || {}
@@ -78,6 +121,7 @@ export async function loadGameData(): Promise<FightData> {
       players: {} // 初始化为空对象，将在运行时填充
     }
 
+    console.log('Game data loaded successfully')
     return gameData
   } catch (error) {
     console.error('Failed to load game data:', error)

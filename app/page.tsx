@@ -8,6 +8,7 @@ import BattleLogExport from './components/BattleLogExport'
 import LifeHistogram from './components/LifeHistogram'
 import { getDefaultWeapon, getDefaultArmour, loadGameData } from './lib/dataLoader'
 import { WeaponData, ArmourData, BattleStats, EducationPerks, FactionPerks, CompanyPerks, PropertyPerks, MeritPerks } from './lib/fightSimulatorTypes'
+import { runClientSimulation } from './lib/clientSimulator'
 
 interface Player {
   name: string
@@ -324,21 +325,13 @@ export default function Home() {
     setBattleResult(null)
     
     try {
-      const response = await fetch('/api/simulate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          player1,
-          player2,
-          simulations: simulationSettings.fights,
-          enableLog: simulationSettings.enableLog,
-          enableLifeHisto: simulationSettings.enableLifeHisto
-        }),
-      })
-
-      const data = await response.json()
+      // 使用客户端模拟器
+      const data = await runClientSimulation(
+        player1,
+        player2,
+        simulationSettings.fights,
+        simulationSettings.enableLog
+      )
       
       if (data.success) {
         setResults(data.results)
@@ -370,7 +363,7 @@ export default function Home() {
       }
     } catch (error) {
       console.error('Error running simulation:', error)
-      alert('运行模拟时出错')
+      alert('运行模拟时出错: ' + (error instanceof Error ? error.message : '未知错误'))
     } finally {
       setIsSimulating(false)
     }
