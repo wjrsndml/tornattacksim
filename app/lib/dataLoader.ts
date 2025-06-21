@@ -19,14 +19,8 @@ let tempBlockData: { [weaponName: string]: string[] } = {}
  * 获取基础URL
  */
 function getBaseUrl() {
-  if (typeof window !== 'undefined') {
-    // 客户端
-    return window.location.origin
-  }
-  // 服务器端
-  return process.env.VERCEL_URL 
-    ? `https://${process.env.VERCEL_URL}` 
-    : 'http://localhost:3000'
+  // 简化URL构建，直接使用相对路径
+  return ''
 }
 
 /**
@@ -38,15 +32,31 @@ export async function loadGameData(): Promise<FightData> {
   }
 
   try {
-    const baseUrl = getBaseUrl()
-    
+    // 使用相对路径直接访问public目录中的文件
     const [weaponsResponse, armoursResponse, modsResponse, armourCoverageResponse, companiesResponse] = await Promise.all([
-      fetch(`${baseUrl}/weapons.json`),
-      fetch(`${baseUrl}/armour.json`),
-      fetch(`${baseUrl}/mods.json`),
-      fetch(`${baseUrl}/armourCoverage.json`),
-      fetch(`${baseUrl}/companies.json`)
+      fetch('/weapons.json'),
+      fetch('/armour.json'),
+      fetch('/mods.json'),
+      fetch('/armourCoverage.json'),
+      fetch('/companies.json')
     ])
+
+    // 检查响应状态
+    if (!weaponsResponse.ok) {
+      throw new Error(`Failed to load weapons.json: ${weaponsResponse.status}`)
+    }
+    if (!armoursResponse.ok) {
+      throw new Error(`Failed to load armour.json: ${armoursResponse.status}`)
+    }
+    if (!modsResponse.ok) {
+      throw new Error(`Failed to load mods.json: ${modsResponse.status}`)
+    }
+    if (!armourCoverageResponse.ok) {
+      throw new Error(`Failed to load armourCoverage.json: ${armourCoverageResponse.status}`)
+    }
+    if (!companiesResponse.ok) {
+      throw new Error(`Failed to load companies.json: ${companiesResponse.status}`)
+    }
 
     const [weaponsData, armoursData, modsData, armourCoverageData, companiesData] = await Promise.all([
       weaponsResponse.json(),
