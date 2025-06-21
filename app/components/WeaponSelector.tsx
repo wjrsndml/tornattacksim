@@ -122,7 +122,7 @@ export default function WeaponSelector({ weaponType, selectedWeapon, onWeaponCha
         <ModSelector
           selectedMods={selectedWeapon.mods || []}
           onModsChange={handleModsChange}
-          maxMods={3}
+          maxMods={2}
           label="武器改装"
         />
       )}

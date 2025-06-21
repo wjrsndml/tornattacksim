@@ -83,22 +83,29 @@ export default function ModSelector({ selectedMods, onModsChange, maxMods = 3, l
       
       {/* 已选择的改装 */}
       {safeSelectedMods.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-2">
-          {safeSelectedMods.map((modName) => (
-            <span
-              key={modName}
-              className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-torn-primary text-white"
-            >
-              {modName}
-              <button
-                type="button"
-                onClick={() => handleModToggle(modName)}
-                className="ml-1 hover:text-gray-300"
+        <div className="space-y-2 mb-3">
+          <div className="text-sm font-medium text-gray-700">已选择的改装：</div>
+          <div className="flex flex-wrap gap-2">
+            {safeSelectedMods.map((modName) => (
+              <div
+                key={modName}
+                className="inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium bg-torn-primary/10 border border-torn-primary/20 text-black"
               >
-                ×
-              </button>
-            </span>
-          ))}
+                <div>
+                  <div className="font-semibold text-torn-primary">{modName}</div>
+                  <div className="text-xs text-gray-600">{getModDescription(modName)}</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleModToggle(modName)}
+                  className="ml-2 text-torn-primary hover:text-torn-primary/70 font-bold text-lg"
+                  title="移除改装"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -110,10 +117,10 @@ export default function ModSelector({ selectedMods, onModsChange, maxMods = 3, l
           disabled={safeSelectedMods.length >= maxMods}
         >
           <div className="flex justify-between items-center">
-            <span className="text-gray-500">
+            <span className={safeSelectedMods.length >= maxMods ? "text-gray-400" : "text-gray-700"}>
               {safeSelectedMods.length >= maxMods ? '已达到最大改装数' : '选择改装...'}
             </span>
-            <svg className={`w-5 h-5 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className={`w-5 h-5 transition-transform ${isOpen ? 'rotate-180' : ''} ${safeSelectedMods.length >= maxMods ? 'text-gray-400' : 'text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </div>
@@ -136,8 +143,10 @@ export default function ModSelector({ selectedMods, onModsChange, maxMods = 3, l
                     !canSelect ? 'text-gray-400 cursor-not-allowed' : ''
                   }`}
                 >
-                  <div className="font-medium">{modName}</div>
-                  <div className="text-xs text-gray-500">
+                  <div className={`font-medium ${isSelected ? 'text-torn-primary' : 'text-black'}`}>
+                    {modName}
+                  </div>
+                  <div className={`text-xs ${isSelected ? 'text-torn-primary/80' : 'text-gray-700'}`}>
                     {getModDescription(modName)}
                   </div>
                 </button>

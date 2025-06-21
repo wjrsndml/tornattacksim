@@ -433,6 +433,7 @@ export function selectBodyPart(x: FightPlayer, critChance: number): [string, num
 export function armourMitigation(bodyPart: string, armour: ArmourSet): number {
   let mitigation = 0
   let coverage: [number, number][] = []
+  let dummy: [number, number][] = []
   let total = 0
   let count = 0
   const rng = Math.floor(Math.random() * 10000 + 1)
@@ -440,11 +441,11 @@ export function armourMitigation(bodyPart: string, armour: ArmourSet): number {
   // 获取护甲覆盖数据
   const armourCoverage = getArmourCoverage()
   
-  // 遍历所有护甲槽位
+  // 遍历所有护甲槽位 - 修复护甲类型检查逻辑，与原版保持一致
   for (const slot in armour) {
     const armourPiece = armour[slot as keyof ArmourSet]
-    if (armourPiece && armourPiece.type !== "" && armourCoverage[bodyPart] && armourCoverage[bodyPart][armourPiece.type]) {
-      const coveragePercent = armourCoverage[bodyPart][armourPiece.type]
+    if (armourPiece && armourCoverage[bodyPart] && armourCoverage[bodyPart][armourPiece.type || ""]) {
+      const coveragePercent = armourCoverage[bodyPart][armourPiece.type || ""]
       coverage.push([armourPiece.armour, coveragePercent])
       total += coveragePercent
       count += 1
@@ -455,35 +456,38 @@ export function armourMitigation(bodyPart: string, armour: ArmourSet): number {
     return 0
   }
 
-  // 创建副本用于排序
-  const dummy = [...coverage]
+  // 创建副本用于排序 - 与原版JavaScript保持一致
+  dummy = dummy.concat(coverage)
+
+  let high = 0, second = 0, third = 0, low = 0
 
   if (total >= 100) {
     // 总覆盖率 >= 100%，使用复杂的优先级计算
     
     if (count === 4) {
-      // 4件护甲
-      let high = 0, second = 0, third = 0, low = 0
+      // 4件护甲 - 修复排序逻辑，与原版JavaScript完全一致
       
-      // 找出最高和最低护甲值的索引
+      // 第一步：找出最高和最低护甲值的索引
       for (let i = 0; i < dummy.length; i++) {
         if (dummy[i][0] > coverage[high][0]) {
           high = i
-        }
-        if (dummy[i][0] < coverage[low][0]) {
+        } else if (dummy[i][0] < coverage[low][0]) {
           low = i
         }
       }
 
-      // 在剩余的护甲中找出第二高和第三高
+      // 第二步：删除最高和最低的元素（模拟原版的delete操作）
+      dummy[high] = [-1, -1] // 标记为已删除
+      dummy[low] = [-1, -1]  // 标记为已删除
+
+      // 第三步：在剩余的护甲中找出第二高和第三高
       for (let i = 0; i < dummy.length; i++) {
-        if (i !== high && i !== low) {
-          if (dummy[i][0] > coverage[second][0]) {
-            third = second
-            second = i
-          } else if (dummy[i][0] > coverage[third][0]) {
-            third = i
-          }
+        if (dummy[i][0] === -1) {
+          continue // 跳过已删除的元素
+        } else if (dummy[i][0] > coverage[second][0]) {
+          second = i
+        } else if (dummy[i][0] < coverage[third][0]) {
+          third = i
         }
       }
 
@@ -517,19 +521,22 @@ export function armourMitigation(bodyPart: string, armour: ArmourSet): number {
 
     } else if (count === 3) {
       // 3件护甲
-      let high = 0, second = 0, low = 0
-      
       for (let i = 0; i < dummy.length; i++) {
         if (dummy[i][0] > coverage[high][0]) {
           high = i
-        }
-        if (dummy[i][0] < coverage[low][0]) {
+        } else if (dummy[i][0] < coverage[low][0]) {
           low = i
         }
       }
 
+      // 删除最高和最低
+      dummy[high] = [-1, -1]
+      dummy[low] = [-1, -1]
+
       for (let i = 0; i < dummy.length; i++) {
-        if (i !== high && i !== low && dummy[i][0] > coverage[second][0]) {
+        if (dummy[i][0] === -1) {
+          continue
+        } else if (dummy[i][0] > coverage[second][0]) {
           second = i
         }
       }
@@ -554,13 +561,10 @@ export function armourMitigation(bodyPart: string, armour: ArmourSet): number {
 
     } else if (count === 2) {
       // 2件护甲
-      let high = 0, low = 0
-      
       for (let i = 0; i < dummy.length; i++) {
         if (dummy[i][0] > coverage[high][0]) {
           high = i
-        }
-        if (dummy[i][0] < coverage[low][0]) {
+        } else if (dummy[i][0] < coverage[low][0]) {
           low = i
         }
       }
@@ -581,10 +585,24 @@ export function armourMitigation(bodyPart: string, armour: ArmourSet): number {
     }
 
   } else {
-    // 总覆盖率 < 100%，按覆盖率排序选择
-    coverage.sort((a, b) => b[1] - a[1]) // 按覆盖率从高到低排序
+    // 总覆盖率 < 100%，与原版JavaScript保持完全一致
+    
+    if (count === 4) {
+      // 修复：添加缺失的4件护甲处理，并修复原版JavaScript的语法错误
+      if (rng > 1 && rng <= coverage[0][1] * 100) {
+        mitigation = coverage[0][0]
+      } else if (rng > coverage[0][1] * 100 && rng <= (coverage[0][1] + coverage[1][1]) * 100) {
+        mitigation = coverage[1][0]
+      } else if (rng > (coverage[0][1] + coverage[1][1]) * 100 && rng <= (coverage[0][1] + coverage[1][1] + coverage[2][1]) * 100) {
+        mitigation = coverage[2][0]
+      } else if (rng > (coverage[0][1] + coverage[1][1] + coverage[2][1]) * 100 && rng <= (coverage[0][1] + coverage[1][1] + coverage[2][1] + coverage[3][1]) * 100) {
+        // 修复原版JavaScript中的语法错误：添加缺失的 rng <= 比较
+        mitigation = coverage[3][0]
+      } else {
+        mitigation = 0
+      }
 
-    if (count === 3) {
+    } else if (count === 3) {
       if (rng > 1 && rng <= coverage[0][1] * 100) {
         mitigation = coverage[0][0]
       } else if (rng > coverage[0][1] * 100 && rng <= (coverage[0][1] + coverage[1][1]) * 100) {
@@ -594,6 +612,7 @@ export function armourMitigation(bodyPart: string, armour: ArmourSet): number {
       } else {
         mitigation = 0
       }
+
     } else if (count === 2) {
       if (rng > 1 && rng <= coverage[0][1] * 100) {
         mitigation = coverage[0][0]
@@ -602,6 +621,7 @@ export function armourMitigation(bodyPart: string, armour: ArmourSet): number {
       } else {
         mitigation = 0
       }
+
     } else if (count === 1) {
       if (rng > 1 && rng <= coverage[0][1] * 100) {
         mitigation = coverage[0][0]
