@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Next: Proxima's Fight Simulator</title>
+    <link rel="icon" type="image/png" href="/favicon-16.png" sizes="16x16">
+    <link rel="icon" type="image/png" href="/favicon-32.png" sizes="32x32">
+    <style>
+input, select {
+  margin: 3px;
+  max-width: 150px;
+}
+
+span {
+  padding-right: 32px;
+}
+
+div.flex-content {
+  display:flex;
+}
+
+div.half {
+  flex: 0 0 50%;
+  max-width: 50%
+}
+div#sampleLog {
+  max-width: 900px;
+  min-height: 500px;
+  max-height: 500px;
+  overflow: scroll;
+}
+.tooltip {
+  position: relative;
+  display: inline-block;
+  border-bottom: 1px dotted black;
+}
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 180px;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  padding: 5px 0;
+  border-radius: 6px;
+  font-family: monospace;
+ 
+  position: absolute;
+  z-index: 1;
+  top: -5px;
+  left: 105%;
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+}
+    </style>
+  </head>
+  <body>
+     <p>Welcome to the Torn Fight Simulator by <a href="https://www.torn.com/profiles.php?XID=1879587">Proxima</a>, featuring <a href="https://www.torn.com/profiles.php?XID=1921241">811</a>. Please <a href="https://www.torn.com/messages.php#/p=compose&XID=1921241"></a>message 811</a> in-game or on Discord about any simulation bugs you encounter.</p>
+     <p>Known issue(s): Smash for the Sledge Hammer isn't implemented yet. You cannot select between Fist or Kick.</p>
+     <div id="settings-content" class="flex-content">
+      <div id="hero_stats" class="half">
+        <h2>Hero <input id="copyvillain" class="submit" value="Copy Villain" type="button"/></h2>
+        <fieldset>
+          <legend>Battle Stats</legend>
+          <input id="hincrease" class="submit" value="10x Stats" type="button"/> 
+          <input id="hdecrease" class="submit" value="1/10 Stats" type="button"/><br>
+          Strength<br>
+          <input type="text" class="battlestat" id="hstrength" value="1,000,000" size=11><br>
+          Defense<br>
+          <input type="text" class="battlestat" id="hdefense" value="1,000,000" size=11><br>
+          Speed<br>
+          <input type="text" class="battlestat" id="hspeed" value="1,000,000" size=11><br>
+          Dexterity<br>
+          <input type="text" class="battlestat" id="hdexterity" value="1,000,000" size=11><br>
+          <div class="tooltip">Life (?)
+          <span class="tooltiptext">
+<strong> Zero Life Merits</strong><br>
+Level 1: 100<br>
+Level 25: 1,125<br>
+Level 50: 2,375<br>
+Level 75: 3,625<br>
+Level 100: 5,000<br><br>
+<strong> 10/10 Life Merits</strong><br>
+Level 1: 150<br>
+Level 25: 1,687<br>
+Level 50: 3,562<br>
+Level 75: 5,437<br>
+Level 100: 7,500<br><br>
+<strong> 10/10 Life + Max Faction</strong><br>
+Level 1: 180<br>
+Level 25: 2,024<br>
+Level 50: 4,274<br>
+Level 75: 6,524<br>
+Level 100: 9,000<br>
+            </span>
+          </div><br>
+          <input type="text" class="battlestat" id="hlife" value="2,375" size=11><br>
+        </fieldset><br>
+        <fieldset>
+          <legend>Stat Passives</legend>
+          Strength<br>
+          <input id="hstrengthmerits" type="text" value="0" size=5>%<br>
+          Defense<br>
+          <input id="hdefensemerits" type="text" value="0" size=5>%<br>
+          Speed<br>
+          <input id="hspeedmerits" type="text" value="0" size=5>%<br>
+          Dexterity<br>
+          <input id="hdexteritymerits" type="text" value="0" size=5>%<br>
+        </fieldset><br>
+        <fieldset id="hprimarysettings"></fieldset><br>
+        <fieldset id="hsecondarysettings"></fieldset><br>
+        <fieldset id="hmeleesettings"></fieldset><br>
+        <fieldset id="htemporarysettings"></fieldset><br>
+        <fieldset id="hfightsettings">
+          <legend><div class="tooltip">Attack Settings (?)
+          <span class="tooltiptext">
+          <p>Note: Hero 'priority' is a strict order (Use 1 until unavailble, then 2, etc), whereas Villain uses Torn's attack settings. 0 means do not use for both.</p>
+          <p>Copy Hero/Villain will not copy these settings due to these semantic differences. Similarly, Export/Import between Hero/Villain will also not load these settings.</p>
+          </span>
+        </fieldset><br>
+        <fieldset>
+          <legend>Armour</legend>
+          <div id="hheadsettings"></div><br>
+          <div id="hbodysettings"></div><br>
+          <div id="hhandssettings"></div><br>
+          <div id="hlegssettings"></div><br>
+          <div id="hfeetsettings"></div><br>
+        </fieldset><br>
+        <fieldset>
+          <legend>Education <input type="checkbox" id="heducation"></legend>
+            1% Damage<br>
+            <input type="checkbox" id="hdamage" name="heducation"><br>
+            2% Melee Damage<br>
+            <input type="checkbox" id="hmeleedamage" name="heducation"><br>
+            10% Japanese Blade Damage<br>
+            <input type="checkbox" id="hjapanesedamage" name="heducation"><br>
+            5% Temp Damage<br>
+            <input type="checkbox" id="htemporarydamage" name="heducation"><br>
+            10% Temp Booster<br>
+            <input type="checkbox" id="htemporarybooster" name="heducation"><br>
+            5% Ammo Control<br>
+            <input type="checkbox" id="hammo1" name="heducation"><br>
+            20% Ammo Control<br>
+            <input type="checkbox" id="hammo2" name="heducation"><br>
+            3% Crit Chance<br>
+            <input type="checkbox" id="hcritchance" name="heducation"><br>
+            100% Fist Damage<br>
+            <input type="checkbox" id="hfist" name="heducation"><br>
+            10% Neck Damage<br>
+            <input type="checkbox" id="hneck" name="heducation"><br>
+            +1.0 Machine Gun Accuracy<br>
+            <input type="checkbox" id="hmachinegunaccuracy" name="heducation"><br>
+            +1.0 SMG Accuracy<br>
+            <input type="checkbox" id="hsmgaccuracy" name="heducation"><br>
+            +1.0 Pistol Accuracy<br>
+            <input type="checkbox" id="hpistolaccuracy" name="heducation"><br>
+            +1.0 Rifle Accuracy<br>
+            <input type="checkbox" id="hrifleaccuracy" name="heducation"><br>
+            +1.0 Heavy Artillery Accuracy<br>
+            <input type="checkbox" id="hheavyartilleryaccuracy" name="heducation"><br>
+            +1.0 Shotgun Accuracy<br>
+            <input type="checkbox" id="hshotgunaccuracy" name="heducation"><br>
+            +1.0 Temporary Accuracy<br>
+            <input type="checkbox" id="htemporaryaccuracy" name="heducation"><br>
+        </fieldset><br>
+        <fieldset>
+          <legend>Other Settings</legend>
+          <div>
+            Crit Rate Merits<br>
+            <input id="hcritmerits" type="range" value="0" min="0" max="10" oninput="this.nextElementSibling.value = this.value">
+            <output>0</output><br>
+            2% Property Damage<br>
+            <input type="checkbox" id="hproperty"><br>
+            Faction Damage<br>
+            <input id="hfactiondamage" type="range" value="0" min="0" max="10" oninput="this.nextElementSibling.value = this.value+ '%'">
+            <output>0%</output><br>
+            Faction Accuracy<br>
+            <input id="hfactionaccuracy" type="range" value="0" min="0" max="10" oninput="this.nextElementSibling.value = '+' + (this.value/5).toFixed(1)">
+            <output>+0.0</output><br>
+            <div class="tooltip">Company Specials (?)
+          <span class="tooltiptext">
+            <p>Note: Company specials do not add any passive stat perks. These are usually already included in your overall passive numbers you most likely copy anyway. If you are not copying your own stats be sure to account for these</p>
+            <p>For this reason, companies with only passive stat perks, such as Strip Clubs, are not included here.</p>
+          </span><br>
+            <select id="hcompany"></select><br>
+          </div>
+        </fieldset><br>
+        <fieldset>
+          <legend>Import/Export</legend>
+          <div>
+            <input type="text" id="himport"> <input id="hload" class="submit" value="Import" type="button" /><br>
+            <input type="text" id="hexport" disabled> <input id="hdump" class="submit" value="Export" type="button" /><br>
+          </div>
+        </fieldset>
+      </div>
+      <div id="villain_stats" class="half">
+        <h2>Villain <input id="copyhero" class="submit" value="Copy Hero" type="button" /></h2>
+        <fieldset>
+          <legend>Battle Stats</legend>
+          <input id="vincrease" class="submit" value="10x Stats" type="button"/> 
+          <input id="vdecrease" class="submit" value="1/10 Stats" type="button"/><br>
+          Strength<br>
+          <input type="text" class="battlestat" id="vstrength" value="1,000,000" size=11><br>
+          Defense<br>
+          <input type="text" class="battlestat" id="vdefense" value="1,000,000" size=11><br>
+          Speed<br>
+          <input type="text" class="battlestat" id="vspeed" value="1,000,000" size=11><br>
+          Dexterity<br>
+          <input type="text" class="battlestat" id="vdexterity" value="1,000,000" size=11><br>
+          <div class="tooltip">Life (?)
+          <span class="tooltiptext">
+<strong> Zero Life Merits</strong><br>
+Level 1: 100<br>
+Level 25: 1,125<br>
+Level 50: 2,375<br>
+Level 75: 3,625<br>
+Level 100: 5,000<br><br>
+<strong> 10/10 Life Merits</strong><br>
+Level 1: 150<br>
+Level 25: 1,687<br>
+Level 50: 3,562<br>
+Level 75: 5,437<br>
+Level 100: 7,500<br><br>
+<strong> 10/10 Life + Max Faction</strong><br>
+Level 1: 180<br>
+Level 25: 2,024<br>
+Level 50: 4,274<br>
+Level 75: 6,524<br>
+Level 100: 9,000<br>
+          </span></div><br>
+          <input type="text" class="battlestat" id="vlife" value="2,375" size=11><br>
+        </fieldset><br>
+        <fieldset>
+          <legend>Stat Passives</legend>
+          Strength<br>
+          <input id="vstrengthmerits" type="text" value="0" size=5>%<br>
+          Defense<br>
+          <input id="vdefensemerits" type="text" value="0" size=5>%<br>
+          Speed<br>
+          <input id="vspeedmerits" type="text" value="0" size=5>%<br>
+          Dexterity<br>
+          <input id="vdexteritymerits" type="text" value="0" size=5>%<br>
+        </fieldset><br>
+        <fieldset id="vprimarysettings"></fieldset><br>
+        <fieldset id="vsecondarysettings"></fieldset><br>
+        <fieldset id="vmeleesettings"></fieldset><br>
+        <fieldset id="vtemporarysettings"></fieldset><br>
+        <fieldset id="vfightsettings">
+          <legend><div class="tooltip">Defense Settings (?)
+          <span class="tooltiptext">
+          <p>Note: Hero 'priority' is a strict order (Use 1 until unavailble, then 2, etc), whereas Villain uses Torn's attack settings. 0 means do not use for both.</p>
+          <p>Copy Hero/Villain will not copy these settings due to these semantic differences. Similarly, Export/Import between Hero/Villain will also not load these settings.</p>
+          </span>
+        </legend>
+        </fieldset><br>
+        <fieldset>
+          <legend>Armour</legend>
+          <div id="vheadsettings"></div><br>
+          <div id="vbodysettings"></div><br>
+          <div id="vhandssettings"></div><br>
+          <div id="vlegssettings"></div><br>
+          <div id="vfeetsettings"></div><br>
+        </fieldset><br>
+        <fieldset>
+          <legend>Education <input type="checkbox" id="veducation"></legend>
+            1% Damage<br>
+            <input type="checkbox" id="vdamage" name="veducation"><br>
+            2% Melee Damage<br>
+            <input type="checkbox" id="vmeleedamage" name="veducation"><br>
+            10% Japanese Blade Damage<br>
+            <input type="checkbox" id="vjapanesedamage" name="veducation"><br>
+            5% Temp Damage<br>
+            <input type="checkbox" id="vtemporarydamage" name="veducation"><br>
+            10% Temp Booster<br>
+            <input type="checkbox" id="vtemporarybooster" name="veducation"><br>
+            5% Ammo Control<br>
+            <input type="checkbox" id="vammo1" name="veducation"><br>
+            20% Ammo Control<br>
+            <input type="checkbox" id="vammo2" name="veducation" name="education"><br>
+            3% Crit Chance<br>
+            <input type="checkbox" id="vcritchance" name="veducation"><br>
+            100% Fist Damage<br>
+            <input type="checkbox" id="vfist" name="veducation"><br>
+            10% Neck Damage<br>
+            <input type="checkbox" id="vneck" name="veducation"><br>
+            +1.0 Machine Gun Accuracy<br>
+            <input type="checkbox" id="vmachinegunaccuracy" name="veducation"><br>
+            +1.0 SMG Accuracy<br>
+            <input type="checkbox" id="vsmgaccuracy" name="veducation"><br>
+            +1.0 Pistol Accuracy<br>
+            <input type="checkbox" id="vpistolaccuracy" name="veducation"><br>
+            +1.0 Rifle Accuracy<br>
+            <input type="checkbox" id="vrifleaccuracy" name="veducation"><br>
+            +1.0 Heavy Artillery Accuracy<br>
+            <input type="checkbox" id="vheavyartilleryaccuracy" name="veducation"><br>
+            +1.0 Shotgun Accuracy<br>
+            <input type="checkbox" id="vshotgunaccuracy" name="veducation"><br>
+            +1.0 Temporary Accuracy<br>
+            <input type="checkbox" id="vtemporaryaccuracy" name="veducation"><br>
+        </fieldset><br>
+        <fieldset>
+          <legend>Other Settings</legend>
+          <div>
+            Crit Rate Merits<br>
+            <input id="vcritmerits" type="range" value="0" min="0" max="10" oninput="this.nextElementSibling.value = this.value">
+            <output>0</output><br>
+            2% Property Damage<br>
+            <input type="checkbox" id="vproperty"><br>
+            Faction Damage<br>
+            <input id="vfactiondamage" type="range" value="0" min="0" max="10" oninput="this.nextElementSibling.value = this.value+ '%'">
+            <output>0%</output><br>
+            Faction Accuracy<br>
+            <input id="vfactionaccuracy" type="range" value="0" min="0" max="10" oninput="this.nextElementSibling.value = '+' + (this.value/5).toFixed(1)">
+            <output>+0.0</output><br>            
+            <div class="tooltip">Company Specials (?)
+          <span class="tooltiptext">
+            <p>Note: Company specials do not add any passive stat perks. These are usually already included in your overall passive numbers you most likely copy anyway. If you are not copying your own stats be sure to account for these</p>
+            <p>For this reason, companies with only passive stat perks, such as Strip Clubs, are not included here.</p>
+          </span><br>
+            <select id="vcompany"></select><br>
+          </div>
+        </fieldset><br>
+        <fieldset>
+          <legend>Import/Export</legend>
+          <div>
+            <input type="text" id="vimport"> <input id="vload" class="submit" value="Import" type="button" /><br>
+            <input type="text" id="vexport" disabled> <input id="vdump" class="submit" value="Export" type="button" /><br>
+          </div>
+        </fieldset>
+      </div>
+     </div>
+     <br>
+     <div id="settings-controls">
+      <form action="" id="controls">
+         <div class="submit">
+           Fights<br>
+            <input type="text" class="detail" id="trials" value="10,000"> > 
+            <input id="submit" class="submit" value="Run Fight" type="button" />
+         </div>
+      </form>
+      <br>
+      <div id="results-control">
+      <input id="control-life" class="submit" value="Enable Life Histo" type="button"/> 
+      <input id="download-life-csv" class="submit" value="Download Life Histo" type="button" disabled/>
+      </div><br>
+      <div id="results">
+      </div>
+     </div>
+     <script type="text/javascript" src="fightUI.js"></script>
+     <script type="text/javascript" src="fightMgmt.js" onload="start();"></script>
+     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.1/chart.min.js"></script>
+  </body>
+  </html>
