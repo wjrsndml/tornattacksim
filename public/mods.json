@@ -1,0 +1,318 @@
+{
+  "Reflex Sight": {
+    "acc_bonus": 1,
+    "enemy_acc_bonus": 0,
+    "crit_chance": 0,
+    "dmg_bonus": 0,
+    "dex_passive": 0,
+    "clip_size_multi": 0,
+    "extra_clips": 0,
+    "rate_of_fire_multi": 0
+  },
+  "Holographic Sight": {
+    "acc_bonus": 1.25,
+    "enemy_acc_bonus": 0,
+    "crit_chance": 0,
+    "dmg_bonus": 0,
+    "dex_passive": 0,
+    "clip_size_multi": 0,
+    "extra_clips": 0,
+    "rate_of_fire_multi": 0
+  },
+  "ACOG Sight": {
+    "acc_bonus": 1.5,
+    "enemy_acc_bonus": 0,
+    "crit_chance": 0,
+    "dmg_bonus": 0,
+    "dex_passive": 0,
+    "clip_size_multi": 0,
+    "extra_clips": 0,
+    "rate_of_fire_multi": 0
+  },
+  "Thermal Sight": {
+    "acc_bonus": 1.75,
+    "enemy_acc_bonus": 0,
+    "crit_chance": 0,
+    "dmg_bonus": 0,
+    "dex_passive": 0,
+    "clip_size_multi": 0,
+    "extra_clips": 0,
+    "rate_of_fire_multi": 0
+  },
+  "1mW Laser": {
+    "acc_bonus": 0,
+    "enemy_acc_bonus": 0,
+    "crit_chance": 2,
+    "dmg_bonus": 0,
+    "dex_passive": 0,
+    "clip_size_multi": 0,
+    "extra_clips": 0,
+    "rate_of_fire_multi": 0
+  },
+  "5mW Laser": {
+    "acc_bonus": 0,
+    "enemy_acc_bonus": 0,
+    "crit_chance": 3,
+    "dmg_bonus": 0,
+    "dex_passive": 0,
+    "clip_size_multi": 0,
+    "extra_clips": 0,
+    "rate_of_fire_multi": 0
+  },
+  "30mW Laser": {
+    "acc_bonus": 0,
+    "enemy_acc_bonus": 0,
+    "crit_chance": 4,
+    "dmg_bonus": 0,
+    "dex_passive": 0,
+    "clip_size_multi": 0,
+    "extra_clips": 0,
+    "rate_of_fire_multi": 0
+  },
+  "100mW Laser": {
+    "acc_bonus": 0,
+    "enemy_acc_bonus": 0,
+    "crit_chance": 5,
+    "dmg_bonus": 0,
+    "dex_passive": 0,
+    "clip_size_multi": 0,
+    "extra_clips": 0,
+    "rate_of_fire_multi": 0
+  },
+  "Small Suppressor": {
+    "acc_bonus": 0,
+    "enemy_acc_bonus": 0,
+    "crit_chance": 0,
+    "dmg_bonus": -5,
+    "dex_passive": 0,
+    "clip_size_multi": 0,
+    "extra_clips": 0,
+    "rate_of_fire_multi": 0
+  },
+  "Standard Suppressor": {
+    "acc_bonus": 0,
+    "enemy_acc_bonus": 0,
+    "crit_chance": 0,
+    "dmg_bonus": -5,
+    "dex_passive": 0,
+    "clip_size_multi": 0,
+    "extra_clips": 0,
+    "rate_of_fire_multi": 0
+  },
+  "Large Suppressor": {
+    "acc_bonus": 0,
+    "enemy_acc_bonus": 0,
+    "crit_chance": 0,
+    "dmg_bonus": -5,
+    "dex_passive": 0,
+    "clip_size_multi": 0,
+    "extra_clips": 0,
+    "rate_of_fire_multi": 0
+  },
+  "Adjustable Trigger": {
+    "acc_bonus": 0,
+    "enemy_acc_bonus": 0,
+    "crit_chance": 0,
+    "dmg_bonus": 0,
+    "dex_passive": 0,
+    "clip_size_multi": 0,
+    "extra_clips": 0,
+    "rate_of_fire_multi": 0,
+    "turn1": {
+      "acc_bonus": 5
+    }
+  },
+  "Hair Trigger": {
+    "acc_bonus": 0,
+    "enemy_acc_bonus": 0,
+    "crit_chance": 0,
+    "dmg_bonus": 0,
+    "dex_passive": 0,
+    "clip_size_multi": 0,
+    "extra_clips": 0,
+    "rate_of_fire_multi": 0,
+    "turn1": {
+      "acc_bonus": 7.5
+    }
+  },
+  "Bipod": {
+    "acc_bonus": 1.75,
+    "enemy_acc_bonus": 0,
+    "crit_chance": 0,
+    "dmg_bonus": 0,
+    "dex_passive": -30,
+    "clip_size_multi": 0,
+    "extra_clips": 0,
+    "rate_of_fire_multi": 0
+  },
+  "Tripod": {
+    "acc_bonus": 2,
+    "enemy_acc_bonus": 0,
+    "crit_chance": 0,
+    "dmg_bonus": 0,
+    "dex_passive": -30,
+    "clip_size_multi": 0,
+    "extra_clips": 0,
+    "rate_of_fire_multi": 0
+  },
+  "Custom Grip": {
+    "acc_bonus": 0.75,
+    "enemy_acc_bonus": 0,
+    "crit_chance": 0,
+    "dmg_bonus": 0,
+    "dex_passive": 0,
+    "clip_size_multi": 0,
+    "extra_clips": 0,
+    "rate_of_fire_multi": 0
+  },
+  "Skeet Choke": {
+    "acc_bonus": 0,
+    "enemy_acc_bonus": 0,
+    "crit_chance": 0,
+    "dmg_bonus": 5,
+    "dex_passive": 0,
+    "clip_size_multi": 0,
+    "extra_clips": 0,
+    "rate_of_fire_multi": 0
+  },
+  "Improved Choke": {
+    "acc_bonus": 0,
+    "enemy_acc_bonus": 0,
+    "crit_chance": 0,
+    "dmg_bonus": 8,
+    "dex_passive": 0,
+    "clip_size_multi": 0,
+    "extra_clips": 0,
+    "rate_of_fire_multi": 0
+  },
+  "Full Choke": {
+    "acc_bonus": 0,
+    "enemy_acc_bonus": 0,
+    "crit_chance": 0,
+    "dmg_bonus": 10,
+    "dex_passive": 0,
+    "clip_size_multi": 0,
+    "extra_clips": 0,
+    "rate_of_fire_multi": 0
+  },
+  "Standard Brake": {
+    "acc_bonus": 1,
+    "enemy_acc_bonus": 0,
+    "crit_chance": 0,
+    "dmg_bonus": 0,
+    "dex_passive": 0,
+    "clip_size_multi": 0,
+    "extra_clips": 0,
+    "rate_of_fire_multi": 0
+  },
+  "Heavy Duty Brake": {
+    "acc_bonus": 1.25,
+    "enemy_acc_bonus": 0,
+    "crit_chance": 0,
+    "dmg_bonus": 0,
+    "dex_passive": 0,
+    "clip_size_multi": 0,
+    "extra_clips": 0,
+    "rate_of_fire_multi": 0
+  },
+  "Tactical Brake": {
+    "acc_bonus": 1.5,
+    "enemy_acc_bonus": 0,
+    "crit_chance": 0,
+    "dmg_bonus": 0,
+    "dex_passive": 0,
+    "clip_size_multi": 0,
+    "extra_clips": 0,
+    "rate_of_fire_multi": 0
+  },
+  "Small Light": {
+    "acc_bonus": 0,
+    "enemy_acc_bonus": -3,
+    "crit_chance": 0,
+    "dmg_bonus": 0,
+    "dex_passive": 0,
+    "clip_size_multi": 0,
+    "extra_clips": 0,
+    "rate_of_fire_multi": 0
+  },
+  "Precision Light": {
+    "acc_bonus": 0,
+    "enemy_acc_bonus": -4,
+    "crit_chance": 0,
+    "dmg_bonus": 0,
+    "dex_passive": 0,
+    "clip_size_multi": 0,
+    "extra_clips": 0,
+    "rate_of_fire_multi": 0
+  },
+  "Tactical Illuminator": {
+    "acc_bonus": 0,
+    "enemy_acc_bonus": -5,
+    "crit_chance": 0,
+    "dmg_bonus": 0,
+    "dex_passive": 0,
+    "clip_size_multi": 0,
+    "extra_clips": 0,
+    "rate_of_fire_multi": 0
+  },
+  "Extended Mags": {
+    "acc_bonus": 0,
+    "enemy_acc_bonus": 0,
+    "crit_chance": 0,
+    "dmg_bonus": 0,
+    "dex_passive": 0,
+    "clip_size_multi": 0.2,
+    "extra_clips": 0,
+    "rate_of_fire_multi": 0
+  },
+  "High Capacity Mags": {
+    "acc_bonus": 0,
+    "enemy_acc_bonus": 0,
+    "crit_chance": 0,
+    "dmg_bonus": 0,
+    "dex_passive": 0,
+    "clip_size_multi": 0.3,
+    "extra_clips": 0,
+    "rate_of_fire_multi": 0
+  },
+  "Extra Clips": {
+    "acc_bonus": 0,
+    "enemy_acc_bonus": 0,
+    "crit_chance": 0,
+    "dmg_bonus": 0,
+    "dex_passive": 0,
+    "clip_size_multi": 0,
+    "extra_clips": 1,
+    "rate_of_fire_multi": 0
+  },
+  "Extra Clips x2": {
+    "acc_bonus": 0,
+    "enemy_acc_bonus": 0,
+    "crit_chance": 0,
+    "dmg_bonus": 0,
+    "dex_passive": 0,
+    "clip_size_multi": 0,
+    "extra_clips": 2,
+    "rate_of_fire_multi": 0
+  },
+  "Recoil Pad": {
+    "acc_bonus": 0,
+    "enemy_acc_bonus": 0,
+    "crit_chance": 0,
+    "dmg_bonus": 0,
+    "dex_passive": 0,
+    "clip_size_multi": 0,
+    "extra_clips": 0,
+    "rate_of_fire_multi": -0.25
+  },
+  "n/a": {
+    "acc_bonus": 0,
+    "enemy_acc_bonus": 0,
+    "crit_chance": 0,
+    "dmg_bonus": 0,
+    "dex_passive": 0,
+    "clip_size_multi": 0,
+    "extra_clips": 0,
+    "rate_of_fire_multi": 0
+  }
+}

@@ -1,0 +1,2029 @@
+{
+  "primary" : {
+    "0": {
+      "name": "",
+      "category": "Shotgun",
+      "damage_range": [0, 0],
+      "accuracy_range": [0, 0],
+      "clipsize": 0,
+      "rateoffire": [0,0],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "22": {
+      "name": "Sawed-Off Shotgun",
+      "category": "Shotgun",
+      "damage_range": [41, 46],
+      "accuracy_range": [63, 68],
+      "clipsize": 2,
+      "rateoffire": [1,2],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "23": {
+      "name": "Benelli M1 Tactical",
+      "category": "Shotgun",
+      "damage_range": [39, 44],
+      "accuracy_range": [65, 70],
+      "clipsize": 7,
+      "rateoffire": [2,3],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "24": {
+      "name": "MP5 Navy",
+      "category": "SMG",
+      "damage_range": [45, 50],
+      "accuracy_range": [51, 56],
+      "clipsize": 30,
+      "rateoffire": [5,8],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "25": {
+      "name": "P90",
+      "category": "SMG",
+      "damage_range": [48, 53],
+      "accuracy_range": [51, 56],
+      "clipsize": 50,
+      "rateoffire": [10,30],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "26": {
+      "name": "AK-47",
+      "category": "Rifle",
+      "damage_range": [56, 61],
+      "accuracy_range": [52, 57],
+      "clipsize": 30,
+      "rateoffire": [4,8],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "27": {
+      "name": "M4A1 Colt Carbine",
+      "category": "Rifle",
+      "damage_range": [55, 60],
+      "accuracy_range": [47, 52],
+      "clipsize": 30,
+      "rateoffire": [4,9],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "28": {
+      "name": "Benelli M4 Super",
+      "category": "Shotgun",
+      "damage_range": [59, 64],
+      "accuracy_range": [55, 60],
+      "clipsize": 7,
+      "rateoffire": [2,3],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "29": {
+      "name": "M16 A2 Rifle",
+      "category": "Rifle",
+      "damage_range": [61, 66],
+      "accuracy_range": [47, 52],
+      "clipsize": 30,
+      "rateoffire": [5,9],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "30": {
+      "name": "Steyr AUG",
+      "category": "Rifle",
+      "damage_range": [64, 69],
+      "accuracy_range": [45, 50],
+      "clipsize": 30,
+      "rateoffire": [5,8],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "31": {
+      "name": "M249 SAW",
+      "category": "Machine Gun",
+      "damage_range": [67, 72],
+      "accuracy_range": [31, 36],
+      "clipsize": 100,
+      "rateoffire": [15,25],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "63": {
+      "name": "Minigun",
+      "category": "Machine Gun",
+      "damage_range": [72, 77],
+      "accuracy_range": [28, 33],
+      "clipsize": 200,
+      "rateoffire": [20,30],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "76": {
+      "name": "Snow Cannon",
+      "category": "Machine Gun",
+      "damage_range": [52, 57],
+      "accuracy_range": [24, 29],
+      "clipsize": 950,
+      "rateoffire": [1,1],
+      "bonus": {
+          "name": "Freeze",
+          "procrange": [20,25]
+      }
+    },
+    "98": {
+      "name": "Neutrilux 2000",
+      "category": "Heavy Artillery",
+      "damage_range": [59, 64],
+      "accuracy_range": [25, 30],
+      "clipsize": 1000,
+      "rateoffire": [233,533],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "100": {
+      "name": "Egg Propelled Launcher",
+      "category": "Heavy Artillery",
+      "damage_range": [64, 69],
+      "accuracy_range": [24, 29],
+      "clipsize": 1000,
+      "rateoffire": [255,505],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "108": {
+      "name": "9mm Uzi",
+      "category": "SMG",
+      "damage_range": [65, 70],
+      "accuracy_range": [43, 48],
+      "clipsize": 30,
+      "rateoffire": [15,25],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "174": {
+      "name": "XM8 Rifle",
+      "category": "Rifle",
+      "damage_range": [50, 55],
+      "accuracy_range": [56, 61],
+      "clipsize": 30,
+      "rateoffire": [5,20],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "219": {
+      "name": "Enfield SA-80",
+      "category": "Rifle",
+      "damage_range": [63, 68],
+      "accuracy_range": [55, 60],
+      "clipsize": 30,
+      "rateoffire": [2,5],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "223": {
+      "name": "Jackhammer",
+      "category": "Shotgun",
+      "damage_range": [69, 74],
+      "accuracy_range": [52, 57],
+      "clipsize": 10,
+      "rateoffire": [5,10],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "225": {
+      "name": "Mag 7",
+      "category": "Shotgun",
+      "damage_range": [56, 61],
+      "accuracy_range": [62, 67],
+      "clipsize": 5,
+      "rateoffire": [2,4],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "228": {
+      "name": "Vektor CR-21",
+      "category": "Rifle",
+      "damage_range": [50, 55],
+      "accuracy_range": [48, 53],
+      "clipsize": 20,
+      "rateoffire": [15,20],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "231": {
+      "name": "Heckler & Koch",
+      "category": "Rifle",
+      "damage_range": [60, 65],
+      "accuracy_range": [46, 51],
+      "clipsize": 10,
+      "rateoffire": [2,9],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "232": {
+      "name": "SIG 550",
+      "category": "Rifle",
+      "damage_range": [62, 67],
+      "accuracy_range": [50, 55],
+      "clipsize": 30,
+      "rateoffire": [10,25],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "240": {
+      "name": "Type 98 Anti-Tank",
+      "category": "Heavy Artillery",
+      "damage_range": [78, 83],
+      "accuracy_range": [25, 30],
+      "clipsize": 2,
+      "rateoffire": [1,2],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "241": {
+      "name": "Bushmaster Carbon 15",
+      "category": "SMG",
+      "damage_range": [50, 55],
+      "accuracy_range": [57, 62],
+      "clipsize": 30,
+      "rateoffire": [2,28],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "249": {
+      "name": "Sks Carbine",
+      "category": "Rifle",
+      "damage_range": [46, 51],
+      "accuracy_range": [47, 52],
+      "clipsize": 10,
+      "rateoffire": [1,8],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "252": {
+      "name": "Ithaca 37",
+      "category": "Shotgun",
+      "damage_range": [49, 54],
+      "accuracy_range": [62, 67],
+      "clipsize": 4,
+      "rateoffire": [1,4],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "382": {
+      "name": "Gold Plated AK-47",
+      "category": "Rifle",
+      "damage_range": [75, 80],
+      "accuracy_range": [62, 67],
+      "clipsize": 45,
+      "rateoffire": [4,6],
+      "bonus": {
+          "name": "Demoralize",
+          "procrange": [20,23]
+      }
+    },
+    "388": {
+      "name": "Pink Mac-10",
+      "category": "SMG",
+      "damage_range": [74, 79],
+      "accuracy_range": [45, 50],
+      "clipsize": 120,
+      "rateoffire": [10,15],
+      "bonus": {
+          "name": "Emasculate",
+          "procrange": [15,16]
+      }
+    },
+    "398": {
+      "name": "SIG 552",
+      "category": "Rifle",
+      "damage_range": [69, 74],
+      "accuracy_range": [50, 55],
+      "clipsize": 24,
+      "rateoffire": [3,5],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "399": {
+      "name": "ArmaLite M-15A4",
+      "category": "Rifle",
+      "damage_range": [68, 73],
+      "accuracy_range": [57, 62],
+      "clipsize": 15,
+      "rateoffire": [3,5],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      },
+      "default":true
+    },
+    "483": {
+      "name": "MP5k",
+      "category": "SMG",
+      "damage_range": [42, 47],
+      "accuracy_range": [52, 57],
+      "clipsize": 15,
+      "rateoffire": [5,7],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "484": {
+      "name": "AK74u",
+      "category": "SMG",
+      "damage_range": [46, 51],
+      "accuracy_range": [41, 46],
+      "clipsize": 30,
+      "rateoffire": [4,6],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "485": {
+      "name": "Skorpion",
+      "category": "SMG",
+      "damage_range": [40, 45],
+      "accuracy_range": [54, 59],
+      "clipsize": 20,
+      "rateoffire": [3,5],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "486": {
+      "name": "TMP",
+      "category": "SMG",
+      "damage_range": [38, 43],
+      "accuracy_range": [45, 50],
+      "clipsize": 15,
+      "rateoffire": [3,6],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "487": {
+      "name": "Thompson",
+      "category": "SMG",
+      "damage_range": [39, 44],
+      "accuracy_range": [43, 48],
+      "clipsize": 20,
+      "rateoffire": [3,5],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "488": {
+      "name": "MP 40",
+      "category": "SMG",
+      "damage_range": [37, 42],
+      "accuracy_range": [41, 46],
+      "clipsize": 32,
+      "rateoffire": [3,5],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "545": {
+      "name": "Dual TMPs",
+      "category": "SMG",
+      "damage_range": [79, 84],
+      "accuracy_range": [40, 45],
+      "clipsize": 30,
+      "rateoffire": [15,25],
+      "bonus": {
+          "name": "Spray",
+          "procrange": [20,24]
+      }
+    },
+    "546": {
+      "name": "Dual Bushmasters",
+      "category": "SMG",
+      "damage_range": [76, 81],
+      "accuracy_range": [47, 52],
+      "clipsize": 60,
+      "rateoffire": [4,30],
+      "bonus": {
+          "name": "Spray",
+          "procrange": [20,24]
+      }
+    },
+    "547": {
+      "name": "Dual MP5s",
+      "category": "SMG",
+      "damage_range": [78, 83],
+      "accuracy_range": [46, 51],
+      "clipsize": 60,
+      "rateoffire": [10,16],
+      "bonus": {
+          "name": "Spray",
+          "procrange": [20,24]
+      }
+    },
+    "548": {
+      "name": "Dual P90s",
+      "category": "SMG",
+      "damage_range": [77, 82],
+      "accuracy_range": [45, 50],
+      "clipsize": 100,
+      "rateoffire": [10,20],
+      "bonus": {
+          "name": "Spray",
+          "procrange": [20,24]
+      }
+    },
+    "549": {
+      "name": "Dual Uzis",
+      "category": "SMG",
+      "damage_range": [80, 85],
+      "accuracy_range": [36, 41],
+      "clipsize": 60,
+      "rateoffire": [15,25],
+      "bonus": {
+          "name": "Spray",
+          "procrange": [20,24]
+      }
+    },
+    "612": {
+      "name": "Tavor TAR-21",
+      "category": "Rifle",
+      "damage_range": [65, 70],
+      "accuracy_range": [52, 57],
+      "clipsize": 30,
+      "rateoffire": [4,8],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "830": {
+      "name": "Nock Gun",
+      "category": "Shotgun",
+      "damage_range": [95, 100],
+      "accuracy_range": [45, 50],
+      "clipsize": 7,
+      "rateoffire": [7,7],
+      "bonus": {
+          "name": "Hazardous",
+          "procrange": [20,22]
+      }
+    },
+    "837": {
+      "name": "Rheinmetall MG 3",
+      "category": "Machine Gun",
+      "damage_range": [66, 71],
+      "accuracy_range": [36, 41],
+      "clipsize": 100,
+      "rateoffire": [20,30],
+      "bonus": {
+          "name": "Blindfire",
+          "procrange": [15, 20]
+      }
+    },
+    "874": {
+      "name": "Prototype",
+      "category": "Rifle",
+      "damage_range": [68, 73],
+      "accuracy_range": [57, 62],
+      "clipsize": 15,
+      "rateoffire": [3,5],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    }
+  },
+  "secondary" : {
+    "0": {
+      "name": "",
+      "category": "Pistol",
+      "damage_range": [0, 0],
+      "accuracy_range": [0, 0],
+      "clipsize": 0,
+      "rateoffire": [0,0],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "12": {
+      "name": "Glock 17",
+      "category": "Pistol",
+      "damage_range": [28, 33],
+      "accuracy_range": [53, 58],
+      "clipsize": 20,
+      "rateoffire": [3,6],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "13": {
+      "name": "Raven MP25",
+      "category": "Pistol",
+      "damage_range": [29, 34],
+      "accuracy_range": [52, 57],
+      "clipsize": 17,
+      "rateoffire": [3,5],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "14": {
+      "name": "Ruger 22/45",
+      "category": "Pistol",
+      "damage_range": [32, 37],
+      "accuracy_range": [56, 61],
+      "clipsize": 15,
+      "rateoffire": [4,6],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "15": {
+      "name": "Beretta M9",
+      "category": "Pistol",
+      "damage_range": [36, 41],
+      "accuracy_range": [54, 59],
+      "clipsize": 17,
+      "rateoffire": [4,5],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "16": {
+      "name": "USP",
+      "category": "Pistol",
+      "damage_range": [44, 49],
+      "accuracy_range": [58, 63],
+      "clipsize": 15,
+      "rateoffire": [4,5],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "17": {
+      "name": "Beretta 92FS",
+      "category": "Pistol",
+      "damage_range": [48, 53],
+      "accuracy_range": [51, 56],
+      "clipsize": 20,
+      "rateoffire": [5,6],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "18": {
+      "name": "Fiveseven",
+      "category": "Pistol",
+      "damage_range": [52, 57],
+      "accuracy_range": [49, 54],
+      "clipsize": 20,
+      "rateoffire": [6,7],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "19": {
+      "name": "Magnum",
+      "category": "Pistol",
+      "damage_range": [55, 60],
+      "accuracy_range": [38, 43],
+      "clipsize": 6,
+      "rateoffire": [1,2],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "20": {
+      "name": "Desert Eagle",
+      "category": "Pistol",
+      "damage_range": [59, 64],
+      "accuracy_range": [36, 41],
+      "clipsize": 8,
+      "rateoffire": [2,3],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "21": {
+      "name": "Dual 92G Berettas",
+      "category": "Pistol",
+      "damage_range": [64, 69],
+      "accuracy_range": [30, 35],
+      "clipsize": 46,
+      "rateoffire": [5,15],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "99": {
+      "name": "Springfield 1911",
+      "category": "Pistol",
+      "damage_range": [33, 38],
+      "accuracy_range": [57, 62],
+      "clipsize": 15,
+      "rateoffire": [3,4],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "109": {
+      "name": "RPG Launcher",
+      "category": "Heavy Artillery",
+      "damage_range": [77, 82],
+      "accuracy_range": [39, 44],
+      "clipsize": 1,
+      "rateoffire": [1,1],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "177": {
+      "name": "Cobra Derringer",
+      "category": "Pistol",
+      "damage_range": [61, 66],
+      "accuracy_range": [53, 58],
+      "clipsize": 2,
+      "rateoffire": [1,2],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "189": {
+      "name": "S&W Revolver",
+      "category": "Pistol",
+      "damage_range": [42, 47],
+      "accuracy_range": [54, 59],
+      "clipsize": 6,
+      "rateoffire": [1,2],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "218": {
+      "name": "Crossbow",
+      "category": "Piercing",
+      "damage_range": [35, 40],
+      "accuracy_range": [63, 68],
+      "clipsize": 1,
+      "rateoffire": [1,1],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "230": {
+      "name": "Flare Gun",
+      "category": "Pistol",
+      "damage_range": [18, 23],
+      "accuracy_range": [22, 27],
+      "clipsize": 1,
+      "rateoffire": [1,1],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "233": {
+      "name": "BT MP9",
+      "category": "SMG",
+      "damage_range": [61, 66],
+      "accuracy_range": [55, 60],
+      "clipsize": 30,
+      "rateoffire": [2,25],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      },
+      "default":true
+    },
+    "243": {
+      "name": "Taurus",
+      "category": "Pistol",
+      "damage_range": [30, 35],
+      "accuracy_range": [57, 62],
+      "clipsize": 13,
+      "rateoffire": [1,12],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "244": {
+      "name": "Blowgun",
+      "category": "Piercing",
+      "damage_range": [15, 20],
+      "accuracy_range": [39, 44],
+      "clipsize": 1,
+      "rateoffire": [1,1],
+      "bonus": {
+          "name": "Poison",
+          "procrange": [85, 100]
+      }
+    },
+    "248": {
+      "name": "Qsz-92",
+      "category": "Pistol",
+      "damage_range": [62, 67],
+      "accuracy_range": [53, 58],
+      "clipsize": 15,
+      "rateoffire": [2,12],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "253": {
+      "name": "Lorcin 380",
+      "category": "Pistol",
+      "damage_range": [27, 32],
+      "accuracy_range": [41, 46],
+      "clipsize": 6,
+      "rateoffire": [1,5],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "254": {
+      "name": "S&W M29",
+      "category": "Pistol",
+      "damage_range": [47, 52],
+      "accuracy_range": [52, 57],
+      "clipsize": 6,
+      "rateoffire": [2,5],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "255": {
+      "name": "Flamethrower",
+      "category": "Heavy Artillery",
+      "damage_range": [67, 72],
+      "accuracy_range": [39, 44],
+      "clipsize": 1,
+      "rateoffire": [1,1],
+      "bonus": {
+          "name": "Burn",
+          "procrange": [30, 50]
+      }
+    },
+    "393": {
+      "name": "Slingshot",
+      "category": "Clubbing",
+      "damage_range": [25, 30],
+      "accuracy_range": [54, 59],
+      "clipsize": 1,
+      "rateoffire": [1,1],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "489": {
+      "name": "Luger",
+      "category": "Pistol",
+      "damage_range": [35, 40],
+      "accuracy_range": [48, 53],
+      "clipsize": 8,
+      "rateoffire": [1,3],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "490": {
+      "name": "Blunderbuss",
+      "category": "Shotgun",
+      "damage_range": [46, 51],
+      "accuracy_range": [24, 29],
+      "clipsize": 1,
+      "rateoffire": [1,1],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "613": {
+      "name": "Harpoon",
+      "category": "Piercing",
+      "damage_range": [47, 52],
+      "accuracy_range": [63, 68],
+      "clipsize": 1,
+      "rateoffire": [1,1],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "831": {
+      "name": "Beretta Pico",
+      "category": "Pistol",
+      "damage_range": [54, 59],
+      "accuracy_range": [53, 58],
+      "clipsize": 6,
+      "rateoffire": [1,2],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "838": {
+      "name": "Homemade Pocket Shotgun",
+      "category": "Shotgun",
+      "damage_range": [63, 68],
+      "accuracy_range": [60, 65],
+      "clipsize": 1,
+      "rateoffire": [1,1],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "844": {
+      "name": "Tranquilizer Gun",
+      "category": "Piercing",
+      "damage_range": [15, 20],
+      "accuracy_range": [45, 50],
+      "clipsize": 1,
+      "rateoffire": [1,1],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    }
+  },
+  "melee" : {
+    "0": {
+      "name": "",
+      "category": "Clubbing",
+      "damage_range": [0, 0],
+      "accuracy_range": [0, 0],
+      "clipsize": 0,
+      "rateoffire": [0,0],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "1": {
+      "name": "Hammer",
+      "category": "Clubbing",
+      "damage_range": [17, 22],
+      "accuracy_range": [55, 60],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "2": {
+      "name": "Baseball Bat",
+      "category": "Clubbing",
+      "damage_range": [16, 21],
+      "accuracy_range": [57, 62],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "3": {
+      "name": "Crowbar",
+      "category": "Clubbing",
+      "damage_range": [20, 25],
+      "accuracy_range": [52, 57],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "4": {
+      "name": "Knuckle Dusters",
+      "category": "Clubbing",
+      "damage_range": [11, 16],
+      "accuracy_range": [62, 67],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "5": {
+      "name": "Pen Knife",
+      "category": "Piercing",
+      "damage_range": [21, 26],
+      "accuracy_range": [45, 50],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "6": {
+      "name": "Kitchen Knife",
+      "category": "Piercing",
+      "damage_range": [25, 30],
+      "accuracy_range": [55, 60],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "7": {
+      "name": "Dagger",
+      "category": "Piercing",
+      "damage_range": [28, 33],
+      "accuracy_range": [60, 65],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "8": {
+      "name": "Axe",
+      "category": "Clubbing",
+      "damage_range": [34, 39],
+      "accuracy_range": [52, 57],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "9": {
+      "name": "Scimitar",
+      "category": "Slashing",
+      "damage_range": [40, 45],
+      "accuracy_range": [58, 63],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "10": {
+      "name": "Chainsaw",
+      "category": "Mechanical",
+      "damage_range": [61, 66],
+      "accuracy_range": [23, 28],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "11": {
+      "name": "Samurai Sword",
+      "category": "Slashing",
+      "damage_range": [58, 63],
+      "accuracy_range": [52, 57],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "110": {
+      "name": "Leather Bullwhip",
+      "category": "Slashing",
+      "damage_range": [27, 32],
+      "accuracy_range": [52, 57],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "111": {
+      "name": "Ninja Claws",
+      "category": "Piercing",
+      "damage_range": [39, 44],
+      "accuracy_range": [51, 56],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "146": {
+      "name": "Yasukuni Sword",
+      "category": "Slashing",
+      "damage_range": [65, 70],
+      "accuracy_range": [49, 54],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "147": {
+      "name": "Rusty Sword",
+      "category": "Slashing",
+      "damage_range": [22, 27],
+      "accuracy_range": [15, 20],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "170": {
+      "name": "Wand of Destruction",
+      "category": "Piercing",
+      "damage_range": [60, 65],
+      "accuracy_range": [24, 29],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "173": {
+      "name": "Butterfly Knife",
+      "category": "Piercing",
+      "damage_range": [24, 29],
+      "accuracy_range": [55, 60],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "175": {
+      "name": "Taser",
+      "category": "Mechanical",
+      "damage_range": [10, 15],
+      "accuracy_range": [54, 59],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "217": {
+      "name": "Claymore Sword",
+      "category": "Slashing",
+      "damage_range": [57, 62],
+      "accuracy_range": [49, 54],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "224": {
+      "name": "Swiss Army Knife",
+      "category": "Piercing",
+      "damage_range": [23, 28],
+      "accuracy_range": [52, 57],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "227": {
+      "name": "Spear",
+      "category": "Piercing",
+      "damage_range": [38, 43],
+      "accuracy_range": [48, 53],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "234": {
+      "name": "Chain Whip",
+      "category": "Slashing",
+      "damage_range": [31, 36],
+      "accuracy_range": [52, 57],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "235": {
+      "name": "Wooden Nunchakus",
+      "category": "Clubbing",
+      "damage_range": [22, 27],
+      "accuracy_range": [59, 64],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "236": {
+      "name": "Kama",
+      "category": "Slashing",
+      "damage_range": [35, 40],
+      "accuracy_range": [55, 60],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "237": {
+      "name": "Kodachi",
+      "category": "Slashing",
+      "damage_range": [62, 67],
+      "accuracy_range": [56, 61],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "238": {
+      "name": "Sai",
+      "category": "Piercing",
+      "damage_range": [29, 34],
+      "accuracy_range": [52, 57],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "245": {
+      "name": "Bo Staff",
+      "category": "Clubbing",
+      "damage_range": [13, 18],
+      "accuracy_range": [55, 60],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "247": {
+      "name": "Katana",
+      "category": "Slashing",
+      "damage_range": [52, 57],
+      "accuracy_range": [55, 60],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "250": {
+      "name": "Twin Tiger Hooks",
+      "category": "Piercing",
+      "damage_range": [50, 55],
+      "accuracy_range": [53, 58],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "251": {
+      "name": "Wushu Double Axes",
+      "category": "Clubbing",
+      "damage_range": [53, 58],
+      "accuracy_range": [51, 56],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "289": {
+      "name": "Dual Axes",
+      "category": "Clubbing",
+      "damage_range": [70, 75],
+      "accuracy_range": [54, 59],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "290": {
+      "name": "Dual Hammers",
+      "category": "Clubbing",
+      "damage_range": [70, 75],
+      "accuracy_range": [54, 59],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "291": {
+      "name": "Dual Scimitars",
+      "category": "Slashing",
+      "damage_range": [70, 75],
+      "accuracy_range": [54, 59],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "292": {
+      "name": "Dual Samurai Swords",
+      "category": "Slashing",
+      "damage_range": [70, 75],
+      "accuracy_range": [54, 59],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "346": {
+      "name": "Pair of High Heels",
+      "category": "Piercing",
+      "damage_range": [40, 45],
+      "accuracy_range": [63, 68],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "359": {
+      "name": "Fine Chisel",
+      "category": "Piercing",
+      "damage_range": [16, 21],
+      "accuracy_range": [50, 55],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "360": {
+      "name": "Ivory Walking Cane",
+      "category": "Clubbing",
+      "damage_range": [53, 58],
+      "accuracy_range": [57, 62],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "387": {
+      "name": "Handbag",
+      "category": "Clubbing",
+      "damage_range": [67, 72],
+      "accuracy_range": [63, 68],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "Storage",
+          "procrange": "n/a"
+      }
+    },
+    "391": {
+      "name": "Macana",
+      "category": "Piercing",
+      "damage_range": [57, 62],
+      "accuracy_range": [65, 70],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      },
+      "default":true
+    },
+    "395": {
+      "name": "Metal Nunchakus",
+      "category": "Clubbing",
+      "damage_range": [61, 66],
+      "accuracy_range": [60, 65],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "397": {
+      "name": "Flail",
+      "category": "Clubbing",
+      "damage_range": [71, 76],
+      "accuracy_range": [28, 33],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "400": {
+      "name": "Guandao",
+      "category": "Slashing",
+      "damage_range": [63, 68],
+      "accuracy_range": [35, 40],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "401": {
+      "name": "Lead Pipe",
+      "category": "Clubbing",
+      "damage_range": [26, 31],
+      "accuracy_range": [33, 38],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "402": {
+      "name": "Ice Pick",
+      "category": "Piercing",
+      "damage_range": [51, 56],
+      "accuracy_range": [60, 65],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "438": {
+      "name": "Cricket Bat",
+      "category": "Clubbing",
+      "damage_range": [18, 23],
+      "accuracy_range": [42, 47],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "439": {
+      "name": "Frying Pan",
+      "category": "Clubbing",
+      "damage_range": [19, 24],
+      "accuracy_range": [43, 48],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "440": {
+      "name": "Pillow",
+      "category": "Clubbing",
+      "damage_range": [3, 8],
+      "accuracy_range": [63, 68],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "539": {
+      "name": "Blood Spattered Sickle",
+      "category": "Slashing",
+      "damage_range": [36, 41],
+      "accuracy_range": [55, 60],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "599": {
+      "name": "Golden Broomstick",
+      "category": "Clubbing",
+      "damage_range": [60, 65],
+      "accuracy_range": [48, 53],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "600": {
+      "name": "Devil's Pitchfork",
+      "category": "Piercing",
+      "damage_range": [61, 66],
+      "accuracy_range": [41, 46],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "604": {
+      "name": "Pair of Ice Skates",
+      "category": "Slashing",
+      "damage_range": [43, 48],
+      "accuracy_range": [45, 50],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "605": {
+      "name": "Diamond Icicle",
+      "category": "Piercing",
+      "damage_range": [45, 50],
+      "accuracy_range": [48, 53],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "614": {
+      "name": "Diamond Bladed Knife",
+      "category": "Piercing",
+      "damage_range": [60, 65],
+      "accuracy_range": [62, 67],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "615": {
+      "name": "Naval Cutlass",
+      "category": "Slashing",
+      "damage_range": [64, 69],
+      "accuracy_range": [52, 57],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "632": {
+      "name": "Petrified Humerus",
+      "category": "Clubbing",
+      "damage_range": [48, 53],
+      "accuracy_range": [48, 53],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "790": {
+      "name": "Plastic Sword",
+      "category": "Clubbing",
+      "damage_range": [5, 10],
+      "accuracy_range": [29, 34],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "792": {
+      "name": "Penelope",
+      "category": "Clubbing",
+      "damage_range": [17, 17],
+      "accuracy_range": [57, 57],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "805": {
+      "name": "Duke's Hammer",
+      "category": "Clubbing",
+      "damage_range": [18, 18],
+      "accuracy_range": [55, 55],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "832": {
+      "name": "Riding Crop",
+      "category": "Slashing",
+      "damage_range": [21, 26],
+      "accuracy_range": [54, 59],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "839": {
+      "name": "Madball",
+      "category": "Clubbing",
+      "damage_range": [60, 65],
+      "accuracy_range": [45, 50],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "846": {
+      "name": "Scalpel",
+      "category": "Piercing",
+      "damage_range": [56, 61],
+      "accuracy_range": [52, 57],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "850": {
+      "name": "Sledgehammer",
+      "category": "Clubbing",
+      "damage_range": [58, 63],
+      "accuracy_range": [50, 55],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "Smash",
+          "procrange": "n/a"
+      }
+    },
+    "871": {
+      "name": "Bug Swatter",
+      "category": "Slashing",
+      "damage_range": [5, 10],
+      "accuracy_range": [59, 64],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "1053": {
+      "name": "Bread Knife",
+      "category": "Piercing",
+      "damage_range": [19, 24],
+      "accuracy_range": [65, 70],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "Lacerate",
+          "procrange": [30,40]
+      }
+    },
+    "1055": {
+      "name": "Poison Umbrella",
+      "category": "Piercing",
+      "damage_range": [35, 40],
+      "accuracy_range": [49, 54],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "Toxin",
+          "procrange": [30,40]
+      }
+    },
+    "1158": {
+      "name": "Meat Hook",
+      "category": "Piercing",
+      "damage_range": [62, 67],
+      "accuracy_range": [39, 44],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "1159": {
+      "name": "Cleaver",
+      "category": "Slashing",
+      "damage_range": [51, 56],
+      "accuracy_range": [56, 61],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    }
+  },
+  "fists" : {
+    "999": {
+      "name": "Fists",
+      "category": "Unarmed",
+      "damage_range": [10, 10],
+      "accuracy_range": [50, 50],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    }
+  },
+  "kick" : {
+    "1000": {
+      "name": "Kick",
+      "category": "Unarmed",
+      "damage_range": [30, 30],
+      "accuracy_range": [40.71, 40.71],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    }
+  },
+  "tempBlock": {
+      "Pepper Spray": ["Hazmat Suit", "Motorcycle Helmet", "Welding Helmet"],
+      "Tear Gas": ["Hazmat Suit"],
+      "Flash Grenade": ["Welding Helmet"],
+      "Sand": ["Hazmat Suit", "Motorcycle Helmet", "Welding Helmet"],
+      "Concussion Grenade": [],
+      "Smoke Grenade": []
+  },
+  "temporary" : {
+    "0": {
+      "name": "",
+      "category": "Throwable",
+      "damage_range": [0, 0],
+      "accuracy_range": [0, 0],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "581": {
+      "name": "Book",
+      "category": "Throwable",
+      "damage_range": [10, 10],
+      "accuracy_range": [88,88],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "394": {
+      "name": "Brick",
+      "category": "Throwable",
+      "damage_range": [28,28],
+      "accuracy_range": [43,43],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "229": {
+      "name": "Claymore Mine",
+      "category": "Throwable",
+      "damage_range": [83,83],
+      "accuracy_range": [27,27],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "1042": {
+      "name": "Concussion Grenade",
+      "category": "Non-Damaging",
+      "damage_range": [0, 0],
+      "accuracy_range": [200, 200],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "463": {
+      "name": "Epinephrine",
+      "category": "Non-Damaging",
+      "damage_range": [0, 0],
+      "accuracy_range": [0, 0],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "246": {
+      "name": "Fireworks",
+      "category": "Throwable",
+      "damage_range": [45,45],
+      "accuracy_range": [34,34],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "222": {
+      "name": "Flash Grenade",
+      "category": "Non-Damaging",
+      "damage_range": [0, 0],
+      "accuracy_range": [200, 200],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "220": {
+      "name": "Grenade",
+      "category": "Throwable",
+      "damage_range": [86, 86],
+      "accuracy_range": [106.00,106.00],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "242": {
+      "name": "HEG",
+      "category": "Throwable",
+      "damage_range": [90, 90],
+      "accuracy_range": [116.00,116.00],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "464": {
+      "name": "Melatonin",
+      "category": "Non-Damaging",
+      "damage_range": [0,0],
+      "accuracy_range": [0,0],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "742": {
+      "name": "Molotov Cocktail",
+      "category": "Throwable",
+      "damage_range": [85, 85],
+      "accuracy_range": [78,78],
+      "bonus": {
+          "name": "Severe Burn",
+          "procrange": [100, 100]
+      }
+    },
+    "840": {
+      "name": "Nail Bomb",
+      "category": "Throwable",
+      "damage_range": [99, 99],
+      "accuracy_range": [106,106],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "239": {
+      "name": "Ninja Stars",
+      "category": "Throwable",
+      "damage_range": [67, 67],
+      "accuracy_range": [53,53],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "392": {
+      "name": "Pepper Spray",
+      "category": "Throwable",
+      "damage_range": [0, 0],
+      "accuracy_range": [200, 200],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    }    ,
+    "883": {
+      "name": "Sand",
+      "category": "Throwable",
+      "damage_range": [0, 0],
+      "accuracy_range": [78,78],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "465": {
+      "name": "Serotonin",
+      "category": "Non-Damaging",
+      "damage_range": [0, 0],
+      "accuracy_range": [0,0],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "226": {
+      "name": "Smoke Grenade",
+      "category": "Throwable",
+      "damage_range": [0, 0],
+      "accuracy_range": [200,200],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "611": {
+      "name": "Snowball",
+      "category": "Throwable",
+      "damage_range": [5, 5],
+      "accuracy_range": [50,50],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "221": {
+      "name": "Stick Grenade",
+      "category": "Throwable",
+      "damage_range": [87, 87],
+      "accuracy_range": [97,97],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "256": {
+      "name": "Tear Gas",
+      "category": "Throwable",
+      "damage_range": [0, 0],
+      "accuracy_range": [200,200],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "257": {
+      "name": "Throwing Knife",
+      "category": "Throwable",
+      "damage_range": [69, 69],
+      "accuracy_range": [52,52],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "616": {
+      "name": "Trout",
+      "category": "Throwable",
+      "damage_range": [35, 35],
+      "accuracy_range": [50,50],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "814": {
+      "name": "Tyrosine",
+      "category": "Non-Damaging",
+      "damage_range": [0, 0],
+      "accuracy_range": [0,0],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    }
+  }
+}

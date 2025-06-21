@@ -1,0 +1,44 @@
+{
+  "head": {
+    "0": {"set": "n/a", "type": "", "armour_range": [0, 0]},
+    "642": {"set": "n/a", "type": "Motorcycle Helmet", "armour_range": [30, 35], "default":true},
+    "348": {"set": "n/a", "type": "Hazmat Suit", "armour_range": [10, 15]},
+    "538": {"set": "n/a", "type": "Medieval Helmet", "armour_range": [25, 30]},
+    "641": {"set": "n/a", "type": "WWII Helmet", "armour_range": [34, 39]},
+    "643": {"set": "n/a", "type": "Construction Helmet", "armour_range": [30, 35]},
+    "644": {"set": "n/a", "type": "Welding Helmet", "armour_range": [34, 39]},
+    "647": {"set": "Leather", "type": "Leather Helmet", "armour_range": [20, 25]},
+    "651": {"set": "Combat", "type": "Combat Helmet", "armour_range": [38, 43]}
+  },
+  "body": {
+    "0": {"set": "n/a", "type": "", "armour_range": [0, 0]},
+    "49": {"set": "n/a", "type": "Full Body Armor", "armour_range": [31, 36], "default":true},
+    "32": {"set": "Leather", "type": "Leather Vest", "armour_range": [20, 25]},
+    "33": {"set": "n/a", "type": "Police Vest", "armour_range": [32, 37]},
+    "34": {"set": "n/a", "type": "Bulletproof Vest", "armour_range": [34, 39]},
+    "50": {"set": "n/a", "type": "Outer Tactical Vest", "armour_range": [36, 41]},
+    "176": {"set": "n/a", "type": "Chain Mail", "armour_range": [23, 28]},
+    "178": {"set": "n/a", "type": "Flak Jacket", "armour_range": [30, 35]},
+    "332": {"set": "Combat", "type": "Combat Vest", "armour_range": [38, 43]},
+    "333": {"set": "n/a", "type": "Liquid Body Armor", "armour_range": [40, 45]},
+    "334": {"set": "n/a", "type": "Flexible Body Armor", "armour_range": [42, 47]}
+  },
+  "hands": {
+    "0": {"set": "n/a", "type": "", "armour_range": [0, 0]},
+    "654": {"set": "Combat", "type": "Combat Gloves", "armour_range": [38, 43], "default":true},
+    "640": {"set": "n/a", "type": "Kevlar Gloves", "armour_range": [32, 37]},
+    "650": {"set": "Leather", "type": "Leather Gloves", "armour_range": [20, 25]}
+  },
+  "legs": {
+    "0": {"set": "n/a", "type": "", "armour_range": [0, 0]},
+    "652": {"set": "Combat", "type": "Combat Pants", "armour_range": [38, 43], "default":true},
+    "648": {"set": "Leather", "type": "Leather Pants", "armour_range": [20, 25]}
+  },
+  "feet": {
+    "0": {"set": "n/a", "type": "", "armour_range": [0, 0]},
+    "653": {"set": "Combat", "type": "Combat Boots", "armour_range": [38, 43], "default":true},
+    "645": {"set": "n/a", "type": "Safety Boots", "armour_range": [30, 35]},
+    "646": {"set": "n/a", "type": "Hiking Boots", "armour_range": [24, 29]},
+    "649": {"set": "Leather", "type": "Leather Boots", "armour_range": [20, 25]}
+  }
+}

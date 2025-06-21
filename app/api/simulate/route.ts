@@ -1,31 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { fight } from '../../lib/fightSimulator'
+import { fight, setModData } from '../../lib/fightSimulator'
 import { FightPlayer, FightResults, BattleStats, WeaponData, ArmourData, PlayerPerks } from '../../lib/fightSimulatorTypes'
+import { loadGameData, getDefaultWeapon, getDefaultArmour } from '../../lib/dataLoader'
 
-// 创建默认玩家数据的辅助函数
-function createDefaultPlayer(name: string, overrides: Partial<FightPlayer> = {}): FightPlayer {
-  const defaultStats: BattleStats = {
-    strength: 1000,
-    speed: 1000,
-    defense: 1000,
-    dexterity: 1000
+// 转换前端武器数据为战斗武器数据
+function convertToFightWeapon(weapon: any): WeaponData {
+  return {
+    name: weapon.name || "Unknown",
+    damage: weapon.damage || 50,
+    accuracy: weapon.accuracy || 50,
+    category: weapon.category || "Fists",
+    clipsize: weapon.clipsize || 0,
+    rateoffire: weapon.rateoffire || [1, 1],
+    experience: weapon.experience || 0,
+    bonus: weapon.bonus,
+    mods: weapon.mods || []
   }
+}
 
-  const defaultWeapon: WeaponData = {
-    name: "Fists",
-    damage: 100,
-    accuracy: 50,
-    category: "Fists",
-    clipsize: 0,
-    rateoffire: [1, 1],
-    experience: 0
+// 转换前端护甲数据为战斗护甲数据
+function convertToFightArmour(armour: any): ArmourData {
+  return {
+    armour: armour.armour || 0,
+    set: armour.set || "n/a",
+    type: armour.type || ""
   }
+}
 
-  const defaultArmour: ArmourData = {
-    armour: 0,
-    set: "n/a"
-  }
-
+// 转换前端玩家数据为战斗玩家数据
+function convertToFightPlayer(playerData: any, position: "attack" | "defend", id: number): FightPlayer {
   const defaultPerks: PlayerPerks = {
     education: {
       damage: false,
@@ -63,77 +66,65 @@ function createDefaultPlayer(name: string, overrides: Partial<FightPlayer> = {})
   }
 
   return {
-    id: 1,
-    name,
-    life: 5000,
-    position: "defend",
-    battleStats: defaultStats,
-    passives: { ...defaultStats },
+    id,
+    name: playerData.name || "Player",
+    life: playerData.life || 5000,
+    position,
+    battleStats: playerData.stats || { strength: 1000, speed: 1000, defense: 1000, dexterity: 1000 },
+    passives: playerData.passives || { strength: 0, speed: 0, defense: 0, dexterity: 0 },
     weapons: {
-      primary: defaultWeapon,
-      secondary: defaultWeapon,
-      melee: defaultWeapon,
-      temporary: defaultWeapon,
-      fists: defaultWeapon,
-      kick: defaultWeapon
+      primary: playerData.weapons?.primary ? convertToFightWeapon(playerData.weapons.primary) : getDefaultWeapon('primary'),
+      secondary: playerData.weapons?.secondary ? convertToFightWeapon(playerData.weapons.secondary) : getDefaultWeapon('secondary'),
+      melee: playerData.weapons?.melee ? convertToFightWeapon(playerData.weapons.melee) : getDefaultWeapon('melee'),
+      temporary: playerData.weapons?.temporary ? convertToFightWeapon(playerData.weapons.temporary) : getDefaultWeapon('temporary'),
+      fists: { name: "Fists", damage: 50, accuracy: 50, category: "Fists", clipsize: 0, rateoffire: [1, 1], experience: 0 },
+      kick: { name: "Kick", damage: 40, accuracy: 55, category: "Fists", clipsize: 0, rateoffire: [1, 1], experience: 0 }
     },
     armour: {
-      head: defaultArmour,
-      body: defaultArmour,
-      hands: defaultArmour,
-      legs: defaultArmour,
-      feet: defaultArmour
+      head: playerData.armour?.head ? convertToFightArmour(playerData.armour.head) : getDefaultArmour('head'),
+      body: playerData.armour?.body ? convertToFightArmour(playerData.armour.body) : getDefaultArmour('body'),
+      hands: playerData.armour?.hands ? convertToFightArmour(playerData.armour.hands) : getDefaultArmour('hands'),
+      legs: playerData.armour?.legs ? convertToFightArmour(playerData.armour.legs) : getDefaultArmour('legs'),
+      feet: playerData.armour?.feet ? convertToFightArmour(playerData.armour.feet) : getDefaultArmour('feet')
     },
-    attacksettings: {
-      primary: { setting: 1, reload: true },
-      secondary: { setting: 0, reload: true },
-      melee: { setting: 0, reload: false },
-      temporary: { setting: 0, reload: false }
+    attacksettings: playerData.attacksettings || {
+      primary: { setting: position === "attack" ? 1 : 0, reload: true },
+      secondary: { setting: position === "attack" ? 2 : 0, reload: true },
+      melee: { setting: position === "attack" ? 3 : 0, reload: false },
+      temporary: { setting: position === "attack" ? 4 : 0, reload: false }
     },
-    defendsettings: {
-      primary: { setting: 5, reload: true },
-      secondary: { setting: 3, reload: true },
-      melee: { setting: 2, reload: false },
-      temporary: { setting: 0, reload: false }
+    defendsettings: playerData.defendsettings || {
+      primary: { setting: position === "defend" ? 5 : 0, reload: true },
+      secondary: { setting: position === "defend" ? 3 : 0, reload: true },
+      melee: { setting: position === "defend" ? 2 : 0, reload: false },
+      temporary: { setting: position === "defend" ? 0 : 0, reload: false }
     },
-    perks: defaultPerks,
-    ...overrides
+    perks: {
+      education: { ...defaultPerks.education, ...playerData.perks?.education },
+      faction: { ...defaultPerks.faction, ...playerData.perks?.faction },
+      company: { ...defaultPerks.company, ...playerData.perks?.company },
+      property: { ...defaultPerks.property, ...playerData.perks?.property },
+      merit: { ...defaultPerks.merit, ...playerData.perks?.merit }
+    }
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
+    // 加载游戏数据
+    const gameData = await loadGameData()
+    
+    // 设置改装数据到战斗模拟器
+    if (gameData.mods) {
+      setModData(gameData.mods)
+    }
+    
     const body = await request.json()
     const { player1, player2, simulations = 1000 } = body
 
     // 创建玩家数据
-    const hero = createDefaultPlayer("Hero", {
-      position: "attack",
-      battleStats: player1.stats || { strength: 1000, speed: 1000, defense: 1000, dexterity: 1000 },
-      life: player1.life || 5000,
-      weapons: {
-        primary: player1.weapons?.primary || createDefaultPlayer("").weapons.primary,
-        secondary: player1.weapons?.secondary || createDefaultPlayer("").weapons.secondary,
-        melee: player1.weapons?.melee || createDefaultPlayer("").weapons.melee,
-        temporary: player1.weapons?.temporary || createDefaultPlayer("").weapons.temporary,
-        fists: createDefaultPlayer("").weapons.fists,
-        kick: createDefaultPlayer("").weapons.kick
-      }
-    })
-
-    const villain = createDefaultPlayer("Villain", {
-      position: "defend",
-      battleStats: player2.stats || { strength: 1000, speed: 1000, defense: 1000, dexterity: 1000 },
-      life: player2.life || 5000,
-      weapons: {
-        primary: player2.weapons?.primary || createDefaultPlayer("").weapons.primary,
-        secondary: player2.weapons?.secondary || createDefaultPlayer("").weapons.secondary,
-        melee: player2.weapons?.melee || createDefaultPlayer("").weapons.melee,
-        temporary: player2.weapons?.temporary || createDefaultPlayer("").weapons.temporary,
-        fists: createDefaultPlayer("").weapons.fists,
-        kick: createDefaultPlayer("").weapons.kick
-      }
-    })
+    const hero = convertToFightPlayer(player1, "attack", 1)
+    const villain = convertToFightPlayer(player2, "defend", 2)
 
     // 初始化结果数组
     let results: FightResults = [
@@ -185,7 +176,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Simulation error:', error)
     return NextResponse.json(
-      { success: false, error: 'Simulation failed' },
+      { success: false, error: 'Simulation failed: ' + (error as Error).message },
       { status: 500 }
     )
   }

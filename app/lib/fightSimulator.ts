@@ -9,7 +9,8 @@ import {
   ActionResults,
   FightData,
   WeaponData,
-  ArmourData
+  ArmourData,
+  ModData
 } from './fightSimulatorTypes'
 
 // 常量定义
@@ -21,6 +22,16 @@ export const MATH_LOG_32_UNDER_50 = 50 / Math.log(32)
 let players: { [key: string]: FightPlayer } = {}
 let a: any, weapons: any, armours: any, m: any, t: any, companies: any
 let h: FightPlayer, v: FightPlayer
+
+// 改装数据缓存
+let cachedModData: { [key: string]: ModData } = {}
+
+/**
+ * 设置改装数据
+ */
+export function setModData(modData: { [key: string]: ModData }) {
+  cachedModData = modData
+}
 
 /**
  * 主要的战斗函数
@@ -56,21 +67,21 @@ export function fight(hero: FightPlayer, villain: FightPlayer, results: FightRes
   
   let h_set = JSON.parse(JSON.stringify(hero.attacksettings))
   let v_set = JSON.parse(JSON.stringify(villain.defendsettings))
-  let h_temps: TempEffects = [[0, 0]] // 修复：应该是二维数组
-  let v_temps: TempEffects = [[0, 0]]
+  let h_temps: TempEffects = []
+  let v_temps: TempEffects = []
 
   let hWS: WeaponState = {
     primary: {
       ammoleft: Math.round(hPrim.clipsize * hModsPrim[0]),
       maxammo: Math.round(hPrim.clipsize * hModsPrim[0]),
       clipsleft: hModsPrim[1],
-      rof: [Math.max(1, hPrim.rateoffire[0] * hModsPrim[2]), Math.max(1, hPrim.rateoffire[1] * hModsPrim[2])]
+      rof: [Math.max(1, Math.round(hPrim.rateoffire[0] * hModsPrim[2])), Math.max(1, Math.round(hPrim.rateoffire[1] * hModsPrim[2]))]
     },
     secondary: {
       ammoleft: Math.round(hSec.clipsize * hModsSec[0]),
       maxammo: Math.round(hSec.clipsize * hModsSec[0]),
       clipsleft: hModsSec[1],
-      rof: [Math.max(1, hSec.rateoffire[0] * hModsSec[2]), Math.max(1, hSec.rateoffire[1] * hModsSec[2])]
+      rof: [Math.max(1, Math.round(hSec.rateoffire[0] * hModsSec[2])), Math.max(1, Math.round(hSec.rateoffire[1] * hModsSec[2]))]
     },
     melee: {
       ammoleft: "n/a",
@@ -87,13 +98,13 @@ export function fight(hero: FightPlayer, villain: FightPlayer, results: FightRes
       ammoleft: Math.round(vPrim.clipsize * vModsPrim[0]),
       maxammo: Math.round(vPrim.clipsize * vModsPrim[0]),
       clipsleft: vModsPrim[1],
-      rof: [Math.max(1, vPrim.rateoffire[0] * vModsPrim[2]), Math.max(1, vPrim.rateoffire[1] * vModsPrim[2])]
+      rof: [Math.max(1, Math.round(vPrim.rateoffire[0] * vModsPrim[2])), Math.max(1, Math.round(vPrim.rateoffire[1] * vModsPrim[2]))]
     },
     secondary: {
       ammoleft: Math.round(vSec.clipsize * vModsSec[0]),
       maxammo: Math.round(vSec.clipsize * vModsSec[0]),
       clipsleft: vModsSec[1],
-      rof: [Math.max(1, vSec.rateoffire[0] * vModsSec[2]), Math.max(1, vSec.rateoffire[1] * vModsSec[2])]
+      rof: [Math.max(1, Math.round(vSec.rateoffire[0] * vModsSec[2])), Math.max(1, Math.round(vSec.rateoffire[1] * vModsSec[2]))]
     },
     melee: {
       ammoleft: "n/a",
@@ -386,10 +397,54 @@ export function procBonus(proc: number): number {
 
 /**
  * 应用改装效果（战斗前）
+ * @param p 玩家数据
+ * @param p_mods 武器改装列表
+ * @returns [弹夹容量倍数, 额外弹夹数, 射速倍数]
  */
 export function applyPMbefore(p: FightPlayer, p_mods: string[]): number[] {
-  // 简化版本：返回默认值
-  return [1, 1, 1] // [弹夹修饰, 弹夹数量修饰, 射速修饰]
+  let clipsizemulti = 1
+  let clips = 3  // 基础弹夹数
+  let rofmulti = 1
+
+  const p_comp = p.perks.company
+  const p_edu = p.perks.education
+
+  // 应用改装效果
+  for (const modName of p_mods) {
+    if (modName && modName !== "n/a") {
+      // 这里需要从数据加载器获取改装数据
+      // 由于这是在战斗逻辑中，我们需要传入改装数据
+      // 暂时使用硬编码的一些常见改装效果
+      const modEffects = getModEffects(modName)
+      if (modEffects) {
+        clipsizemulti += modEffects.clip_size_multi
+        clips += modEffects.extra_clips
+        rofmulti += modEffects.rate_of_fire_multi
+      }
+    }
+  }
+
+  // 公司技能：Gun Shop 7星+增加1个额外弹夹
+  if (p_comp.name === "Gun Shop" && p_comp.star >= 7) {
+    clips += 1
+  }
+
+  // 教育技能：弹药控制
+  if (p_edu.ammocontrol1) {
+    rofmulti -= 0.05
+  }
+  if (p_edu.ammocontrol2) {
+    rofmulti -= 0.2
+  }
+
+  return [clipsizemulti, clips, rofmulti]
+}
+
+/**
+ * 获取改装效果
+ */
+function getModEffects(modName: string): ModData | null {
+  return cachedModData[modName] || null
 }
 
 /**

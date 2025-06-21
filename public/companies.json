@@ -1,0 +1,13 @@
+{
+  "Adult Novelties": [7],
+  "Clothing Store": [10],
+  "Firework Stand": [10],
+  "Furniture Store": [10],
+  "Gas Station" : [5, 7, 10],
+  "Gun Shop": [10],
+  "Hair Salon": [10],
+  "Private Security Firm": [7],
+  "Pub": [3],
+  "Restaurant": [3],
+  "Zoo": [10]
+}
