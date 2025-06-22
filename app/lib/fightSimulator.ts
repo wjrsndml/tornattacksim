@@ -1429,11 +1429,32 @@ function action(
 					// 如果暴击率被修改，需要重新选择身体部位
 					if (modifiedCritChance !== x_crit_chance) {
 						xBP = selectBodyPart(x, modifiedCritChance);
-					}
 
-					// 更新暴击倍数
-					if (xBP[1] > 1) {
-						xBP[1] = modifiedCritDamage;
+						// 重新计算基于新身体部位的武器特效暴击倍数修改
+						const [, newModifiedCritDamage] = applyWeaponBonusesToCritical(
+							modifiedCritChance, // 使用修改后的暴击率
+							xBP[1], // 使用新身体部位的暴击倍数
+							currentWeapon,
+							{
+								attacker: x,
+								target: y,
+								weapon: currentWeapon,
+								bodyPart: xBP[0], // 使用新身体部位
+								isCritical: xBP[1] > 1,
+								turn: turn,
+								currentWeaponSlot: xCW,
+							},
+						);
+
+						// 更新暴击倍数
+						if (xBP[1] > 1) {
+							xBP[1] = newModifiedCritDamage;
+						}
+					} else {
+						// 暴击率未被修改，直接使用原始计算的暴击倍数
+						if (xBP[1] > 1) {
+							xBP[1] = modifiedCritDamage;
+						}
 					}
 				}
 
@@ -2231,7 +2252,7 @@ function action(
 			);
 
 			if (healAmount > 0) {
-				const maxLife = x.life;
+				const maxLife = x.maxLife;
 				const actualHeal = Math.min(healAmount, maxLife - xCL);
 				if (actualHeal > 0) {
 					xCL += actualHeal;

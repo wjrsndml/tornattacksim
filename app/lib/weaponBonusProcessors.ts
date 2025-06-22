@@ -175,8 +175,7 @@ const BloodlustProcessor: WeaponBonusProcessor = {
 		bonusValue: number,
 		_context: DamageContext,
 	) => {
-		// 注意：这里需要在实际使用时修改攻击者的生命值
-		// 由于这是纯函数，实际的生命值修改需要在调用方处理
+		// 返回正值表示对攻击者的生命回复
 		return Math.round(damage * (bonusValue / 100));
 	},
 };
@@ -360,17 +359,30 @@ const DoubleEdgedProcessor: WeaponBonusProcessor = {
 	applyToDamage: (
 		damage: number,
 		bonusValue: number,
-		context: DamageContext,
+		_context: DamageContext,
 	) => {
 		const doubleEdgedChance = bonusValue / 100;
 		const random = Math.random();
 		if (random < doubleEdgedChance) {
 			addTriggeredEffect("Double-edged");
-			// 设置标记表示需要自伤，实际自伤在applyPostDamage中处理
-			context.attacker.life -= Math.round(damage * 0.25); // 自伤25%
 			return Math.round(damage * 2); // 双倍伤害
 		}
 		return damage;
+	},
+	applyPostDamage: (
+		_attacker: FightPlayer,
+		_target: FightPlayer,
+		damage: number,
+		_bonusValue: number,
+		_context: DamageContext,
+	) => {
+		// 只有在Double-edged特效触发时才造成自伤
+		if (getCurrentTurnTriggeredEffects().includes("Double-edged")) {
+			const selfDamage = Math.round(damage * 0.25); // 自伤25%
+			// 返回负值表示对攻击者造成伤害
+			return -selfDamage;
+		}
+		return 0;
 	},
 };
 
@@ -385,7 +397,7 @@ const ExecuteProcessor: WeaponBonusProcessor = {
 		_context: DamageContext,
 	) => {
 		const executeThreshold = bonusValue / 100;
-		const targetHealthPercent = target.life / 1000; // 假设最大生命值1000
+		const targetHealthPercent = target.life / target.maxLife;
 		if (targetHealthPercent <= executeThreshold && damage > 0) {
 			addTriggeredEffect("Execute");
 			// 直接击败目标 - 这个需要在战斗引擎中处理
@@ -402,8 +414,8 @@ const BlindsideProcessor: WeaponBonusProcessor = {
 		bonusValue: number,
 		context: DamageContext,
 	) => {
-		// 检查目标是否满血（假设最大生命值1000）
-		if (context.target.life >= 1000) {
+		// 检查目标是否满血
+		if (context.target.life >= context.target.maxLife) {
 			return Math.round(damage * (1 + bonusValue / 100));
 		}
 		return damage;
@@ -419,7 +431,8 @@ const ComebackProcessor: WeaponBonusProcessor = {
 		context: DamageContext,
 	) => {
 		// 检查自己血量是否低于25%
-		const attackerHealthPercent = context.attacker.life / 1000; // 假设最大生命值1000
+		const attackerHealthPercent =
+			context.attacker.life / context.attacker.maxLife;
 		if (attackerHealthPercent <= 0.25) {
 			return Math.round(damage * (1 + bonusValue / 100));
 		}
@@ -694,11 +707,21 @@ export function applyWeaponBonusesPostDamage(
 	for (const bonus of weapon.weaponBonuses) {
 		const processor = getWeaponBonusProcessor(bonus.name);
 		if (processor?.applyPostDamage) {
+			const result = processor.applyPostDamage(
+				attacker,
+				target,
+				damage,
+				bonus.value,
+				context,
+			);
+
 			if (bonus.name === "Bloodlust") {
-				// 特殊处理Bloodlust的生命回复
-				totalHealing += Math.round(damage * (bonus.value / 100));
+				// Bloodlust的生命回复
+				totalHealing += result;
+			} else if (bonus.name === "Double-edged" && result < 0) {
+				// Double-edged的自伤（负值表示对攻击者造成伤害）
+				totalHealing += result; // 负值减少攻击者生命值
 			}
-			processor.applyPostDamage(attacker, target, damage, bonus.value, context);
 		}
 	}
 
@@ -771,11 +794,14 @@ export function getTriggeredBonuses(
 				triggered = true;
 			}
 			// 条件伤害特效 - 只有满足条件时才显示
-			else if (bonus.name === "Blindside" && context.target.life >= 1000) {
+			else if (
+				bonus.name === "Blindside" &&
+				context.target.life >= context.target.maxLife
+			) {
 				triggered = true;
 			} else if (
 				bonus.name === "Comeback" &&
-				context.attacker.life / 1000 <= 0.25
+				context.attacker.life / context.attacker.maxLife <= 0.25
 			) {
 				triggered = true;
 			} else if (bonus.name === "Assassinate" && context.turn === 1) {
