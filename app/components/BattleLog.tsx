@@ -64,33 +64,37 @@ export default function BattleLog({
 		const isAttackerAction = entry.attacker === player1Name;
 		const isDefenderAction = entry.attacker === player2Name;
 
-		// 基础背景色：使用柔和的灰色系
+		// 基础背景色：攻击者使用淡绿色，防御者使用淡红色
 		let baseColor = "";
 		if (isAttackerAction) {
-			baseColor = "bg-slate-50/50 border-l-4 border-slate-200";
+			baseColor = "bg-green-50/60 border-l-4 border-green-200/60";
 		} else if (isDefenderAction) {
-			baseColor = "bg-slate-50/50 border-l-4 border-slate-200";
+			baseColor = "bg-red-50/60 border-l-4 border-red-200/60";
 		}
 
 		// 如果有战斗结果，根据结果调整颜色强度
 		if (battleResult) {
 			if (battleResult === "player1") {
-				// Attacker赢了
+				// Attacker赢了，增强攻击者颜色
 				if (isAttackerAction) {
-					baseColor = "bg-slate-100 border-l-4 border-slate-300";
+					baseColor = "bg-green-100/80 border-l-4 border-green-300/80";
 				} else if (isDefenderAction) {
-					baseColor = "bg-slate-50 border-l-4 border-slate-200";
+					baseColor = "bg-red-50/40 border-l-4 border-red-200/40";
 				}
 			} else if (battleResult === "player2") {
-				// Defender赢了
+				// Defender赢了，增强防御者颜色
 				if (isAttackerAction) {
-					baseColor = "bg-slate-50 border-l-4 border-slate-200";
+					baseColor = "bg-green-50/40 border-l-4 border-green-200/40";
 				} else if (isDefenderAction) {
-					baseColor = "bg-slate-100 border-l-4 border-slate-300";
+					baseColor = "bg-red-100/80 border-l-4 border-red-300/80";
 				}
 			} else if (battleResult === "stalemate") {
-				// 平局
-				baseColor = "bg-slate-100 border-l-4 border-slate-300";
+				// 平局，保持基础颜色但稍微增强
+				if (isAttackerAction) {
+					baseColor = "bg-green-100/70 border-l-4 border-green-300/70";
+				} else if (isDefenderAction) {
+					baseColor = "bg-red-100/70 border-l-4 border-red-300/70";
+				}
 			}
 		}
 
@@ -139,19 +143,13 @@ export default function BattleLog({
 						<div className="flex items-center justify-between text-sm">
 							<div className="flex items-center space-x-4">
 								<div className="flex items-center space-x-2">
-									<div className="w-4 h-4 bg-slate-100 border-l-4 border-slate-300 rounded"></div>
-									<span className="text-slate-600">{player1Name} 攻击</span>
+									<div className="w-4 h-4 bg-green-100 border-l-4 border-green-300 rounded"></div>
+									<span className="text-green-700">{player1Name} 攻击</span>
 								</div>
 								<div className="flex items-center space-x-2">
-									<div className="w-4 h-4 bg-slate-100 border-l-4 border-slate-300 rounded"></div>
-									<span className="text-slate-600">{player2Name} 反击</span>
+									<div className="w-4 h-4 bg-red-100 border-l-4 border-red-300 rounded"></div>
+									<span className="text-red-700">{player2Name} 反击</span>
 								</div>
-								{battleResult === "stalemate" && (
-									<div className="flex items-center space-x-2">
-										<div className="w-4 h-4 bg-slate-100 border-l-4 border-slate-300 rounded"></div>
-										<span className="text-slate-600">平局</span>
-									</div>
-								)}
 							</div>
 							{battleResult && (
 								<div className="text-sm font-medium">

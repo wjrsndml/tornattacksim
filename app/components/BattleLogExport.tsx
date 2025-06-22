@@ -108,7 +108,7 @@ export default function BattleLogExport({
 		}
 	};
 
-	// 解析日志信息并返回颜色样式（使用更柔和的颜色）
+	// 解析日志信息并返回颜色样式（攻击者绿色，防御者红色）
 	const getLogLineStyle = (
 		message: string,
 		battleResult: "player1" | "player2" | "stalemate",
@@ -116,11 +116,11 @@ export default function BattleLogExport({
 		// 检查是否是胜利/平局消息
 		if (message.includes("won") || message.includes("Stalemate")) {
 			if (message.includes(`${player1Name} won`)) {
-				return "p-2 rounded-md text-sm transition-colors bg-slate-50 border-l-4 border-slate-300 text-slate-700 font-medium";
+				return "p-2 rounded-md text-sm transition-colors bg-green-100/80 border-l-4 border-green-300/80 text-green-800 font-medium";
 			} else if (message.includes(`${player2Name} won`)) {
-				return "p-2 rounded-md text-sm transition-colors bg-slate-50 border-l-4 border-slate-300 text-slate-700 font-medium";
+				return "p-2 rounded-md text-sm transition-colors bg-red-100/80 border-l-4 border-red-300/80 text-red-800 font-medium";
 			} else if (message.includes("Stalemate")) {
-				return "p-2 rounded-md text-sm transition-colors bg-slate-50 border-l-4 border-slate-300 text-slate-700 font-medium";
+				return "p-2 rounded-md text-sm transition-colors bg-yellow-100/80 border-l-4 border-yellow-300/80 text-yellow-800 font-medium";
 			}
 		}
 
@@ -128,47 +128,52 @@ export default function BattleLogExport({
 		const isPlayer1Action = message.startsWith(`${player1Name} `);
 		const isPlayer2Action = message.startsWith(`${player2Name} `);
 
-		// 基础背景色：使用更柔和的颜色
+		// 基础背景色：攻击者使用淡绿色，防御者使用淡红色
 		let baseStyle = "p-2 rounded-md text-sm transition-colors text-slate-600";
 		if (isPlayer1Action) {
-			baseStyle += " bg-slate-50/50 border-l-4 border-slate-200";
+			baseStyle += " bg-green-50/60 border-l-4 border-green-200/60";
 		} else if (isPlayer2Action) {
-			baseStyle += " bg-slate-50/50 border-l-4 border-slate-200";
+			baseStyle += " bg-red-50/60 border-l-4 border-red-200/60";
 		}
 
 		// 根据战斗结果调整颜色强度
 		if (battleResult === "player1") {
-			// Player1赢了
+			// Player1赢了，增强攻击者颜色
 			if (isPlayer1Action) {
 				baseStyle = baseStyle.replace(
-					"bg-slate-50/50 border-slate-200",
-					"bg-slate-100 border-slate-300",
+					"bg-green-50/60 border-green-200/60",
+					"bg-green-100/80 border-green-300/80",
 				);
 			} else if (isPlayer2Action) {
 				baseStyle = baseStyle.replace(
-					"bg-slate-50/50 border-slate-200",
-					"bg-slate-50 border-slate-200",
+					"bg-red-50/60 border-red-200/60",
+					"bg-red-50/40 border-red-200/40",
 				);
 			}
 		} else if (battleResult === "player2") {
-			// Player2赢了
+			// Player2赢了，增强防御者颜色
 			if (isPlayer1Action) {
 				baseStyle = baseStyle.replace(
-					"bg-slate-50/50 border-slate-200",
-					"bg-slate-50 border-slate-200",
+					"bg-green-50/60 border-green-200/60",
+					"bg-green-50/40 border-green-200/40",
 				);
 			} else if (isPlayer2Action) {
 				baseStyle = baseStyle.replace(
-					"bg-slate-50/50 border-slate-200",
-					"bg-slate-100 border-slate-300",
+					"bg-red-50/60 border-red-200/60",
+					"bg-red-100/80 border-red-300/80",
 				);
 			}
 		} else if (battleResult === "stalemate") {
-			// 平局
-			if (isPlayer1Action || isPlayer2Action) {
+			// 平局，保持基础颜色但稍微增强
+			if (isPlayer1Action) {
 				baseStyle = baseStyle.replace(
-					"bg-slate-50/50 border-slate-200",
-					"bg-slate-100 border-slate-300",
+					"bg-green-50/60 border-green-200/60",
+					"bg-green-100/70 border-green-300/70",
+				);
+			} else if (isPlayer2Action) {
+				baseStyle = baseStyle.replace(
+					"bg-red-50/60 border-red-200/60",
+					"bg-red-100/70 border-red-300/70",
 				);
 			}
 		}

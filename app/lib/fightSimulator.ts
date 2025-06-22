@@ -2,6 +2,7 @@ import { canArmourBlock, getArmourCoverage } from "./dataLoader";
 import type {
 	ActionResults,
 	ArmourSet,
+	DamageContext,
 	DOTEffects,
 	FightPlayer,
 	FightResults,
@@ -13,6 +14,16 @@ import type {
 	WeaponSettings,
 	WeaponState,
 } from "./fightSimulatorTypes";
+import {
+	applyWeaponBonusesPostDamage,
+	applyWeaponBonusesToAmmo,
+	applyWeaponBonusesToArmour,
+	applyWeaponBonusesToCritical,
+	applyWeaponBonusesToDamage,
+	applyWeaponBonusesToStats,
+	applyWeaponBonusesToWeaponState,
+	getTriggeredBonuses,
+} from "./weaponBonusProcessors";
 
 // 常量定义
 export const PARTIAL_FREQUENCY = 10000;
@@ -192,6 +203,12 @@ export function fight(
 			initialsetting: v_set.temporary.setting,
 		},
 	};
+
+	// 应用武器特效对武器状态的修改（如Specialist特效）
+	hWS = applyWeaponBonusesToWeaponState(hWS, hPrim);
+	hWS = applyWeaponBonusesToWeaponState(hWS, hSec);
+	vWS = applyWeaponBonusesToWeaponState(vWS, vPrim);
+	vWS = applyWeaponBonusesToWeaponState(vWS, vSec);
 
 	// 战斗循环，最多25回合
 	for (let i = 0; i < 25; i++) {
@@ -1373,13 +1390,49 @@ function action(
 				) {
 					xBP = ["chest", 1 / 1.75];
 				} else {
-					xBP = selectBodyPart(x, x_crit_chance);
+					// 应用武器特效到暴击率
+					const [modifiedCritChance, modifiedCritDamage] =
+						applyWeaponBonusesToCritical(
+							x_crit_chance,
+							xBP?.[1] || 1.75, // 默认暴击倍数
+							currentWeapon,
+							{
+								attacker: x,
+								target: y,
+								weapon: currentWeapon,
+								bodyPart: "",
+								isCritical: false,
+								turn: turn,
+								currentWeaponSlot: xCW,
+							},
+						);
+					xBP = selectBodyPart(x, modifiedCritChance);
+					// 更新暴击倍数
+					if (xBP[1] > 1) {
+						xBP[1] = modifiedCritDamage;
+					}
 				}
 
 				xMD = maxDamage(xSTR);
 				yDM = (100 - damageMitigation(yDEF, xSTR)) / 100;
 				xWDM = xW[xCW as keyof typeof xW].damage / 10;
-				yAM = (100 - armourMitigation(xBP[0], yA) / x_pen) / 100;
+
+				// 应用武器特效到护甲减免
+				const baseArmourMitigation = armourMitigation(xBP[0], yA);
+				const modifiedArmourMitigation = applyWeaponBonusesToArmour(
+					baseArmourMitigation,
+					currentWeapon,
+					{
+						attacker: x,
+						target: y,
+						weapon: currentWeapon,
+						bodyPart: xBP[0],
+						isCritical: xBP[1] > 1,
+						turn: turn,
+						currentWeaponSlot: xCW,
+					},
+				);
+				yAM = (100 - modifiedArmourMitigation / x_pen) / 100;
 				xDV = variance();
 
 				xDMG = Math.round(
@@ -1392,6 +1445,18 @@ function action(
 						(1 + x_dmg_bonus / 100) *
 						x_ammo_dmg,
 				);
+
+				// 应用武器特效到伤害
+				xDMG = applyWeaponBonusesToDamage(xDMG, currentWeapon, {
+					attacker: x,
+					target: y,
+					weapon: currentWeapon,
+					bodyPart: xBP[0],
+					isCritical: xBP[1] > 1,
+					turn: turn,
+					currentWeaponSlot: xCW,
+				});
+
 				if (Number.isNaN(xDMG)) {
 					xDMG = 0;
 				}
@@ -1489,6 +1554,22 @@ function action(
 
 				xRF = roundsFired(xW[xCW], xWS[xCW]);
 				if (xHOM) {
+					// 检测触发的特效
+					const triggeredBonuses = getTriggeredBonuses(primaryWeapon, {
+						attacker: x,
+						target: y,
+						weapon: primaryWeapon,
+						bodyPart: xBP[0],
+						isCritical: xBP[1] > 1,
+						turn: turn,
+						currentWeaponSlot: xCW,
+					});
+
+					const bonusText =
+						triggeredBonuses.length > 0
+							? ` [${triggeredBonuses.join(", ")}]`
+							: "";
+
 					log.push(
 						x.name +
 							" fired " +
@@ -1502,7 +1583,8 @@ function action(
 							" in the " +
 							xBP[0] +
 							" for " +
-							xDMG,
+							xDMG +
+							bonusText,
 					);
 
 					// 处理主武器特�?
@@ -1634,7 +1716,28 @@ function action(
 			}
 			// 更新弹药状态
 			if (hasAmmoSystem(primaryWeaponState)) {
-				primaryWeaponState.ammoleft -= xRF;
+				// 应用武器特效到弹药消耗（如Conserve特效）
+				const modifiedAmmoConsumed = applyWeaponBonusesToAmmo(
+					xRF,
+					primaryWeapon,
+					{
+						attacker: x,
+						target: y,
+						weapon: primaryWeapon,
+						bodyPart: xBP[0],
+						isCritical: xBP[1] > 1,
+						turn: turn,
+						currentWeaponSlot: xCW,
+					},
+				);
+
+				primaryWeaponState.ammoleft -= modifiedAmmoConsumed;
+				if (modifiedAmmoConsumed < xRF) {
+					log.push(
+						`${x.name}'s weapon conserved ${xRF - modifiedAmmoConsumed} rounds [Conserve]`,
+					);
+				}
+
 				if (primaryWeaponState.ammoleft === 0) {
 					primaryWeaponState.clipsleft -= 1;
 					if (
@@ -1658,6 +1761,22 @@ function action(
 			const xRF = roundsFired(secondaryWeapon, secondaryWeaponState);
 
 			if (xHOM) {
+				// 检测触发的特效
+				const triggeredBonuses = getTriggeredBonuses(secondaryWeapon, {
+					attacker: x,
+					target: y,
+					weapon: secondaryWeapon,
+					bodyPart: xBP[0],
+					isCritical: xBP[1] > 1,
+					turn: turn,
+					currentWeaponSlot: xCW,
+				});
+
+				const bonusText =
+					triggeredBonuses.length > 0
+						? ` [${triggeredBonuses.join(", ")}]`
+						: "";
+
 				log.push(
 					x.name +
 						" fired " +
@@ -1671,7 +1790,8 @@ function action(
 						" in the " +
 						xBP[0] +
 						" for " +
-						xDMG,
+						xDMG +
+						bonusText,
 				);
 
 				// 处理副武器特�?
@@ -1717,7 +1837,28 @@ function action(
 			}
 			// 更新弹药状态
 			if (hasAmmoSystem(secondaryWeaponState)) {
-				secondaryWeaponState.ammoleft -= xRF;
+				// 应用武器特效到弹药消耗（如Conserve特效）
+				const modifiedAmmoConsumed = applyWeaponBonusesToAmmo(
+					xRF,
+					secondaryWeapon,
+					{
+						attacker: x,
+						target: y,
+						weapon: secondaryWeapon,
+						bodyPart: xBP[0],
+						isCritical: xBP[1] > 1,
+						turn: turn,
+						currentWeaponSlot: xCW,
+					},
+				);
+
+				secondaryWeaponState.ammoleft -= modifiedAmmoConsumed;
+				if (modifiedAmmoConsumed < xRF) {
+					log.push(
+						`${x.name}'s weapon conserved ${xRF - modifiedAmmoConsumed} rounds [Conserve]`,
+					);
+				}
+
 				if (secondaryWeaponState.ammoleft === 0) {
 					secondaryWeaponState.clipsleft -= 1;
 					if (
@@ -1767,6 +1908,23 @@ function action(
 			} else {
 				if (xHOM) {
 					const weaponName = xCW ? xW[xCW as keyof typeof xW].name : "weapon";
+
+					// 检测触发的特效
+					const triggeredBonuses = getTriggeredBonuses(meleeWeapon, {
+						attacker: x,
+						target: y,
+						weapon: meleeWeapon,
+						bodyPart: xBP[0],
+						isCritical: xBP[1] > 1,
+						turn: turn,
+						currentWeaponSlot: xCW,
+					});
+
+					const bonusText =
+						triggeredBonuses.length > 0
+							? ` [${triggeredBonuses.join(", ")}]`
+							: "";
+
 					log.push(
 						x.name +
 							" hit " +
@@ -1776,7 +1934,8 @@ function action(
 							" in the " +
 							xBP[0] +
 							" for " +
-							xDMG,
+							xDMG +
+							bonusText,
 					);
 
 					// 处理近战武器特效
@@ -1971,6 +2130,22 @@ function action(
 			} else {
 				// 其他投掷武器
 				if (xHOM) {
+					// 检测触发的特效
+					const triggeredBonuses = getTriggeredBonuses(temporaryWeapon, {
+						attacker: x,
+						target: y,
+						weapon: temporaryWeapon,
+						bodyPart: xBP[0],
+						isCritical: xBP[1] > 1,
+						turn: turn,
+						currentWeaponSlot: xCW,
+					});
+
+					const bonusText =
+						triggeredBonuses.length > 0
+							? ` [${triggeredBonuses.join(", ")}]`
+							: "";
+
 					log.push(
 						x.name +
 							" threw a " +
@@ -1980,7 +2155,8 @@ function action(
 							" in the " +
 							xBP[0] +
 							" for " +
-							xDMG,
+							xDMG +
+							bonusText,
 					);
 				} else {
 					log.push(
@@ -2011,6 +2187,34 @@ function action(
 
 		// 扣除伤害
 		yCL -= xDMG;
+
+		// 应用武器特效的后处理效果（如Bloodlust生命回复）
+		if (xDMG > 0) {
+			const healAmount = applyWeaponBonusesPostDamage(
+				x,
+				y,
+				xDMG,
+				currentWeapon,
+				{
+					attacker: x,
+					target: y,
+					weapon: currentWeapon,
+					bodyPart: xBP[0],
+					isCritical: xBP[1] > 1,
+					turn: turn,
+					currentWeaponSlot: xCW,
+				},
+			);
+
+			if (healAmount > 0) {
+				const maxLife = x.life;
+				const actualHeal = Math.min(healAmount, maxLife - xCL);
+				if (actualHeal > 0) {
+					xCL += actualHeal;
+					log.push(`${x.name} recovered ${actualHeal} life from Bloodlust`);
+				}
+			}
+		}
 
 		if (yCL === 0) {
 			return [
@@ -2521,16 +2725,35 @@ function applyPMT(
 		x_passives.speed -= 25;
 	}
 
-	// 最终属性计?
-	const xSTR = x.battleStats.strength * (1 + x_passives.strength / 100);
-	let xSPD = x.battleStats.speed * (1 + x_passives.speed / 100);
-	const xDEF = x.battleStats.defense * (1 + x_passives.defense / 100);
-	let xDEX = x.battleStats.dexterity * (1 + x_passives.dexterity / 100);
+	// 应用武器特效到属性
+	const xBaseStats = {
+		strength: x.battleStats.strength * (1 + x_passives.strength / 100),
+		speed: x.battleStats.speed * (1 + x_passives.speed / 100),
+		defense: x.battleStats.defense * (1 + x_passives.defense / 100),
+		dexterity: x.battleStats.dexterity * (1 + x_passives.dexterity / 100),
+	};
 
-	const ySTR = y.battleStats.strength * (1 + y_passives.strength / 100);
-	let ySPD = y.battleStats.speed * (1 + y_passives.speed / 100);
-	const yDEF = y.battleStats.defense * (1 + y_passives.defense / 100);
-	let yDEX = y.battleStats.dexterity * (1 + y_passives.dexterity / 100);
+	const yBaseStats = {
+		strength: y.battleStats.strength * (1 + y_passives.strength / 100),
+		speed: y.battleStats.speed * (1 + y_passives.speed / 100),
+		defense: y.battleStats.defense * (1 + y_passives.defense / 100),
+		dexterity: y.battleStats.dexterity * (1 + y_passives.dexterity / 100),
+	};
+
+	// 应用武器特效对属性的修改
+	const xModifiedStats = applyWeaponBonusesToStats(xBaseStats, x_wep);
+	const yModifiedStats = applyWeaponBonusesToStats(yBaseStats, y_wep);
+
+	// 最终属性计算
+	const xSTR = xModifiedStats.strength;
+	let xSPD = xModifiedStats.speed;
+	const xDEF = xModifiedStats.defense;
+	let xDEX = xModifiedStats.dexterity;
+
+	const ySTR = yModifiedStats.strength;
+	let ySPD = yModifiedStats.speed;
+	const yDEF = yModifiedStats.defense;
+	let yDEX = yModifiedStats.dexterity;
 
 	// 处理致盲等效?
 	let sM = 1,

@@ -388,3 +388,66 @@ export interface SelectedWeaponBonus {
 	name: string;
 	value: number;
 }
+
+// 武器特效处理器相关类型
+export interface DamageContext {
+	attacker: FightPlayer;
+	target: FightPlayer;
+	weapon: WeaponData;
+	bodyPart: string;
+	isCritical: boolean;
+	turn: number;
+	currentWeaponSlot: string;
+}
+
+export interface WeaponBonusProcessor {
+	name: string;
+	applyToStats?: (stats: BattleStats, bonusValue: number) => BattleStats;
+	applyToDamage?: (
+		damage: number,
+		bonusValue: number,
+		context: DamageContext,
+	) => number;
+	applyToHitChance?: (
+		hitChance: number,
+		bonusValue: number,
+		context: DamageContext,
+	) => number;
+	applyToArmourMitigation?: (
+		mitigation: number,
+		bonusValue: number,
+		context: DamageContext,
+	) => number;
+	applyToCritical?: (
+		critChance: number,
+		critDamage: number,
+		bonusValue: number,
+		context: DamageContext,
+	) => [number, number];
+	applyToAmmo?: (
+		ammoConsumed: number,
+		bonusValue: number,
+		context: DamageContext,
+	) => number;
+	applyPostDamage?: (
+		attacker: FightPlayer,
+		target: FightPlayer,
+		damage: number,
+		bonusValue: number,
+		context: DamageContext,
+	) => void;
+	modifyWeaponState?: (
+		weaponState: WeaponState,
+		bonusValue: number,
+	) => WeaponState;
+}
+
+export interface WeaponBonusEffects {
+	damageMultiplier: number;
+	critChanceBonus: number;
+	critDamageMultiplier: number;
+	hitChanceBonus: number;
+	armourPenetration: number;
+	ammoConservation: number;
+	statModifiers: Partial<BattleStats>;
+}
