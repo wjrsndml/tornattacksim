@@ -33,7 +33,7 @@ const PowerfulProcessor: WeaponBonusProcessor = {
 	applyToDamage: (
 		damage: number,
 		bonusValue: number,
-		context: DamageContext,
+		_context: DamageContext,
 	) => {
 		return Math.round(damage * (1 + bonusValue / 100));
 	},
@@ -68,7 +68,7 @@ const DeadeyeProcessor: WeaponBonusProcessor = {
 		critChance: number,
 		critDamage: number,
 		bonusValue: number,
-		context: DamageContext,
+		_context: DamageContext,
 	) => {
 		const newCritDamage = critDamage * (1 + bonusValue / 100);
 		return [critChance, newCritDamage];
@@ -82,7 +82,7 @@ const ExposeProcessor: WeaponBonusProcessor = {
 		critChance: number,
 		critDamage: number,
 		bonusValue: number,
-		context: DamageContext,
+		_context: DamageContext,
 	) => {
 		const newCritChance = Math.min(100, critChance + bonusValue);
 		return [newCritChance, critDamage];
@@ -95,7 +95,7 @@ const ConserveProcessor: WeaponBonusProcessor = {
 	applyToAmmo: (
 		ammoConsumed: number,
 		bonusValue: number,
-		context: DamageContext,
+		_context: DamageContext,
 	) => {
 		// 按保存率几率返回0消耗，否则正常消耗
 		const saveChance = bonusValue / 100;
@@ -110,11 +110,11 @@ const SpecialistProcessor: WeaponBonusProcessor = {
 	applyToDamage: (
 		damage: number,
 		bonusValue: number,
-		context: DamageContext,
+		_context: DamageContext,
 	) => {
 		return Math.round(damage * (1 + bonusValue / 100));
 	},
-	modifyWeaponState: (weaponState: WeaponState, bonusValue: number) => {
+	modifyWeaponState: (weaponState: WeaponState, _bonusValue: number) => {
 		// 限制为单弹夹
 		const modifiedState = { ...weaponState };
 		if (
@@ -139,7 +139,7 @@ const PenetrateProcessor: WeaponBonusProcessor = {
 	applyToArmourMitigation: (
 		mitigation: number,
 		bonusValue: number,
-		context: DamageContext,
+		_context: DamageContext,
 	) => {
 		return mitigation * (1 - bonusValue / 100);
 	},
@@ -149,15 +149,15 @@ const PenetrateProcessor: WeaponBonusProcessor = {
 const BloodlustProcessor: WeaponBonusProcessor = {
 	name: "Bloodlust",
 	applyPostDamage: (
-		attacker: FightPlayer,
-		target: FightPlayer,
+		_attacker: FightPlayer,
+		_target: FightPlayer,
 		damage: number,
 		bonusValue: number,
-		context: DamageContext,
+		_context: DamageContext,
 	) => {
-		const healAmount = Math.round(damage * (bonusValue / 100));
 		// 注意：这里需要在实际使用时修改攻击者的生命值
 		// 由于这是纯函数，实际的生命值修改需要在调用方处理
+		return Math.round(damage * (bonusValue / 100));
 	},
 };
 

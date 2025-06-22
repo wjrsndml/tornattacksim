@@ -2,7 +2,6 @@ import { canArmourBlock, getArmourCoverage } from "./dataLoader";
 import type {
 	ActionResults,
 	ArmourSet,
-	DamageContext,
 	DOTEffects,
 	FightPlayer,
 	FightResults,
