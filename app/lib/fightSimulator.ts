@@ -32,6 +32,7 @@ import {
 	applyWeaponBonusesToStats,
 	applyWeaponBonusesToWeaponState,
 	clearTriggeredEffects,
+	getCurrentTurnTriggeredEffects,
 	getTriggeredBonuses,
 } from "./weaponBonusProcessors";
 
@@ -2338,6 +2339,12 @@ function action(
 		// 扣除伤害
 		yCL -= xDMG;
 
+		// 检查Execute特效是否触发
+		if (getCurrentTurnTriggeredEffects().includes("Execute")) {
+			log.push(`${x.name} executed ${y.name}!`);
+			yCL = 0; // 直接击败目标
+		}
+
 		// 应用武器特效的后处理效果（如Bloodlust生命回复）
 		if (xDMG > 0) {
 			const postDamageResult = applyWeaponBonusesPostDamage(
@@ -2356,13 +2363,32 @@ function action(
 				},
 			);
 
-			// 处理生命回复
-			if (postDamageResult.healing > 0) {
-				const maxLife = x.maxLife;
-				const actualHeal = Math.min(postDamageResult.healing, maxLife - xCL);
-				if (actualHeal > 0) {
-					xCL += actualHeal;
-					log.push(`${x.name} recovered ${actualHeal} life from Bloodlust`);
+			// 处理生命回复和自伤
+			if (postDamageResult.healing !== 0) {
+				if (postDamageResult.healing > 0) {
+					// 正值：生命回复（如Bloodlust）
+					const maxLife = x.maxLife;
+					const actualHeal = Math.min(postDamageResult.healing, maxLife - xCL);
+					if (actualHeal > 0) {
+						xCL += actualHeal;
+						log.push(`${x.name} recovered ${actualHeal} life from Bloodlust`);
+					}
+				} else {
+					// 负值：自伤（如Double-edged）
+					const selfDamage = Math.abs(postDamageResult.healing);
+					if (selfDamage > xCL - 1) {
+						// 自伤不能致死，最多留1血
+						const actualSelfDamage = xCL - 1;
+						xCL = 1;
+						log.push(
+							`${x.name} took ${actualSelfDamage} self-damage from Double-edged`,
+						);
+					} else {
+						xCL -= selfDamage;
+						log.push(
+							`${x.name} took ${selfDamage} self-damage from Double-edged`,
+						);
+					}
 				}
 			}
 
@@ -2371,7 +2397,90 @@ function action(
 				log.push(
 					`${x.name} gains ${postDamageResult.extraAttacks} extra attacks from weapon effects`,
 				);
-				// TODO: 实现额外攻击逻辑
+
+				// 实现额外攻击逻辑
+				for (
+					let extraAttack = 0;
+					extraAttack < postDamageResult.extraAttacks && yCL > 0;
+					extraAttack++
+				) {
+					// 重新计算命中率和伤害
+					let extraHitChance = hitChance(xSPD, yDEX);
+					extraHitChance = applyAccuracy(
+						extraHitChance,
+						currentWeapon.accuracy,
+						{
+							bonus: x_acc_bonus,
+						},
+					);
+					extraHitChance = applyWeaponBonusesToHitChance(
+						extraHitChance,
+						currentWeapon,
+						{
+							attacker: x,
+							target: y,
+							weapon: currentWeapon,
+							bodyPart: "",
+							isCritical: false,
+							turn: turn,
+							currentWeaponSlot: xCW,
+						},
+					);
+
+					const extraHit = hitOrMiss(extraHitChance);
+					if (extraHit) {
+						const extraBodyPart = selectBodyPart(x, x_crit_chance);
+						const extraMaxDamage = maxDamage(xSTR);
+						const extraDefenseMitigation =
+							(100 - damageMitigation(yDEF, xSTR)) / 100;
+						const extraWeaponDamage = currentWeapon.damage / 10;
+						const extraArmourMitigation =
+							(100 - armourMitigation(extraBodyPart[0], yA)) / 100;
+						const extraVariance = variance();
+
+						let extraDamage = Math.round(
+							extraBodyPart[1] *
+								extraMaxDamage *
+								extraDefenseMitigation *
+								extraWeaponDamage *
+								extraArmourMitigation *
+								extraVariance *
+								(1 + x_dmg_bonus / 100),
+						);
+
+						// 应用武器特效到额外攻击伤害
+						extraDamage = applyWeaponBonusesToDamage(
+							extraDamage,
+							currentWeapon,
+							{
+								attacker: x,
+								target: y,
+								weapon: currentWeapon,
+								bodyPart: extraBodyPart[0],
+								isCritical: extraBodyPart[1] > 1,
+								turn: turn,
+								currentWeaponSlot: xCW,
+							},
+						);
+
+						// 应用Eviscerate效果
+						if (extraDamage > 0) {
+							extraDamage = applyEviscerateToIncomingDamage(y, extraDamage);
+						}
+
+						if (extraDamage > yCL) {
+							extraDamage = yCL;
+						}
+
+						log.push(
+							`${x.name} extra attack hits ${y.name} in the ${extraBodyPart[0]} for ${extraDamage}`,
+						);
+
+						yCL -= extraDamage;
+					} else {
+						log.push(`${x.name} extra attack misses ${y.name}`);
+					}
+				}
 			}
 		}
 
