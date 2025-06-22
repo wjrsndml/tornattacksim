@@ -1389,23 +1389,31 @@ function action(
 				) {
 					xBP = ["chest", 1 / 1.75];
 				} else {
-					// 应用武器特效到暴击率
+					// 首先选择身体部位以获取正确的暴击倍数
+					xBP = selectBodyPart(x, x_crit_chance);
+
+					// 然后应用武器特效到暴击率和暴击倍数
 					const [modifiedCritChance, modifiedCritDamage] =
 						applyWeaponBonusesToCritical(
 							x_crit_chance,
-							xBP?.[1] || 1.75, // 默认暴击倍数
+							xBP[1], // 使用实际的身体部位暴击倍数
 							currentWeapon,
 							{
 								attacker: x,
 								target: y,
 								weapon: currentWeapon,
-								bodyPart: "",
-								isCritical: false,
+								bodyPart: xBP[0],
+								isCritical: xBP[1] > 1,
 								turn: turn,
 								currentWeaponSlot: xCW,
 							},
 						);
-					xBP = selectBodyPart(x, modifiedCritChance);
+
+					// 如果暴击率被修改，需要重新选择身体部位
+					if (modifiedCritChance !== x_crit_chance) {
+						xBP = selectBodyPart(x, modifiedCritChance);
+					}
+
 					// 更新暴击倍数
 					if (xBP[1] > 1) {
 						xBP[1] = modifiedCritDamage;
