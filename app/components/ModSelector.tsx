@@ -1,160 +1,190 @@
-'use client'
+"use client";
 
-import React, { useState, useEffect } from 'react'
-import { getModList, getModData, loadGameData } from '../lib/dataLoader'
-import { ModData } from '../lib/fightSimulatorTypes'
+import { ChevronDown, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { getModData, getModList, loadGameData } from "../lib/dataLoader";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
+import { Label } from "./ui/label";
 
 interface ModSelectorProps {
-  selectedMods: string[]
-  onModsChange: (mods: string[]) => void
-  maxMods?: number
-  label: string
+	selectedMods: string[];
+	onModsChange: (mods: string[]) => void;
+	maxMods?: number;
+	label: string;
 }
 
-export default function ModSelector({ selectedMods, onModsChange, maxMods = 3, label }: ModSelectorProps) {
-  const [availableMods, setAvailableMods] = useState<string[]>([])
-  const [loading, setLoading] = useState(true)
-  const [isOpen, setIsOpen] = useState(false)
+export default function ModSelector({
+	selectedMods,
+	onModsChange,
+	maxMods = 3,
+	label,
+}: ModSelectorProps) {
+	const [availableMods, setAvailableMods] = useState<string[]>([]);
+	const [loading, setLoading] = useState(true);
+	const [isOpen, setIsOpen] = useState(false);
 
-  // 确保selectedMods始终是数组
-  const safeSelectedMods = Array.isArray(selectedMods) ? selectedMods : []
+	// 确保selectedMods始终是数组
+	const safeSelectedMods = Array.isArray(selectedMods) ? selectedMods : [];
 
-  useEffect(() => {
-    async function loadMods() {
-      try {
-        await loadGameData()
-        const modList = getModList()
-        setAvailableMods(modList)
-      } catch (error) {
-        console.error('Failed to load mods:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
+	useEffect(() => {
+		async function loadMods() {
+			try {
+				await loadGameData();
+				const modList = getModList();
+				setAvailableMods(modList);
+			} catch (error) {
+				console.error("Failed to load mods:", error);
+			} finally {
+				setLoading(false);
+			}
+		}
 
-    loadMods()
-  }, [])
+		loadMods();
+	}, []);
 
-  const handleModToggle = (modName: string) => {
-    const currentMods = [...safeSelectedMods]
-    const modIndex = currentMods.indexOf(modName)
-    
-    if (modIndex >= 0) {
-      // 移除改装
-      currentMods.splice(modIndex, 1)
-    } else if (currentMods.length < maxMods) {
-      // 添加改装
-      currentMods.push(modName)
-    }
-    
-    onModsChange(currentMods)
-  }
+	const handleModToggle = (modName: string) => {
+		const currentMods = [...safeSelectedMods];
+		const modIndex = currentMods.indexOf(modName);
 
-  const getModDescription = (modName: string): string => {
-    const modData = getModData(modName)
-    if (!modData) return ''
-    
-    const effects: string[] = []
-    if (modData.acc_bonus !== 0) effects.push(`精准${modData.acc_bonus > 0 ? '+' : ''}${modData.acc_bonus}`)
-    if (modData.dmg_bonus !== 0) effects.push(`伤害${modData.dmg_bonus > 0 ? '+' : ''}${modData.dmg_bonus}`)
-    if (modData.crit_chance !== 0) effects.push(`暴击${modData.crit_chance > 0 ? '+' : ''}${modData.crit_chance}%`)
-    if (modData.clip_size_multi !== 0) effects.push(`弹夹${modData.clip_size_multi > 0 ? '+' : ''}${(modData.clip_size_multi * 100).toFixed(0)}%`)
-    if (modData.extra_clips !== 0) effects.push(`额外弹夹${modData.extra_clips > 0 ? '+' : ''}${modData.extra_clips}`)
-    if (modData.rate_of_fire_multi !== 0) effects.push(`射速${modData.rate_of_fire_multi > 0 ? '+' : ''}${(modData.rate_of_fire_multi * 100).toFixed(0)}%`)
-    if (modData.dex_passive !== 0) effects.push(`敏捷${modData.dex_passive > 0 ? '+' : ''}${modData.dex_passive}`)
-    
-    return effects.join(' • ')
-  }
+		if (modIndex >= 0) {
+			// 移除改装
+			currentMods.splice(modIndex, 1);
+		} else if (currentMods.length < maxMods) {
+			// 添加改装
+			currentMods.push(modName);
+		}
 
-  if (loading) {
-    return (
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">{label}</label>
-        <div className="animate-pulse bg-gray-200 h-10 rounded-md"></div>
-      </div>
-    )
-  }
+		onModsChange(currentMods);
+	};
 
-  return (
-    <div className="space-y-2">
-      <label className="block text-sm font-medium text-gray-700">
-        {label} ({safeSelectedMods.length}/{maxMods})
-      </label>
-      
-      {/* 已选择的改装 */}
-      {safeSelectedMods.length > 0 && (
-        <div className="space-y-2 mb-3">
-          <div className="text-sm font-medium text-gray-700">已选择的改装：</div>
-          <div className="flex flex-wrap gap-2">
-            {safeSelectedMods.map((modName) => (
-              <div
-                key={modName}
-                className="inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium bg-torn-primary/10 border border-torn-primary/20 text-black"
-              >
-                <div>
-                  <div className="font-semibold text-torn-primary">{modName}</div>
-                  <div className="text-xs text-gray-600">{getModDescription(modName)}</div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleModToggle(modName)}
-                  className="ml-2 text-torn-primary hover:text-torn-primary/70 font-bold text-lg"
-                  title="移除改装"
-                >
-                  ×
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+	const getModDescription = (modName: string): string => {
+		const modData = getModData(modName);
+		if (!modData) return "";
 
-      <div className="relative">
-        <button
-          type="button"
-          onClick={() => setIsOpen(!isOpen)}
-          className="w-full bg-white border border-gray-300 rounded-md px-3 py-2 text-left focus:outline-none focus:ring-2 focus:ring-torn-primary focus:border-transparent"
-          disabled={safeSelectedMods.length >= maxMods}
-        >
-          <div className="flex justify-between items-center">
-            <span className={safeSelectedMods.length >= maxMods ? "text-gray-400" : "text-gray-700"}>
-              {safeSelectedMods.length >= maxMods ? '已达到最大改装数' : '选择改装...'}
-            </span>
-            <svg className={`w-5 h-5 transition-transform ${isOpen ? 'rotate-180' : ''} ${safeSelectedMods.length >= maxMods ? 'text-gray-400' : 'text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </div>
-        </button>
+		const effects: string[] = [];
+		if (modData.acc_bonus !== 0)
+			effects.push(
+				`精准${modData.acc_bonus > 0 ? "+" : ""}${modData.acc_bonus}`,
+			);
+		if (modData.dmg_bonus !== 0)
+			effects.push(
+				`伤害${modData.dmg_bonus > 0 ? "+" : ""}${modData.dmg_bonus}`,
+			);
+		if (modData.crit_chance !== 0)
+			effects.push(
+				`暴击${modData.crit_chance > 0 ? "+" : ""}${modData.crit_chance}%`,
+			);
+		if (modData.clip_size_multi !== 0)
+			effects.push(
+				`弹夹${modData.clip_size_multi > 0 ? "+" : ""}${(modData.clip_size_multi * 100).toFixed(0)}%`,
+			);
+		if (modData.extra_clips !== 0)
+			effects.push(
+				`额外弹夹${modData.extra_clips > 0 ? "+" : ""}${modData.extra_clips}`,
+			);
+		if (modData.rate_of_fire_multi !== 0)
+			effects.push(
+				`射速${modData.rate_of_fire_multi > 0 ? "+" : ""}${(modData.rate_of_fire_multi * 100).toFixed(0)}%`,
+			);
+		if (modData.dex_passive !== 0)
+			effects.push(
+				`敏捷${modData.dex_passive > 0 ? "+" : ""}${modData.dex_passive}`,
+			);
 
-        {isOpen && (
-          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
-            {availableMods.map((modName) => {
-              const isSelected = safeSelectedMods.includes(modName)
-              const canSelect = !isSelected && safeSelectedMods.length < maxMods
-              
-              return (
-                <button
-                  key={modName}
-                  type="button"
-                  onClick={() => handleModToggle(modName)}
-                  disabled={!isSelected && !canSelect}
-                  className={`w-full px-3 py-2 text-left hover:bg-gray-50 focus:outline-none focus:bg-gray-50 ${
-                    isSelected ? 'bg-torn-primary/10 text-torn-primary' : 
-                    !canSelect ? 'text-gray-400 cursor-not-allowed' : ''
-                  }`}
-                >
-                  <div className={`font-medium ${isSelected ? 'text-torn-primary' : 'text-black'}`}>
-                    {modName}
-                  </div>
-                  <div className={`text-xs ${isSelected ? 'text-torn-primary/80' : 'text-gray-700'}`}>
-                    {getModDescription(modName)}
-                  </div>
-                </button>
-              )
-            })}
-          </div>
-        )}
-      </div>
-    </div>
-  )
-} 
+		return effects.join(" • ");
+	};
+
+	if (loading) {
+		return (
+			<div className="space-y-2">
+				<Label>{label}</Label>
+				<div className="animate-pulse bg-slate-200 h-10 rounded-md"></div>
+			</div>
+		);
+	}
+
+	return (
+		<div className="space-y-2">
+			<Label>
+				{label} ({safeSelectedMods.length}/{maxMods})
+			</Label>
+
+			{/* 已选择的改装 */}
+			{safeSelectedMods.length > 0 && (
+				<div className="flex flex-wrap gap-2">
+					{safeSelectedMods.map((modName) => (
+						<Badge key={modName} variant="secondary" className="px-3 py-1.5">
+							<div className="flex items-center gap-2">
+								<div>
+									<div className="font-medium">{modName}</div>
+									<div className="text-xs opacity-80">
+										{getModDescription(modName)}
+									</div>
+								</div>
+								<button
+									type="button"
+									onClick={() => handleModToggle(modName)}
+									className="ml-1 hover:opacity-70"
+									title="移除改装"
+								>
+									<X className="h-3 w-3" />
+								</button>
+							</div>
+						</Badge>
+					))}
+				</div>
+			)}
+
+			<DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+				<DropdownMenuTrigger asChild>
+					<Button
+						variant="outline"
+						className="w-full justify-between"
+						disabled={safeSelectedMods.length >= maxMods}
+					>
+						<span>
+							{safeSelectedMods.length >= maxMods
+								? "已达到最大改装数"
+								: "选择改装..."}
+						</span>
+						<ChevronDown className="ml-2 h-4 w-4" />
+					</Button>
+				</DropdownMenuTrigger>
+				<DropdownMenuContent className="w-full">
+					{availableMods.map((modName) => {
+						const isSelected = safeSelectedMods.includes(modName);
+						const canSelect = !isSelected && safeSelectedMods.length < maxMods;
+
+						return (
+							<DropdownMenuItem
+								key={modName}
+								onSelect={(e) => {
+									e.preventDefault();
+									if (isSelected || canSelect) {
+										handleModToggle(modName);
+									}
+								}}
+								disabled={!isSelected && !canSelect}
+								className={`cursor-pointer ${isSelected ? "bg-secondary" : ""}`}
+							>
+								<div className="w-full">
+									<div className="font-medium">{modName}</div>
+									<div className="text-xs text-muted-foreground">
+										{getModDescription(modName)}
+									</div>
+								</div>
+							</DropdownMenuItem>
+						);
+					})}
+				</DropdownMenuContent>
+			</DropdownMenu>
+		</div>
+	);
+}
