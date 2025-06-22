@@ -51,8 +51,10 @@ export default function WeaponBonusSelector({
 	useEffect(() => {
 		if (availableBonuses.length === 0) return;
 
-		const validBonuses = selectedBonuses.filter((selected) =>
-			availableBonuses.some((bonus) => bonus.name === selected.name),
+		const validBonuses = selectedBonuses.filter(
+			(selected) =>
+				selected.name === "" ||
+				availableBonuses.some((bonus) => bonus.name === selected.name),
 		);
 
 		if (validBonuses.length !== selectedBonuses.length) {
