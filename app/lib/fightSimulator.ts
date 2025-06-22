@@ -19,8 +19,10 @@ import {
 	applyWeaponBonusesToArmour,
 	applyWeaponBonusesToCritical,
 	applyWeaponBonusesToDamage,
+	applyWeaponBonusesToHitChance,
 	applyWeaponBonusesToStats,
 	applyWeaponBonusesToWeaponState,
+	clearTriggeredEffects,
 	getTriggeredBonuses,
 } from "./weaponBonusProcessors";
 
@@ -1117,6 +1119,9 @@ function action(
 	y_temps: TempEffects,
 	turn: number,
 ): ActionResults {
+	// 清空上一回合触发的武器特效记录
+	clearTriggeredEffects();
+
 	const xW = Object.assign({}, x.weapons);
 	const yA = JSON.parse(JSON.stringify(y.armour));
 
@@ -1379,6 +1384,18 @@ function action(
 			xFHC = applyAccuracy(xBHC, xW[xCW as keyof typeof xW].accuracy, {
 				bonus: x_acc_bonus,
 			});
+
+			// 应用武器特效到命中率（如Sure Shot）
+			xFHC = applyWeaponBonusesToHitChance(xFHC, currentWeapon, {
+				attacker: x,
+				target: y,
+				weapon: currentWeapon,
+				bodyPart: "", // 此时还未确定身体部位
+				isCritical: false,
+				turn: turn,
+				currentWeaponSlot: xCW,
+			});
+
 			xHOM = hitOrMiss(xFHC);
 
 			if (xHOM) {
