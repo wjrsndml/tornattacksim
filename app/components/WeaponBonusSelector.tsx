@@ -45,22 +45,21 @@ export default function WeaponBonusSelector({
 	useEffect(() => {
 		const bonuses = getAvailableBonusesForWeapon(weapon.category);
 		setAvailableBonuses(bonuses);
+	}, [weapon.category]);
 
-		// 如果当前选择的特效不适用于新武器，清空选择
+	// 当可用特效变化时，验证当前选择的特效
+	useEffect(() => {
+		if (availableBonuses.length === 0) return;
+
 		const validBonuses = selectedBonuses.filter((selected) =>
-			bonuses.some((bonus) => bonus.name === selected.name),
+			availableBonuses.some((bonus) => bonus.name === selected.name),
 		);
 
 		if (validBonuses.length !== selectedBonuses.length) {
 			setSelectedBonuses(validBonuses);
 			onBonusesChange(validBonuses);
 		}
-	}, [
-		weapon.category,
-		onBonusesChange,
-		selectedBonuses.filter,
-		selectedBonuses.length,
-	]);
+	}, [availableBonuses, selectedBonuses, onBonusesChange]);
 
 	// 更新选中的特效
 	useEffect(() => {
@@ -70,7 +69,9 @@ export default function WeaponBonusSelector({
 	const handleAddBonus = () => {
 		if (selectedBonuses.length >= 2) return; // 最多两个特效
 
-		setSelectedBonuses([...selectedBonuses, { name: "", value: 0 }]);
+		const newBonuses = [...selectedBonuses, { name: "", value: 0 }];
+		setSelectedBonuses(newBonuses);
+		onBonusesChange(newBonuses);
 	};
 
 	const handleRemoveBonus = (index: number) => {
