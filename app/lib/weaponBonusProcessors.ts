@@ -5,6 +5,11 @@ import type {
 	WeaponBonusProcessor,
 	WeaponState,
 } from "./fightSimulatorTypes";
+import {
+	addStatus,
+	hasStatus,
+	initializeStatusEffectsV2,
+} from "./statusEffectManager";
 import { getWeaponBonus } from "./weaponBonuses";
 
 // 武器特效处理器注册表
@@ -699,10 +704,11 @@ export function applyWeaponBonusesPostDamage(
 	damage: number,
 	weapon: { weaponBonuses?: Array<{ name: string; value: number }> },
 	context: DamageContext,
-): number {
-	if (!weapon.weaponBonuses) return 0;
+): { healing: number; extraAttacks: number } {
+	if (!weapon.weaponBonuses) return { healing: 0, extraAttacks: 0 };
 
 	let totalHealing = 0;
+	let totalExtraAttacks = 0;
 
 	for (const bonus of weapon.weaponBonuses) {
 		const processor = getWeaponBonusProcessor(bonus.name);
@@ -715,17 +721,21 @@ export function applyWeaponBonusesPostDamage(
 				context,
 			);
 
-			if (bonus.name === "Bloodlust") {
-				// Bloodlust的生命回复
-				totalHealing += result;
-			} else if (bonus.name === "Double-edged" && result < 0) {
-				// Double-edged的自伤（负值表示对攻击者造成伤害）
-				totalHealing += result; // 负值减少攻击者生命值
+			if (typeof result === "number") {
+				if (bonus.name === "Bloodlust") {
+					// Bloodlust的生命回复
+					totalHealing += result;
+				} else if (bonus.name === "Double-edged" && result < 0) {
+					// Double-edged的自伤（负值表示对攻击者造成伤害）
+					totalHealing += result; // 负值减少攻击者生命值
+				}
+			} else if (typeof result === "object" && result.extraAttacks) {
+				totalExtraAttacks += result.extraAttacks;
 			}
 		}
 	}
 
-	return totalHealing;
+	return { healing: totalHealing, extraAttacks: totalExtraAttacks };
 }
 
 // 辅助函数：修改武器状态（用于Specialist等特效）
@@ -745,6 +755,51 @@ export function applyWeaponBonusesToWeaponState(
 	}
 
 	return modifiedState;
+}
+
+// 新增：应用回合前钩子
+export function applyWeaponBonusesBeforeTurn(
+	attacker: FightPlayer,
+	target: FightPlayer,
+	weaponState: WeaponState,
+	weapon: { weaponBonuses?: Array<{ name: string; value: number }> },
+	context: DamageContext,
+): boolean {
+	if (!weapon.weaponBonuses) return false;
+
+	for (const bonus of weapon.weaponBonuses) {
+		const processor = getWeaponBonusProcessor(bonus.name);
+		if (processor?.applyBeforeTurn) {
+			const result = processor.applyBeforeTurn(
+				attacker,
+				target,
+				weaponState,
+				context,
+			);
+			if (result?.skip) {
+				return true; // 跳过这回合
+			}
+		}
+	}
+
+	return false;
+}
+
+// 新增：应用回合结束钩子
+export function applyWeaponBonusesOnTurnEnd(
+	attacker: FightPlayer,
+	target: FightPlayer,
+	weapon: { weaponBonuses?: Array<{ name: string; value: number }> },
+	context: DamageContext,
+): void {
+	if (!weapon.weaponBonuses) return;
+
+	for (const bonus of weapon.weaponBonuses) {
+		const processor = getWeaponBonusProcessor(bonus.name);
+		if (processor?.onTurnEnd) {
+			processor.onTurnEnd(attacker, target, context);
+		}
+	}
 }
 
 // 辅助函数：检测和记录触发的特效
@@ -807,6 +862,29 @@ export function getTriggeredBonuses(
 			} else if (bonus.name === "Assassinate" && context.turn === 1) {
 				triggered = true;
 			}
+			// 新增困难特效的触发条件
+			else if (bonus.name === "Berserk" || bonus.name === "Grace") {
+				triggered = true; // 总是生效
+			} else if (
+				bonus.name === "Frenzy" &&
+				(context.attacker.comboCounter || 0) > 0
+			) {
+				triggered = true;
+			} else if (
+				bonus.name === "Focus" &&
+				(context.attacker.comboCounter || 0) > 0
+			) {
+				triggered = true;
+			} else if (bonus.name === "Finale") {
+				const lastUsedTurn =
+					context.attacker.lastUsedTurn?.[context.currentWeaponSlot] || 0;
+				const idleTurns = Math.max(0, context.turn - lastUsedTurn - 1);
+				if (idleTurns > 0) triggered = true;
+			} else if (bonus.name === "Wind-up" && context.attacker.windup) {
+				triggered = true;
+			} else if (bonus.name === "Smurf") {
+				triggered = true; // 简化处理，总是显示
+			}
 		}
 		// 暴击相关特效（命中时触发）
 		else if (processor.applyToCritical && context.attacker) {
@@ -854,6 +932,346 @@ export function checkProbabilityBonus(
 	return Math.random() < chance;
 }
 
+// ===== 困难难度特效 (33-48) =====
+
+// 33. Berserk - 增加伤害但减少命中
+const BerserkProcessor: WeaponBonusProcessor = {
+	name: "Berserk",
+	applyToDamage: (
+		damage: number,
+		bonusValue: number,
+		_context: DamageContext,
+	) => {
+		return Math.round(damage * (1 + bonusValue / 100));
+	},
+	applyToHitChance: (
+		hitChance: number,
+		bonusValue: number,
+		_context: DamageContext,
+	) => {
+		// 命中率减少伤害加成的一半
+		return Math.max(0, hitChance - bonusValue / 2);
+	},
+};
+
+// 34. Grace - 增加命中但减少伤害
+const GraceProcessor: WeaponBonusProcessor = {
+	name: "Grace",
+	applyToHitChance: (
+		hitChance: number,
+		bonusValue: number,
+		_context: DamageContext,
+	) => {
+		return Math.min(100, hitChance + bonusValue);
+	},
+	applyToDamage: (
+		damage: number,
+		bonusValue: number,
+		_context: DamageContext,
+	) => {
+		// 伤害减少命中加成的一半
+		return Math.round(damage * (1 - bonusValue / 200));
+	},
+};
+
+// 35. Frenzy - 连击加成
+const FrenzyProcessor: WeaponBonusProcessor = {
+	name: "Frenzy",
+	applyToDamage: (
+		damage: number,
+		bonusValue: number,
+		context: DamageContext,
+	) => {
+		const comboCounter = context.attacker.comboCounter || 0;
+		if (comboCounter > 0) {
+			const multiplier = 1 + (comboCounter * bonusValue) / 100;
+			return Math.round(damage * multiplier);
+		}
+		return damage;
+	},
+	applyToHitChance: (
+		hitChance: number,
+		bonusValue: number,
+		context: DamageContext,
+	) => {
+		const comboCounter = context.attacker.comboCounter || 0;
+		if (comboCounter > 0) {
+			return Math.min(100, hitChance + comboCounter * bonusValue);
+		}
+		return hitChance;
+	},
+};
+
+// 36. Focus - 连续miss加成
+const FocusProcessor: WeaponBonusProcessor = {
+	name: "Focus",
+	applyToHitChance: (
+		hitChance: number,
+		bonusValue: number,
+		context: DamageContext,
+	) => {
+		const missCounter = context.attacker.comboCounter || 0;
+		if (missCounter > 0) {
+			return Math.min(100, hitChance + missCounter * bonusValue);
+		}
+		return hitChance;
+	},
+};
+
+// 37. Finale - 未使用回合伤害加成
+const FinaleProcessor: WeaponBonusProcessor = {
+	name: "Finale",
+	applyToDamage: (
+		damage: number,
+		bonusValue: number,
+		context: DamageContext,
+	) => {
+		const lastUsedTurn =
+			context.attacker.lastUsedTurn?.[context.currentWeaponSlot] || 0;
+		const idleTurns = Math.max(0, context.turn - lastUsedTurn - 1);
+		if (idleTurns > 0) {
+			const multiplier =
+				1 + Math.min((idleTurns * bonusValue) / 100, (bonusValue * 5) / 100);
+			return Math.round(damage * multiplier);
+		}
+		return damage;
+	},
+};
+
+// 38. Wind-up - 蓄力伤害加成
+const WindupProcessor: WeaponBonusProcessor = {
+	name: "Wind-up",
+	applyBeforeTurn: (
+		attacker: FightPlayer,
+		_target: FightPlayer,
+		_weaponState: WeaponState,
+		_context: DamageContext,
+	) => {
+		if (!attacker.windup) {
+			attacker.windup = true;
+			return { skip: true };
+		}
+		return undefined;
+	},
+	applyToDamage: (
+		damage: number,
+		bonusValue: number,
+		context: DamageContext,
+	) => {
+		if (context.attacker.windup) {
+			context.attacker.windup = false;
+			return Math.round(damage * (1 + bonusValue / 100));
+		}
+		return damage;
+	},
+};
+
+// 39. Rage - 多重攻击几率
+const RageProcessor: WeaponBonusProcessor = {
+	name: "Rage",
+	applyPostDamage: (
+		_attacker: FightPlayer,
+		_target: FightPlayer,
+		_damage: number,
+		bonusValue: number,
+		_context: DamageContext,
+	) => {
+		const rageChance = bonusValue / 100;
+		if (Math.random() < rageChance) {
+			addTriggeredEffect("Rage");
+			const extraAttacks = Math.floor(Math.random() * 7) + 1; // 1-7 额外攻击
+			return { extraAttacks };
+		}
+		return 0;
+	},
+};
+
+// 40. Motivation - 属性叠加buff
+const MotivationProcessor: WeaponBonusProcessor = {
+	name: "Motivation",
+	applyPostDamage: (
+		attacker: FightPlayer,
+		_target: FightPlayer,
+		damage: number,
+		bonusValue: number,
+		_context: DamageContext,
+	) => {
+		if (damage > 0) {
+			const motivationChance = bonusValue / 100;
+			if (Math.random() < motivationChance) {
+				addTriggeredEffect("Motivation");
+				initializeStatusEffectsV2(attacker);
+				addStatus(attacker, "motivation", 99, 5); // 最多叠加5层
+			}
+		}
+		return 0;
+	},
+};
+
+// 41. Backstab - 敌人分心时双倍伤害
+const BackstabProcessor: WeaponBonusProcessor = {
+	name: "Backstab",
+	applyToDamage: (
+		damage: number,
+		_bonusValue: number,
+		context: DamageContext,
+	) => {
+		if (hasStatus(context.target, "distracted")) {
+			addTriggeredEffect("Backstab");
+			return Math.round(damage * 2);
+		}
+		return damage;
+	},
+};
+
+// 42. Smurf - 等级差伤害加成 (简化为 Powerful 处理)
+const SmurfProcessor: WeaponBonusProcessor = {
+	name: "Smurf",
+	applyToDamage: (
+		damage: number,
+		bonusValue: number,
+		_context: DamageContext,
+	) => {
+		// 简化处理，直接按照 bonusValue 增加伤害
+		return Math.round(damage * (1 + bonusValue / 100));
+	},
+};
+
+// 43. Disarm - 缴械效果
+const DisarmProcessor: WeaponBonusProcessor = {
+	name: "Disarm",
+	applyPostDamage: (
+		_attacker: FightPlayer,
+		target: FightPlayer,
+		damage: number,
+		bonusValue: number,
+		context: DamageContext,
+	) => {
+		if (
+			damage > 0 &&
+			(context.bodyPart === "hand" || context.bodyPart === "arm")
+		) {
+			const disarmChance = bonusValue / 100;
+			if (Math.random() < disarmChance) {
+				addTriggeredEffect("Disarm");
+				initializeStatusEffectsV2(target);
+				addStatus(target, "disarm", Math.floor(bonusValue / 10), 1); // 持续回合数为 value/10
+			}
+		}
+		return 0;
+	},
+};
+
+// 44. Slow - 减速debuff
+const SlowProcessor: WeaponBonusProcessor = {
+	name: "Slow",
+	applyPostDamage: (
+		_attacker: FightPlayer,
+		target: FightPlayer,
+		damage: number,
+		bonusValue: number,
+		_context: DamageContext,
+	) => {
+		if (damage > 0) {
+			const slowChance = bonusValue / 100;
+			if (Math.random() < slowChance) {
+				addTriggeredEffect("Slow");
+				initializeStatusEffectsV2(target);
+				addStatus(target, "slow", 3, 3); // 持续3回合，最多叠加3层
+			}
+		}
+		return 0;
+	},
+};
+
+// 45. Cripple - 致残debuff
+const CrippleProcessor: WeaponBonusProcessor = {
+	name: "Cripple",
+	applyPostDamage: (
+		_attacker: FightPlayer,
+		target: FightPlayer,
+		damage: number,
+		bonusValue: number,
+		_context: DamageContext,
+	) => {
+		if (damage > 0) {
+			const crippleChance = bonusValue / 100;
+			if (Math.random() < crippleChance) {
+				addTriggeredEffect("Cripple");
+				initializeStatusEffectsV2(target);
+				addStatus(target, "cripple", 3, 3); // 持续3回合，最多叠加3层
+			}
+		}
+		return 0;
+	},
+};
+
+// 46. Weaken - 虚弱debuff
+const WeakenProcessor: WeaponBonusProcessor = {
+	name: "Weaken",
+	applyPostDamage: (
+		_attacker: FightPlayer,
+		target: FightPlayer,
+		damage: number,
+		bonusValue: number,
+		_context: DamageContext,
+	) => {
+		if (damage > 0) {
+			const weakenChance = bonusValue / 100;
+			if (Math.random() < weakenChance) {
+				addTriggeredEffect("Weaken");
+				initializeStatusEffectsV2(target);
+				addStatus(target, "weaken", 3, 3); // 持续3回合，最多叠加3层
+			}
+		}
+		return 0;
+	},
+};
+
+// 47. Wither - 衰弱debuff
+const WitherProcessor: WeaponBonusProcessor = {
+	name: "Wither",
+	applyPostDamage: (
+		_attacker: FightPlayer,
+		target: FightPlayer,
+		damage: number,
+		bonusValue: number,
+		_context: DamageContext,
+	) => {
+		if (damage > 0) {
+			const witherChance = bonusValue / 100;
+			if (Math.random() < witherChance) {
+				addTriggeredEffect("Wither");
+				initializeStatusEffectsV2(target);
+				addStatus(target, "wither", 3, 3); // 持续3回合，最多叠加3层
+			}
+		}
+		return 0;
+	},
+};
+
+// 48. Eviscerate - 受伤加重debuff
+const EviscerateProcessor: WeaponBonusProcessor = {
+	name: "Eviscerate",
+	applyPostDamage: (
+		_attacker: FightPlayer,
+		target: FightPlayer,
+		damage: number,
+		bonusValue: number,
+		_context: DamageContext,
+	) => {
+		if (damage > 0) {
+			const eviscerateChance = bonusValue / 100;
+			if (Math.random() < eviscerateChance) {
+				addTriggeredEffect("Eviscerate");
+				initializeStatusEffectsV2(target);
+				addStatus(target, "eviscerate", 3, 3); // 持续3回合，最多叠加3层
+			}
+		}
+		return 0;
+	},
+};
+
 // 新增：获取特效触发时的描述文本
 export function getBonusEffectText(
 	bonusName: string,
@@ -880,7 +1298,43 @@ export function getBonusEffectText(
 			return "temporary weapon deflected";
 		case "Parry":
 			return "attack parried";
+		case "Rage":
+			return "multiple attacks";
+		case "Motivation":
+			return "stats boosted";
+		case "Backstab":
+			return "backstab damage";
+		case "Disarm":
+			return "target disarmed";
+		case "Slow":
+			return "target slowed";
+		case "Cripple":
+			return "target crippled";
+		case "Weaken":
+			return "target weakened";
+		case "Wither":
+			return "target withered";
+		case "Eviscerate":
+			return "target eviscerated";
 		default:
 			return `${bonusName} triggered`;
 	}
 }
+
+// 注册困难难度特效处理器
+registerProcessor(BerserkProcessor);
+registerProcessor(GraceProcessor);
+registerProcessor(FrenzyProcessor);
+registerProcessor(FocusProcessor);
+registerProcessor(FinaleProcessor);
+registerProcessor(WindupProcessor);
+registerProcessor(RageProcessor);
+registerProcessor(MotivationProcessor);
+registerProcessor(BackstabProcessor);
+registerProcessor(SmurfProcessor);
+registerProcessor(DisarmProcessor);
+registerProcessor(SlowProcessor);
+registerProcessor(CrippleProcessor);
+registerProcessor(WeakenProcessor);
+registerProcessor(WitherProcessor);
+registerProcessor(EviscerateProcessor);

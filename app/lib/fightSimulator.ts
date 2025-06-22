@@ -14,6 +14,15 @@ import type {
 	WeaponState,
 } from "./fightSimulatorTypes";
 import {
+	applyEviscerateToIncomingDamage,
+	applyStatusEffectsToStats,
+	decrementStatusEffects,
+	hasStatus,
+	initializeStatusEffectsV2,
+	shouldSkipTurn,
+} from "./statusEffectManager";
+import {
+	applyWeaponBonusesBeforeTurn,
 	applyWeaponBonusesPostDamage,
 	applyWeaponBonusesToAmmo,
 	applyWeaponBonusesToArmour,
@@ -308,38 +317,59 @@ export function takeTurns(
 ): TurnResults {
 	let log: string[] = [];
 
+	// 初始化状态效果V2
+	initializeStatusEffectsV2(h);
+	initializeStatusEffectsV2(v);
+
+	// 递减状态效果回合数
+	decrementStatusEffects(h);
+	decrementStatusEffects(v);
+
+	// 检查是否应该跳过回合
+	const hShouldSkip = shouldSkipTurn(h);
+	const vShouldSkip = shouldSkipTurn(v);
+
+	if (hShouldSkip) {
+		log.push(`${h.name} is stunned/suppressed and skips their turn`);
+	}
+	if (vShouldSkip) {
+		log.push(`${v.name} is stunned/suppressed and skips their turn`);
+	}
+
 	// 英雄行动
-	const h_action = action(
-		[],
-		h,
-		v,
-		hCL,
-		vCL,
-		hWS,
-		vWS,
-		hSE,
-		vSE,
-		hDOT,
-		vDOT,
-		h_set,
-		v_set,
-		h_temps,
-		v_temps,
-		turn,
-	);
-	log = log.concat(h_action[0]);
-	hCL = h_action[1];
-	vCL = h_action[2];
-	hWS = h_action[3];
-	vWS = h_action[4];
-	hSE = h_action[5];
-	vSE = h_action[6];
-	hDOT = h_action[7];
-	vDOT = h_action[8];
-	h_set = h_action[9];
-	v_set = h_action[10];
-	h_temps = h_action[11];
-	v_temps = h_action[12];
+	if (!hShouldSkip) {
+		const h_action = action(
+			[],
+			h,
+			v,
+			hCL,
+			vCL,
+			hWS,
+			vWS,
+			hSE,
+			vSE,
+			hDOT,
+			vDOT,
+			h_set,
+			v_set,
+			h_temps,
+			v_temps,
+			turn,
+		);
+		log = log.concat(h_action[0]);
+		hCL = h_action[1];
+		vCL = h_action[2];
+		hWS = h_action[3];
+		vWS = h_action[4];
+		hSE = h_action[5];
+		vSE = h_action[6];
+		hDOT = h_action[7];
+		vDOT = h_action[8];
+		h_set = h_action[9];
+		v_set = h_action[10];
+		h_temps = h_action[11];
+		v_temps = h_action[12];
+	}
 
 	if (vCL === 0) {
 		return [
@@ -360,37 +390,39 @@ export function takeTurns(
 	}
 
 	// 反派行动
-	const v_action = action(
-		[],
-		v,
-		h,
-		vCL,
-		hCL,
-		vWS,
-		hWS,
-		vSE,
-		hSE,
-		vDOT,
-		hDOT,
-		v_set,
-		h_set,
-		v_temps,
-		h_temps,
-		turn,
-	);
-	log = log.concat(v_action[0]);
-	vCL = v_action[1];
-	hCL = v_action[2];
-	vWS = v_action[3];
-	hWS = v_action[4];
-	vSE = v_action[5];
-	hSE = v_action[6];
-	vDOT = v_action[7];
-	hDOT = v_action[8];
-	v_set = v_action[9];
-	h_set = v_action[10];
-	v_temps = v_action[11];
-	h_temps = v_action[12];
+	if (!vShouldSkip) {
+		const v_action = action(
+			[],
+			v,
+			h,
+			vCL,
+			hCL,
+			vWS,
+			hWS,
+			vSE,
+			hSE,
+			vDOT,
+			hDOT,
+			v_set,
+			h_set,
+			v_temps,
+			h_temps,
+			turn,
+		);
+		log = log.concat(v_action[0]);
+		vCL = v_action[1];
+		hCL = v_action[2];
+		vWS = v_action[3];
+		hWS = v_action[4];
+		vSE = v_action[5];
+		hSE = v_action[6];
+		vDOT = v_action[7];
+		hDOT = v_action[8];
+		v_set = v_action[9];
+		h_set = v_action[10];
+		v_temps = v_action[11];
+		h_temps = v_action[12];
+	}
 
 	return [
 		log,
@@ -416,6 +448,11 @@ export function chooseWeapon(
 	p: FightPlayer,
 	weaponSettings: WeaponSettings,
 ): string {
+	// 检查是否被缴械，如果是则强制使用拳头
+	if (hasStatus(p, "disarm")) {
+		return "melee"; // 或者返回 "fists"，取决于系统设计
+	}
+
 	if (p.position === "attack") {
 		let weaponChoice: string = "primary";
 		let settingInteger = 5;
@@ -1181,15 +1218,41 @@ function action(
 		turn,
 	);
 
-	const xSTR = pmt[0][0],
-		xSPD = pmt[0][1];
-	// _xDEF = pmt[0][2], _xDEX = pmt[0][3] - 暂时未使用
+	let xSTR = pmt[0][0],
+		xSPD = pmt[0][1],
+		xDEF = pmt[0][2],
+		xDEX = pmt[0][3];
 	let x_acc_bonus = pmt[2][0],
 		x_dmg_bonus = pmt[2][1],
 		x_crit_chance = pmt[2][2];
 
-	const yDEF = pmt[1][2],
+	let ySTR = pmt[1][0],
+		ySPD = pmt[1][1],
+		yDEF = pmt[1][2],
 		yDEX = pmt[1][3];
+
+	// 应用状态效果对属性的修改
+	const xModifiedStats = applyStatusEffectsToStats(x, {
+		strength: xSTR,
+		speed: xSPD,
+		defense: xDEF,
+		dexterity: xDEX,
+	});
+	xSTR = xModifiedStats.strength;
+	xSPD = xModifiedStats.speed;
+	xDEF = xModifiedStats.defense;
+	xDEX = xModifiedStats.dexterity;
+
+	const yModifiedStats = applyStatusEffectsToStats(y, {
+		strength: ySTR,
+		speed: ySPD,
+		defense: yDEF,
+		dexterity: yDEX,
+	});
+	ySTR = yModifiedStats.strength;
+	ySPD = yModifiedStats.speed;
+	yDEF = yModifiedStats.defense;
+	yDEX = yModifiedStats.dexterity;
 	// _ySTR = pmt[1][0], _ySPD = pmt[1][1] - 暂时未使用
 	// _y_acc_bonus = pmt[3][0], _y_dmg_bonus = pmt[3][1], _y_crit_chance = pmt[3][2] - 暂时未使用
 
@@ -1367,6 +1430,43 @@ function action(
 
 		// 非伤害性临时武器不产生命中率和伤害�?
 		const currentWeapon = xW[xCW as keyof typeof xW];
+
+		// 应用回合前钩子（如Wind-up特效）
+		const shouldSkipAction = applyWeaponBonusesBeforeTurn(
+			x,
+			y,
+			xWS,
+			currentWeapon,
+			{
+				attacker: x,
+				target: y,
+				weapon: currentWeapon,
+				bodyPart: "", // 此时还未确定身体部位
+				isCritical: false,
+				turn: turn,
+				currentWeaponSlot: xCW,
+			},
+		);
+
+		if (shouldSkipAction) {
+			log.push(`${x.name} is winding up their ${currentWeapon.name}`);
+			return [
+				log,
+				xCL,
+				yCL,
+				xWS,
+				yWS,
+				xSE,
+				ySE,
+				xDOT,
+				yDOT,
+				x_set,
+				y_set,
+				x_temps,
+				y_temps,
+			];
+		}
+
 		if (currentWeapon.category !== "Non-Damaging") {
 			// 弹药类型效果
 			if (currentWeapon.ammo === "TR") {
@@ -2230,12 +2330,17 @@ function action(
 			}
 		}
 
+		// 应用Eviscerate效果增加受到的伤害
+		if (xDMG > 0) {
+			xDMG = applyEviscerateToIncomingDamage(y, xDMG);
+		}
+
 		// 扣除伤害
 		yCL -= xDMG;
 
 		// 应用武器特效的后处理效果（如Bloodlust生命回复）
 		if (xDMG > 0) {
-			const healAmount = applyWeaponBonusesPostDamage(
+			const postDamageResult = applyWeaponBonusesPostDamage(
 				x,
 				y,
 				xDMG,
@@ -2251,13 +2356,22 @@ function action(
 				},
 			);
 
-			if (healAmount > 0) {
+			// 处理生命回复
+			if (postDamageResult.healing > 0) {
 				const maxLife = x.maxLife;
-				const actualHeal = Math.min(healAmount, maxLife - xCL);
+				const actualHeal = Math.min(postDamageResult.healing, maxLife - xCL);
 				if (actualHeal > 0) {
 					xCL += actualHeal;
 					log.push(`${x.name} recovered ${actualHeal} life from Bloodlust`);
 				}
+			}
+
+			// 处理额外攻击（如Rage特效）
+			if (postDamageResult.extraAttacks > 0) {
+				log.push(
+					`${x.name} gains ${postDamageResult.extraAttacks} extra attacks from weapon effects`,
+				);
+				// TODO: 实现额外攻击逻辑
 			}
 		}
 
@@ -2371,7 +2485,38 @@ function action(
 				dotEffect[1] += 1;
 			}
 		}
+
+		// 更新连击计数器（Frenzy/Focus特效用）
+		if (currentWeapon.weaponBonuses) {
+			const hasFrenzy = currentWeapon.weaponBonuses.some(
+				(b) => b.name === "Frenzy",
+			);
+			const hasFocus = currentWeapon.weaponBonuses.some(
+				(b) => b.name === "Focus",
+			);
+
+			if (hasFrenzy) {
+				if (xHOM && xDMG > 0) {
+					x.comboCounter = (x.comboCounter || 0) + 1; // 命中时增加连击
+				} else {
+					x.comboCounter = 0; // miss时重置
+				}
+			} else if (hasFocus) {
+				if (xHOM && xDMG > 0) {
+					x.comboCounter = 0; // 命中时重置
+				} else {
+					x.comboCounter = (x.comboCounter || 0) + 1; // miss时增加计数
+				}
+			}
+		}
 	}
+
+	// 更新连击计数器和最后使用回合
+	if (!x.comboCounter) x.comboCounter = 0;
+	if (!x.lastUsedTurn) x.lastUsedTurn = {};
+
+	// 更新最后使用武器的回合
+	x.lastUsedTurn[xCW] = turn;
 
 	return [
 		log,
