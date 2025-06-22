@@ -36,4 +36,8 @@ next-env.d.ts
 
 # IDE
 .vscode/
-.idea/ 
+.idea/
+
+# Markdown
+*.md
+!README.md
