@@ -240,6 +240,7 @@ export interface FightPlayer {
 	id: number;
 	name: string;
 	life: number;
+	maxLife: number;
 	position: "attack" | "defend";
 	battleStats: BattleStats;
 	passives: BattleStats;
@@ -435,7 +436,7 @@ export interface WeaponBonusProcessor {
 		damage: number,
 		bonusValue: number,
 		context: DamageContext,
-	) => void;
+	) => number;
 	modifyWeaponState?: (
 		weaponState: WeaponState,
 		bonusValue: number,

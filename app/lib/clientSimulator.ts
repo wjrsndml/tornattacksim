@@ -124,10 +124,12 @@ function convertToFightPlayer(
 		},
 	};
 
+	const maxLife = playerData.life || 5000;
 	return {
 		id,
 		name: playerData.name || "Player",
-		life: playerData.life || 5000,
+		life: maxLife,
+		maxLife: maxLife,
 		position,
 		battleStats: playerData.stats || {
 			strength: 1000,
