@@ -8,6 +8,26 @@ export interface BattleStats {
 	dexterity: number;
 }
 
+// 状态标志类型 - 支持回合数和层数
+export interface StatusFlag {
+	turns: number;
+	stacks?: number;
+}
+
+// 新版状态效果 V2 - 具名结构体
+export interface StatusEffectsV2 {
+	stun?: StatusFlag;
+	suppress?: StatusFlag;
+	slow?: StatusFlag;
+	cripple?: StatusFlag;
+	weaken?: StatusFlag;
+	wither?: StatusFlag;
+	eviscerate?: StatusFlag;
+	disarm?: StatusFlag;
+	distracted?: StatusFlag;
+	motivation?: StatusFlag;
+}
+
 // 真实武器数据接口
 export interface RealWeaponData {
 	name: string;
@@ -244,6 +264,11 @@ export interface FightPlayer {
 	position: "attack" | "defend";
 	battleStats: BattleStats;
 	passives: BattleStats;
+	// 新增状态字段用于高级特效
+	statusEffectsV2?: StatusEffectsV2;
+	comboCounter?: number;
+	lastUsedTurn?: { [slot: string]: number };
+	windup?: boolean;
 	weapons: {
 		primary: WeaponData;
 		secondary: WeaponData;
@@ -436,11 +461,22 @@ export interface WeaponBonusProcessor {
 		damage: number,
 		bonusValue: number,
 		context: DamageContext,
-	) => number;
+	) => number | { extraAttacks?: number };
 	modifyWeaponState?: (
 		weaponState: WeaponState,
 		bonusValue: number,
 	) => WeaponState;
+	applyBeforeTurn?: (
+		attacker: FightPlayer,
+		target: FightPlayer,
+		weaponState: WeaponState,
+		context: DamageContext,
+	) => { skip: boolean } | undefined;
+	onTurnEnd?: (
+		attacker: FightPlayer,
+		target: FightPlayer,
+		context: DamageContext,
+	) => void;
 }
 
 export interface WeaponBonusEffects {
