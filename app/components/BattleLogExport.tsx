@@ -1,6 +1,12 @@
 'use client'
 
 import React, { useState } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
+import { Button } from './ui/button'
+import { Input } from './ui/input'
+import { Label } from './ui/label'
+import { Badge } from './ui/badge'
+import { Separator } from './ui/separator'
 
 interface BattleLogData {
   battleNumber: number
@@ -88,16 +94,16 @@ export default function BattleLogExport({ allBattleLogs, player1Name, player2Nam
     }
   }
 
-  // 解析日志信息并返回颜色样式（与SimulationResults中的逻辑相同）
+  // 解析日志信息并返回颜色样式（使用更柔和的颜色）
   const getLogLineStyle = (message: string, battleResult: 'player1' | 'player2' | 'stalemate') => {
     // 检查是否是胜利/平局消息
     if (message.includes('won') || message.includes('Stalemate')) {
       if (message.includes(player1Name + ' won')) {
-        return 'bg-green-200 border-l-4 border-green-500 text-green-800 font-semibold'
+        return 'p-2 rounded-md text-sm transition-colors bg-green-50 border-l-4 border-green-200 text-green-800 font-medium'
       } else if (message.includes(player2Name + ' won')) {
-        return 'bg-red-200 border-l-4 border-red-500 text-red-800 font-semibold'
+        return 'p-2 rounded-md text-sm transition-colors bg-red-50 border-l-4 border-red-200 text-red-800 font-medium'
       } else if (message.includes('Stalemate')) {
-        return 'bg-yellow-200 border-l-4 border-yellow-500 text-yellow-800 font-semibold'
+        return 'p-2 rounded-md text-sm transition-colors bg-yellow-50 border-l-4 border-yellow-200 text-yellow-800 font-medium'
       }
     }
     
@@ -105,33 +111,33 @@ export default function BattleLogExport({ allBattleLogs, player1Name, player2Nam
     const isPlayer1Action = message.startsWith(player1Name + ' ')
     const isPlayer2Action = message.startsWith(player2Name + ' ')
     
-    // 基础背景色：攻击方=绿色，防守方=红色
-    let baseStyle = ''
+    // 基础背景色：使用更柔和的颜色
+    let baseStyle = 'p-2 rounded-md text-sm transition-colors'
     if (isPlayer1Action) {
-      baseStyle = 'bg-green-50 border-l-4 border-green-200'
+      baseStyle += ' bg-green-50/50 border-l-4 border-green-100'
     } else if (isPlayer2Action) {
-      baseStyle = 'bg-red-50 border-l-4 border-red-200'
+      baseStyle += ' bg-red-50/50 border-l-4 border-red-100'
     }
     
     // 根据战斗结果调整颜色强度
     if (battleResult === 'player1') {
       // Player1赢了
       if (isPlayer1Action) {
-        baseStyle = 'bg-green-100 border-l-4 border-green-400'
+        baseStyle = baseStyle.replace('bg-green-50/50 border-green-100', 'bg-green-50 border-green-200')
       } else if (isPlayer2Action) {
-        baseStyle = 'bg-red-100 border-l-4 border-red-400'
+        baseStyle = baseStyle.replace('bg-red-50/50 border-red-100', 'bg-red-50 border-red-200')
       }
     } else if (battleResult === 'player2') {
       // Player2赢了  
       if (isPlayer1Action) {
-        baseStyle = 'bg-red-100 border-l-4 border-red-400'
+        baseStyle = baseStyle.replace('bg-green-50/50 border-green-100', 'bg-red-50 border-red-200')
       } else if (isPlayer2Action) {
-        baseStyle = 'bg-green-100 border-l-4 border-green-400'
+        baseStyle = baseStyle.replace('bg-red-50/50 border-red-100', 'bg-green-50 border-green-200')
       }
     } else if (battleResult === 'stalemate') {
       // 平局
       if (isPlayer1Action || isPlayer2Action) {
-        baseStyle = 'bg-yellow-50 border-l-4 border-yellow-200'
+        baseStyle = baseStyle.replace(/bg-(green|red)-50\/50 border-(green|red)-100/, 'bg-yellow-50/50 border-yellow-100')
       }
     }
     
@@ -145,157 +151,129 @@ export default function BattleLogExport({ allBattleLogs, player1Name, player2Nam
   return (
     <div className="space-y-6">
       {/* 导出功能 */}
-      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-        <div className="flex items-center justify-between">
-          <div>
-            <h4 className="text-lg font-semibold text-blue-800">战斗日志导出</h4>
-            <p className="text-sm text-blue-600">
-              共 {allBattleLogs.length.toLocaleString()} 场战斗日志可导出
-            </p>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span>战斗日志导出</span>
+            <Badge className="bg-blue-50 text-blue-700 border-blue-200">
+              {allBattleLogs.length.toLocaleString()} 场战斗
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-slate-600">
+                共 {allBattleLogs.length.toLocaleString()} 场战斗日志可导出
+              </p>
+            </div>
+            <Button onClick={exportToCSV} className="bg-blue-600 hover:bg-blue-700 text-white">
+              📊 导出CSV文件
+            </Button>
           </div>
-          <button
-            onClick={exportToCSV}
-            className="btn-primary bg-blue-600 hover:bg-blue-700"
-          >
-            📊 导出CSV文件
-          </button>
-        </div>
-        
-        <div className="mt-3 text-xs text-blue-600">
-          <p>导出的CSV文件包含以下列：</p>
-          <ul className="list-disc list-inside mt-1 space-y-1">
-            <li>战斗编号、胜利者、回合数</li>
-            <li>双方造成的伤害和剩余生命值</li>
-            <li>完整的战斗日志详情</li>
-          </ul>
-        </div>
-      </div>
+          
+          <div className="text-xs text-slate-600 bg-slate-50 p-3 rounded-md border border-slate-200">
+            <p className="font-medium mb-2">导出的CSV文件包含以下列：</p>
+            <ul className="list-disc list-inside space-y-1">
+              <li>战斗编号、胜利者、回合数</li>
+              <li>双方造成的伤害和剩余生命值</li>
+              <li>完整的战斗日志详情</li>
+            </ul>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* 查看特定战斗日志 */}
-      <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-        <h4 className="text-lg font-semibold text-green-800 mb-4">查看战斗日志</h4>
-        
-        <div className="flex items-center space-x-4 mb-4">
-          <div className="flex items-center space-x-2">
-            <label htmlFor="battleNumber" className="text-sm font-medium text-green-700">
-              战斗编号:
-            </label>
-            <input
-              id="battleNumber"
-              type="number"
-              min="1"
-              max={allBattleLogs.length}
-              value={viewBattleNumber}
-              onChange={(e) => setViewBattleNumber(e.target.value)}
-              placeholder={`1-${allBattleLogs.length}`}
-              className="w-24 px-2 py-1 border border-green-300 rounded text-sm"
-            />
+      <Card>
+        <CardHeader>
+          <CardTitle>查看战斗日志</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <Label htmlFor="battleNumber" className="text-sm font-medium">
+                战斗编号:
+              </Label>
+              <Input
+                id="battleNumber"
+                type="number"
+                min="1"
+                max={allBattleLogs.length}
+                value={viewBattleNumber}
+                onChange={(e) => setViewBattleNumber(e.target.value)}
+                placeholder={`1-${allBattleLogs.length}`}
+                className="w-32"
+              />
+            </div>
+            <Button onClick={viewBattleLog} variant="outline">
+              查看日志
+            </Button>
+            {selectedBattle && (
+              <Button 
+                onClick={() => setSelectedBattle(null)} 
+                variant="ghost"
+                size="sm"
+              >
+                清除
+              </Button>
+            )}
           </div>
-          <button
-            onClick={viewBattleLog}
-            className="btn-primary bg-green-600 hover:bg-green-700 text-sm"
-          >
-            查看日志
-          </button>
+
+          {/* 显示选中的战斗日志 */}
           {selectedBattle && (
-            <button
-              onClick={() => setSelectedBattle(null)}
-              className="btn-secondary text-sm"
-            >
-              清除显示
-            </button>
+            <div className="space-y-4">
+              <Separator />
+              
+              {/* 战斗统计 */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="text-center space-y-1">
+                  <div className="text-sm text-slate-600">战斗编号</div>
+                  <div className="text-lg font-semibold">#{selectedBattle.battleNumber}</div>
+                </div>
+                <div className="text-center space-y-1">
+                  <div className="text-sm text-slate-600">胜利者</div>
+                  <Badge className={selectedBattle.winner === player1Name ? 
+                    "bg-green-50 text-green-700 border-green-200" : 
+                    "bg-red-50 text-red-700 border-red-200"
+                  }>
+                    {selectedBattle.winner}
+                  </Badge>
+                </div>
+                <div className="text-center space-y-1">
+                  <div className="text-sm text-slate-600">回合数</div>
+                  <div className="text-lg font-semibold">{selectedBattle.turns}</div>
+                </div>
+                <div className="text-center space-y-1">
+                  <div className="text-sm text-slate-600">伤害对比</div>
+                  <div className="text-sm">
+                    <div className="text-green-600">{selectedBattle.heroDamageDealt}</div>
+                    <div className="text-red-600">{selectedBattle.villainDamageDealt}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 战斗日志 */}
+              <div>
+                <h4 className="font-medium mb-3">详细战斗日志</h4>
+                <div className="space-y-2 max-h-80 overflow-y-auto bg-slate-50/50 p-4 rounded-md border border-slate-200">
+                  {selectedBattle.battleLog.map((message, index) => {
+                    const battleResult = selectedBattle.winner === player1Name ? 'player1' : 
+                                       selectedBattle.winner === player2Name ? 'player2' : 'stalemate'
+                    return (
+                      <div
+                        key={index}
+                        className={getLogLineStyle(message, battleResult)}
+                      >
+                        {message}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
           )}
-        </div>
-
-        <p className="text-xs text-green-600 mb-4">
-          输入战斗编号 (1-{allBattleLogs.length}) 来查看该场战斗的详细日志
-        </p>
-
-        {/* 显示选中的战斗日志 */}
-        {selectedBattle && (
-          <div className="card bg-white border border-green-300">
-            <h5 className="text-lg font-semibold mb-3">
-              第 {selectedBattle.battleNumber} 场战斗详情
-            </h5>
-            
-            {/* 战斗统计信息 */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 p-3 bg-gray-50 rounded">
-              <div className="text-center">
-                <div className="text-sm text-gray-600">胜利者</div>
-                <div className={`font-semibold ${
-                  selectedBattle.winner === player1Name ? 'text-green-600' :
-                  selectedBattle.winner === player2Name ? 'text-red-600' : 'text-yellow-600'
-                }`}>
-                  {selectedBattle.winner}
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="text-sm text-gray-600">回合数</div>
-                <div className="font-semibold">{selectedBattle.turns}</div>
-              </div>
-              <div className="text-center">
-                <div className="text-sm text-gray-600">{player1Name}剩余生命</div>
-                <div className="font-semibold text-green-600">{selectedBattle.heroFinalLife}</div>
-              </div>
-              <div className="text-center">
-                <div className="text-sm text-gray-600">{player2Name}剩余生命</div>
-                <div className="font-semibold text-red-600">{selectedBattle.villainFinalLife}</div>
-              </div>
-            </div>
-
-            {/* 颜色说明 */}
-            <div className="mb-4 p-3 bg-gray-100 rounded-lg">
-              <div className="flex items-center justify-between text-sm">
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 bg-green-100 border-l-4 border-green-400 rounded"></div>
-                    <span className="text-gray-600">{player1Name} 攻击</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 bg-red-100 border-l-4 border-red-400 rounded"></div>
-                    <span className="text-gray-600">{player2Name} 反击</span>
-                  </div>
-                  {selectedBattle.winner === 'Stalemate' && (
-                    <div className="flex items-center space-x-2">
-                      <div className="w-4 h-4 bg-yellow-100 border-l-4 border-yellow-400 rounded"></div>
-                      <span className="text-gray-600">平局</span>
-                    </div>
-                  )}
-                </div>
-                <div className="text-sm font-medium">
-                  {selectedBattle.winner === player1Name && (
-                    <span className="text-green-600">🏆 {player1Name} 获胜</span>
-                  )}
-                  {selectedBattle.winner === player2Name && (
-                    <span className="text-red-600">🏆 {player2Name} 获胜</span>
-                  )}
-                  {selectedBattle.winner === 'Stalemate' && (
-                    <span className="text-yellow-600">🤝 平局</span>
-                  )}
-                </div>
-              </div>
-            </div>
-            
-            {/* 战斗日志 */}
-            <div className="bg-gray-50 p-4 rounded-lg max-h-60 overflow-y-auto">
-              <div className="space-y-1 text-sm font-mono">
-                {selectedBattle.battleLog.map((message, index) => {
-                  const battleResult = selectedBattle.winner === player1Name ? 'player1' : 
-                                     selectedBattle.winner === player2Name ? 'player2' : 'stalemate'
-                  return (
-                    <div 
-                      key={index} 
-                      className={`p-2 rounded-md transition-colors duration-200 ${getLogLineStyle(message, battleResult)}`}
-                    >
-                      {message}
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+        </CardContent>
+      </Card>
     </div>
   )
 } 

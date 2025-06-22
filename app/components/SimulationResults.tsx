@@ -1,6 +1,10 @@
 'use client'
 
 import React from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
+import { Progress } from './ui/progress'
+import { Badge } from './ui/badge'
+import { Separator } from './ui/separator'
 
 interface SimulationResult {
   totalSimulations: number
@@ -57,11 +61,11 @@ export default function SimulationResults({ results, player1Name = 'Attacker', p
     // 检查是否是胜利/平局消息
     if (message.includes('won') || message.includes('Stalemate')) {
       if (message.includes(player1Name + ' won')) {
-        return 'bg-green-200 border-l-4 border-green-500 text-green-800 font-semibold'
+        return 'bg-green-50 border-l-4 border-green-200 text-green-800 font-medium'
       } else if (message.includes(player2Name + ' won')) {
-        return 'bg-red-200 border-l-4 border-red-500 text-red-800 font-semibold'
+        return 'bg-red-50 border-l-4 border-red-200 text-red-800 font-medium'
       } else if (message.includes('Stalemate')) {
-        return 'bg-yellow-200 border-l-4 border-yellow-500 text-yellow-800 font-semibold'
+        return 'bg-yellow-50 border-l-4 border-yellow-200 text-yellow-800 font-medium'
       }
     }
     
@@ -69,33 +73,33 @@ export default function SimulationResults({ results, player1Name = 'Attacker', p
     const isPlayer1Action = message.startsWith(player1Name + ' ')
     const isPlayer2Action = message.startsWith(player2Name + ' ')
     
-    // 基础背景色：攻击方=绿色，防守方=红色
-    let baseStyle = ''
+    // 基础背景色：使用更柔和的颜色
+    let baseStyle = 'p-3 rounded-md text-sm transition-colors duration-200'
     if (isPlayer1Action) {
-      baseStyle = 'bg-green-50 border-l-4 border-green-200'
+      baseStyle += ' bg-green-50/50 border-l-4 border-green-100'
     } else if (isPlayer2Action) {
-      baseStyle = 'bg-red-50 border-l-4 border-red-200'
+      baseStyle += ' bg-red-50/50 border-l-4 border-red-100'
     }
     
     // 根据战斗结果调整颜色强度
     if (battleResult === 'player1') {
       // Player1赢了
       if (isPlayer1Action) {
-        baseStyle = 'bg-green-100 border-l-4 border-green-400'
+        baseStyle = baseStyle.replace('bg-green-50/50 border-green-100', 'bg-green-50 border-green-200')
       } else if (isPlayer2Action) {
-        baseStyle = 'bg-red-100 border-l-4 border-red-400'
+        baseStyle = baseStyle.replace('bg-red-50/50 border-red-100', 'bg-red-50 border-red-200')
       }
     } else if (battleResult === 'player2') {
       // Player2赢了  
       if (isPlayer1Action) {
-        baseStyle = 'bg-red-100 border-l-4 border-red-400'
+        baseStyle = baseStyle.replace('bg-green-50/50 border-green-100', 'bg-red-50 border-red-200')
       } else if (isPlayer2Action) {
-        baseStyle = 'bg-green-100 border-l-4 border-green-400'
+        baseStyle = baseStyle.replace('bg-red-50/50 border-red-100', 'bg-green-50 border-green-200')
       }
     } else if (battleResult === 'stalemate') {
       // 平局
       if (isPlayer1Action || isPlayer2Action) {
-        baseStyle = 'bg-yellow-50 border-l-4 border-yellow-200'
+        baseStyle = baseStyle.replace(/bg-(green|red)-50\/50 border-(green|red)-100/, 'bg-yellow-50/50 border-yellow-100')
       }
     }
     
@@ -105,204 +109,160 @@ export default function SimulationResults({ results, player1Name = 'Attacker', p
   return (
     <div className="space-y-6">
       {/* 总体统计 */}
-      <div className="card">
-        <h3 className="text-xl font-semibold mb-4">模拟结果</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-green-600">
-              {heroWins.toLocaleString()}
+      <Card>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg">模拟结果</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center space-y-1">
+              <div className="text-2xl font-bold text-green-600">
+                {heroWins.toLocaleString()}
+              </div>
+              <div className="text-xs text-slate-600">玩家1胜利</div>
+              <Badge className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100 text-xs">
+                {heroWinRate.toFixed(1)}%
+              </Badge>
             </div>
-            <div className="text-sm text-gray-600">玩家1胜利</div>
-            <div className="text-lg font-semibold text-green-600">
-              {heroWinRate.toFixed(1)}%
+            <div className="text-center space-y-1">
+              <div className="text-2xl font-bold text-red-600">
+                {villainWins.toLocaleString()}
+              </div>
+              <div className="text-xs text-slate-600">玩家2胜利</div>
+              <Badge className="bg-red-50 text-red-700 border-red-200 hover:bg-red-100 text-xs">
+                {villainWinRate.toFixed(1)}%
+              </Badge>
+            </div>
+            <div className="text-center space-y-1">
+              <div className="text-2xl font-bold text-slate-600">
+                {stalemates.toLocaleString()}
+              </div>
+              <div className="text-xs text-slate-600">平局</div>
+              <Badge className="bg-slate-100 text-slate-700 border-slate-200 text-xs">
+                {stalemateRate.toFixed(1)}%
+              </Badge>
+            </div>
+            <div className="text-center space-y-1">
+              <div className="text-2xl font-bold text-blue-600">
+                {averageTurns.toFixed(1)}
+              </div>
+              <div className="text-xs text-slate-600">平均回合数</div>
             </div>
           </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-red-600">
-              {villainWins.toLocaleString()}
-            </div>
-            <div className="text-sm text-gray-600">玩家2胜利</div>
-            <div className="text-lg font-semibold text-red-600">
-              {villainWinRate.toFixed(1)}%
-            </div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-gray-600">
-              {stalemates.toLocaleString()}
-            </div>
-            <div className="text-sm text-gray-600">平局</div>
-            <div className="text-lg font-semibold text-gray-600">
-              {stalemateRate.toFixed(1)}%
-            </div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-blue-600">
-              {averageTurns.toFixed(1)}
-            </div>
-            <div className="text-sm text-gray-600">平均回合数</div>
-          </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* 胜率图表 */}
-      <div className="card">
-        <h3 className="text-xl font-semibold mb-4">胜率分布</h3>
-        <div className="space-y-3">
-          <div className="flex items-center">
-            <div className="w-20 text-sm font-medium">玩家1</div>
-            <div className="flex-1 bg-gray-200 rounded-full h-6 mx-3">
-              <div
-                className="bg-green-500 h-6 rounded-full flex items-center justify-end pr-2"
-                style={{ width: `${heroWinRate}%` }}
-              >
-                <span className="text-white text-xs font-medium">
+      <Card>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg">胜率分布</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0 space-y-4">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-16 text-sm font-medium">玩家1</div>
+                <Progress value={heroWinRate} className="flex-1 h-2" />
+              </div>
+              <div className="flex items-center space-x-2">
+                <Badge className="bg-green-50 text-green-700 border-green-200 text-xs">
                   {heroWinRate.toFixed(1)}%
+                </Badge>
+                <span className="text-xs text-slate-600 w-16 text-right">
+                  {heroWins.toLocaleString()}
                 </span>
               </div>
             </div>
-            <div className="w-16 text-sm text-right">
-              {heroWins.toLocaleString()}
-            </div>
-          </div>
-          
-          <div className="flex items-center">
-            <div className="w-20 text-sm font-medium">玩家2</div>
-            <div className="flex-1 bg-gray-200 rounded-full h-6 mx-3">
-              <div
-                className="bg-red-500 h-6 rounded-full flex items-center justify-end pr-2"
-                style={{ width: `${villainWinRate}%` }}
-              >
-                <span className="text-white text-xs font-medium">
+            
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-16 text-sm font-medium">玩家2</div>
+                <Progress value={villainWinRate} className="flex-1 h-2" />
+              </div>
+              <div className="flex items-center space-x-2">
+                <Badge className="bg-red-50 text-red-700 border-red-200 text-xs">
                   {villainWinRate.toFixed(1)}%
+                </Badge>
+                <span className="text-xs text-slate-600 w-16 text-right">
+                  {villainWins.toLocaleString()}
                 </span>
               </div>
             </div>
-            <div className="w-16 text-sm text-right">
-              {villainWins.toLocaleString()}
-            </div>
-          </div>
-          
-          {stalemates > 0 && (
-            <div className="flex items-center">
-              <div className="w-20 text-sm font-medium">平局</div>
-              <div className="flex-1 bg-gray-200 rounded-full h-6 mx-3">
-                <div
-                  className="bg-gray-500 h-6 rounded-full flex items-center justify-end pr-2"
-                  style={{ width: `${stalemateRate}%` }}
-                >
-                  <span className="text-white text-xs font-medium">
+            
+            {stalemates > 0 && (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-16 text-sm font-medium">平局</div>
+                  <Progress value={stalemateRate} className="flex-1 h-2" />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Badge className="bg-slate-100 text-slate-700 border-slate-200 text-xs">
                     {stalemateRate.toFixed(1)}%
+                  </Badge>
+                  <span className="text-xs text-slate-600 w-16 text-right">
+                    {stalemates.toLocaleString()}
                   </span>
                 </div>
               </div>
-              <div className="w-16 text-sm text-right">
-                {stalemates.toLocaleString()}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* 详细统计 */}
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="card">
-          <h3 className="text-lg font-semibold mb-3">战斗统计</h3>
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <span>总模拟次数：</span>
-              <span className="font-medium">{totalSimulations.toLocaleString()}</span>
+      <Card>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg">详细统计</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-3">
+              <div>
+                <div className="text-xs text-slate-600">总模拟次数</div>
+                <div className="text-xl font-semibold">{totalSimulations.toLocaleString()}</div>
+              </div>
+              <div>
+                <div className="text-xs text-slate-600">平均回合数</div>
+                <div className="text-xl font-semibold">{averageTurns.toFixed(1)}</div>
+              </div>
             </div>
-            <div className="flex justify-between">
-              <span>平均回合数：</span>
-              <span className="font-medium">{averageTurns.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>玩家1平均剩余生命：</span>
-              <span className="font-medium">{averageHeroLifeRemaining.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>玩家2平均剩余生命：</span>
-              <span className="font-medium">{averageVillainLifeRemaining.toLocaleString()}</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="card">
-          <h3 className="text-lg font-semibold mb-3">胜率分析</h3>
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <span>玩家1胜率：</span>
-              <span className="font-medium text-green-600">{heroWinRate.toFixed(2)}%</span>
-            </div>
-            <div className="flex justify-between">
-              <span>玩家2胜率：</span>
-              <span className="font-medium text-red-600">{villainWinRate.toFixed(2)}%</span>
-            </div>
-            <div className="flex justify-between">
-              <span>平局率：</span>
-              <span className="font-medium text-gray-600">{stalemateRate.toFixed(2)}%</span>
-            </div>
-            <div className="flex justify-between">
-              <span>胜率差：</span>
-              <span className={`font-medium ${heroWinRate > villainWinRate ? 'text-green-600' : 'text-red-600'}`}>
-                {Math.abs(heroWinRate - villainWinRate).toFixed(2)}%
-              </span>
+            <div className="space-y-3">
+              <div>
+                <div className="text-xs text-slate-600">玩家1平均剩余生命</div>
+                <div className="text-xl font-semibold text-green-600">
+                  {averageHeroLifeRemaining.toFixed(0)}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-slate-600">玩家2平均剩余生命</div>
+                <div className="text-xl font-semibold text-red-600">
+                  {averageVillainLifeRemaining.toFixed(0)}
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* 最后一场战斗日志 */}
       {lastFightLog && lastFightLog.length > 0 && (
-        <div className="card">
-          <h3 className="text-lg font-semibold mb-3">最后一场战斗日志</h3>
-          
-          {/* 颜色说明 */}
-          <div className="mb-4 p-3 bg-gray-100 rounded-lg">
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 bg-green-100 border-l-4 border-green-400 rounded"></div>
-                  <span className="text-gray-600">{player1Name} 攻击</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 bg-red-100 border-l-4 border-red-400 rounded"></div>
-                  <span className="text-gray-600">{player2Name} 反击</span>
-                </div>
-                {getBattleResult() === 'stalemate' && (
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 bg-yellow-100 border-l-4 border-yellow-400 rounded"></div>
-                    <span className="text-gray-600">平局</span>
-                  </div>
-                )}
-              </div>
-              <div className="text-sm font-medium">
-                {getBattleResult() === 'player1' && (
-                  <span className="text-green-600">🏆 {player1Name} 胜率更高</span>
-                )}
-                {getBattleResult() === 'player2' && (
-                  <span className="text-red-600">🏆 {player2Name} 胜率更高</span>
-                )}
-                {getBattleResult() === 'stalemate' && (
-                  <span className="text-yellow-600">🤝 胜率相等</span>
-                )}
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-gray-50 p-4 rounded-lg max-h-60 overflow-y-auto">
-            <div className="space-y-1 text-sm font-mono">
+        <Card>
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg">最后一场战斗日志</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="space-y-1 max-h-80 overflow-y-auto">
               {lastFightLog.map((message, index) => (
-                <div 
-                  key={index} 
-                  className={`p-2 rounded-md transition-colors duration-200 ${getLogLineStyle(message)}`}
+                <div
+                  key={index}
+                  className={getLogLineStyle(message)}
                 >
                   {message}
                 </div>
               ))}
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   )

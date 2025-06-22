@@ -9,6 +9,11 @@ import LifeHistogram from './components/LifeHistogram'
 import { getDefaultWeapon, getDefaultArmour, loadGameData } from './lib/dataLoader'
 import { WeaponData, ArmourData, BattleStats, EducationPerks, FactionPerks, CompanyPerks, PropertyPerks, MeritPerks } from './lib/fightSimulatorTypes'
 import { runClientSimulation } from './lib/clientSimulator'
+import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card'
+import { Button } from './components/ui/button'
+import { Input } from './components/ui/input'
+import { Label } from './components/ui/label'
+import { Separator } from './components/ui/separator'
 
 interface Player {
   name: string
@@ -388,27 +393,31 @@ export default function Home() {
 
   if (!dataLoaded) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-torn-primary mx-auto"></div>
-          <p className="mt-4 text-lg text-gray-600">正在加载游戏数据...</p>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-2 border-slate-900 border-t-transparent mx-auto"></div>
+          <p className="text-lg text-slate-600">正在加载游戏数据...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
-        {/* 模拟控制 */}
-        <div className="card mb-8">
+    <div className="space-y-6">
+      {/* 模拟控制 */}
+      <Card>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg">战斗模拟器</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
           <div className="flex flex-col lg:flex-row justify-between items-start gap-6">
             <div className="flex flex-col md:flex-row items-start space-y-4 md:space-y-0 md:space-x-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+              <div className="space-y-2">
+                <Label htmlFor="simulation-count" className="text-sm font-medium">
                   模拟次数: {simulationSettings.fights.toLocaleString()}
-                </label>
-                <input
+                </Label>
+                <Input
+                  id="simulation-count"
                   type="range"
                   min="100"
                   max="100000"
@@ -416,143 +425,121 @@ export default function Home() {
                   value={simulationSettings.fights}
                   onChange={(e) => setSimulationSettings(prev => ({ ...prev, fights: parseInt(e.target.value) }))}
                   className="w-48"
-                  aria-label="模拟次数"
                 />
-                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                <div className="flex justify-between text-xs text-slate-500">
                   <span>100</span>
                   <span>100,000</span>
                 </div>
               </div>
               
               <div className="space-y-2">
-                <label className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2">
                   <input
+                    id="enable-log"
                     type="checkbox"
                     checked={simulationSettings.enableLog}
                     onChange={(e) => setSimulationSettings(prev => ({ ...prev, enableLog: e.target.checked }))}
-                    className="rounded"
+                    className="rounded border-slate-300 text-slate-900 focus:ring-slate-500"
                   />
-                  <span className="text-sm text-gray-700">启用战斗日志记录</span>
-                </label>
-                <label className="flex items-center space-x-2">
-                  {/* <input
-                    type="checkbox"
-                    checked={simulationSettings.enableLifeHisto}
-                    onChange={(e) => setSimulationSettings(prev => ({ ...prev, enableLifeHisto: e.target.checked }))}
-                    className="rounded"
-                  />
-                  <span className="text-sm text-gray-700">启用生命值分布</span> */}
-                </label>
+                  <Label htmlFor="enable-log" className="text-sm">
+                    启用战斗日志记录
+                  </Label>
+                </div>
               </div>
             </div>
 
-            <div className="flex space-x-3">
-              <button
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
                 onClick={() => copyPlayer(player2, 1)}
-                className="btn-secondary"
+                className="border-slate-300 text-slate-700 hover:bg-slate-50 text-sm"
+                size="sm"
               >
                 复制Defender→Attacker
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="outline"
                 onClick={() => copyPlayer(player1, 2)}
-                className="btn-secondary"
+                className="border-slate-300 text-slate-700 hover:bg-slate-50 text-sm"
+                size="sm"
               >
                 复制Attacker→Defender
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={handleSimulate}
                 disabled={isSimulating}
-                className="btn-primary"
+                className="min-w-[100px] bg-slate-900 hover:bg-slate-800 text-white disabled:bg-slate-400 text-sm"
+                size="sm"
               >
                 {isSimulating ? '模拟中...' : '开始战斗'}
-              </button>
+              </Button>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* 玩家1配置 */}
+        <div className="space-y-4">
+          <PlayerConfig
+            player={player1}
+            onPlayerChange={setPlayer1}
+            playerName="Attacker"
+            isAttacker={true}
+          />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* 玩家1配置 */}
-          <div>
-            <PlayerConfig
-              player={player1}
-              onPlayerChange={setPlayer1}
-              playerName="Attacker"
-              isAttacker={true}
-            />
-          </div>
+        {/* 玩家2配置 */}
+        <div className="space-y-4">
+          <PlayerConfig
+            player={player2}
+            onPlayerChange={setPlayer2}
+            playerName="Defender"
+            isAttacker={false}
+          />
+        </div>
 
-          {/* 玩家2配置 */}
-          <div>
-            <PlayerConfig
-              player={player2}
-              onPlayerChange={setPlayer2}
-              playerName="Defender"
-              isAttacker={false}
+        {/* 结果显示 */}
+        <div className="space-y-4">
+          {results && (
+            <SimulationResults 
+              results={results} 
+              player1Name={player1.name}
+              player2Name={player2.name}
             />
-          </div>
+          )}
 
-          {/* 结果显示 */}
-          <div>
-            {results ? (
-              <SimulationResults 
-                results={results}
+          {/* 战斗日志 */}
+          {simulationSettings.enableLog && allBattleLogs.length > 0 && (
+            <>
+              <Separator className="bg-slate-200" />
+              <BattleLogExport 
+                allBattleLogs={allBattleLogs}
                 player1Name={player1.name}
                 player2Name={player2.name}
               />
-            ) : (
-              <div className="card text-center">
-                <div className="py-12">
-                  <div className="text-6xl mb-4">⚔️</div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                    准备开始战斗模拟
-                  </h3>
-                  <p className="text-gray-600">
-                    配置你的玩家并点击"开始战斗"查看结果
-                  </p>
-                </div>
+            </>
+          )}
+
+          {/* 生命值分布图 */}
+          {simulationSettings.enableLifeHisto && lifeData.player1.length > 0 && (
+            <>
+              <Separator className="bg-slate-200" />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <LifeHistogram 
+                  lifeData={lifeData.player1}
+                  playerName={player1.name}
+                  totalFights={simulationSettings.fights}
+                />
+                <LifeHistogram 
+                  lifeData={lifeData.player2}
+                  playerName={player2.name}
+                  totalFights={simulationSettings.fights}
+                />
               </div>
-            )}
-          </div>
+            </>
+          )}
         </div>
-
-        {/* 战斗日志 */}
-        {simulationSettings.enableLog && (
-          <div className="mt-8">
-            {/* 隐藏原先的战斗日志组件，因为它不能正常工作
-            <BattleLog
-              logs={battleLogs}
-              isActive={isSimulating}
-              onClear={clearBattleLogs}
-              player1Name={player1.name}
-              player2Name={player2.name}
-              battleResult={battleResult}
-            />
-            */}
-            
-            {/* 战斗日志导出 */}
-            <BattleLogExport
-              allBattleLogs={allBattleLogs}
-              player1Name={player1.name}
-              player2Name={player2.name}
-            />
-          </div>
-        )}
-
-        {/* 生命值分布 */}
-        {simulationSettings.enableLifeHisto && (
-          <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <LifeHistogram
-              lifeData={lifeData.player1}
-              playerName={player1.name}
-              totalFights={simulationSettings.fights}
-            />
-            <LifeHistogram
-              lifeData={lifeData.player2}
-              playerName={player2.name}
-              totalFights={simulationSettings.fights}
-            />
-          </div>
-        )}
       </div>
     </div>
   )
