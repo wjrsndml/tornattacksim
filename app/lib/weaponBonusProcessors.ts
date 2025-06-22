@@ -330,7 +330,7 @@ const DoubleTapProcessor: WeaponBonusProcessor = {
 		const random = Math.random();
 		if (random < doubleTapChance) {
 			addTriggeredEffect("Double Tap");
-			// 这里只标记触发，实际的额外攻击需要在战斗引擎中处理
+			return { extraAttacks: 1 };
 		}
 		return 0;
 	},
@@ -352,7 +352,7 @@ const FuryProcessor: WeaponBonusProcessor = {
 		const isMelee = ["CL", "PI", "SL"].includes(context.weapon.category);
 		if (isMelee && random < furyChance) {
 			addTriggeredEffect("Fury");
-			// 这里只标记触发，实际的额外攻击需要在战斗引擎中处理
+			return { extraAttacks: 1 };
 		}
 		return 0;
 	},
