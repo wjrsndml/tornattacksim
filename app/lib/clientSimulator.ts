@@ -66,6 +66,10 @@ function convertToFightWeapon(weapon: WeaponData): WeaponData {
 		result.ammo = weapon.ammo;
 	}
 
+	if (weapon.weaponBonuses) {
+		result.weaponBonuses = weapon.weaponBonuses;
+	}
+
 	return result;
 }
 
