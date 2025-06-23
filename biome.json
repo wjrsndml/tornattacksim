@@ -7,7 +7,14 @@
 	},
 	"files": {
 		"ignoreUnknown": false,
-		"includes": ["app/**", "*.json", "*.js", "*.ts", "*.tsx"]
+		"includes": [
+			"app/**",
+			"tests/**",
+			"*.json",
+			"**/*.js",
+			"**/*.ts",
+			"**/*.tsx"
+		]
 	},
 	"formatter": {
 		"enabled": true,

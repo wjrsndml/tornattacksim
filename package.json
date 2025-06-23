@@ -10,7 +10,13 @@
 		"lint": "biome check .",
 		"lint:fix": "biome check --write .",
 		"format": "biome format --write .",
-		"prepare": "husky"
+		"prepare": "husky",
+		"test:weapons": "tsx tests/weaponBonusTests.ts",
+		"test:weapons:basic": "tsx tests/weaponBonusTests.ts --basic",
+		"test:weapons:probability": "tsx tests/weaponBonusTests.ts --probability",
+		"test:weapons:quick": "tsx tests/weaponBonusTests.ts --quick",
+		"test:weapons:demo": "tsx tests/demo.ts",
+		"test:logger:demo": "tsx tests/loggerDemo.ts"
 	},
 	"dependencies": {
 		"@headlessui/react": "^2.2.4",
@@ -43,6 +49,8 @@
 		"husky": "^9.1.7",
 		"lint-staged": "^16.1.2",
 		"postcss": "^8.5.6",
+		"ts-node": "^10.9.2",
+		"tsx": "^4.7.0",
 		"typescript": "^5.8.3"
 	},
 	"lint-staged": {
