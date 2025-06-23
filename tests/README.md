@@ -1,22 +1,24 @@
-# 武器特效自动化测试框架
+# 武器特效完整测试系统
 
-这是一个专门用于测试武器特效系统的自动化测试框架，可以全面验证各种武器特效的正确性和稳定性。
+这是一个全面的武器特效测试系统，涵盖了游戏中所有53种武器特效的测试验证，确保战斗系统的正确性和稳定性。测试覆盖率达到**85%以上**（45+个特效）。
 
 ## 📁 文件结构
 
 ```
 tests/
-├── README.md                    # 本文档
-├── weaponBonusTests.ts         # 主测试入口
+├── README.md                    # 本文档  
+├── weaponBonusTests.ts         # 主测试运行器
 ├── testUtils.ts                # 测试工具函数
 ├── mockData.ts                 # 测试模拟数据
+├── demo.ts                     # 测试演示程序
 ├── reportLogger.ts             # 日志记录模块
 ├── loggerDemo.ts               # 日志系统演示
 ├── testCases/                  # 具体测试用例
-│   ├── basicBonuses.test.ts    # 基础特效测试
-│   ├── probabilityBonuses.test.ts # 概率特效测试
-│   ├── complexBonuses.test.ts  # 复杂特效测试（待实现）
-│   └── statusEffects.test.ts   # 状态效果测试（待实现）
+│   ├── basicBonuses.test.ts    # 基础特效测试 ✅
+│   ├── probabilityBonuses.test.ts # 概率特效测试 ✅
+│   ├── complexBonuses.test.ts  # 复杂特效测试 ✅
+│   ├── statusEffects.test.ts   # 状态效果测试 ✅
+│   └── conditionalBonuses.test.ts # 条件特效测试 ✅
 └── reports/                    # 测试报告输出目录
     ├── *.log                   # 文本日志文件
     ├── *.html                  # HTML可视化报告
@@ -25,35 +27,49 @@ tests/
 
 ## 🚀 快速开始
 
-### 运行所有测试
-```bash
-npm run test:weapons
+### 运行完整测试套件
+```typescript
+import { runAllWeaponBonusTests } from './tests/weaponBonusTests';
+runAllWeaponBonusTests();
 ```
 
 ### 快速测试模式
-```bash
-npm run test:weapons --quick
+```typescript
+import { runQuickWeaponBonusTests } from './tests/weaponBonusTests';
+runQuickWeaponBonusTests();
 ```
 
-### 只运行基础特效测试
-```bash
-npm run test:weapons --basic
+### 运行特定类型测试
+```typescript
+import { runSpecificBonusTypeTests } from './tests/weaponBonusTests';
+
+// 支持中英文
+runSpecificBonusTypeTests('basic');      // 或 '基础'
+runSpecificBonusTypeTests('probability'); // 或 '概率'
+runSpecificBonusTypeTests('complex');    // 或 '复杂'
+runSpecificBonusTypeTests('status');     // 或 '状态'
+runSpecificBonusTypeTests('conditional'); // 或 '条件'
 ```
 
-### 只运行概率特效测试
-```bash
-npm run test:weapons --probability
+### 生成测试报告
+```typescript
+import { generateTestReport } from './tests/weaponBonusTests';
+generateTestReport();
 ```
 
-### 运行日志系统演示
+### 运行演示程序
 ```bash
-npm run test:logger:demo
+# 设置演示类型并运行
+DEMO_TYPE=all npx ts-node tests/demo.ts      # 完整测试套件
+DEMO_TYPE=quick npx ts-node tests/demo.ts    # 快速测试
+DEMO_TYPE=basic npx ts-node tests/demo.ts    # 基础特效测试
+DEMO_TYPE=report npx ts-node tests/demo.ts   # 生成测试报告
 ```
 
-## 🧪 测试类型
+## 🧪 测试类型与覆盖率
 
-### 1. 基础特效测试
-测试确定性的武器特效，如：
+### 1. 基础特效测试 ✅ (9个特效)
+测试简单数值修改的特效：
 - **Powerful**: 伤害增加百分比
 - **Empower**: 力量属性增加
 - **Quicken**: 速度属性增加
@@ -61,30 +77,82 @@ npm run test:logger:demo
 - **Expose**: 暴击率增加
 - **Penetrate**: 护甲穿透
 - **Bloodlust**: 伤害回血
-- **Specialist**: 伤害增加但限制弹夹
+- **Specialist**: 单发弹夹伤害加成
+- **Conserve**: 弹药保存
 
-### 2. 概率特效测试
-测试概率触发的武器特效，如：
+### 2. 概率特效测试 ✅ (9个特效)
+测试基于概率触发的特效：
 - **Puncture**: 概率忽略护甲
 - **Sure Shot**: 概率必中
-- **Deadly**: 概率致命一击
-- **Double Tap**: 概率双击
-- **Fury**: 概率双击（近战）
-- **Stun**: 概率眩晕
-- **Parry**: 概率格挡
+- **Deadly**: 概率致命一击 (+500%伤害)
+- **Double Tap**: 概率连击两次
+- **Fury**: 概率多次攻击
+- **Double-edged**: 概率双倍伤害但自伤
+- **Stun**: 概率眩晕敌人
+- **Home Run**: 概率格挡临时物品
+- **Parry**: 概率格挡近战攻击
 
-### 3. 条件特效测试（待实现）
-测试需要特定条件的武器特效，如：
+### 3. 复杂特效测试 ✅ (9个特效)
+测试需要多回合或复杂条件的特效：
+- **Execute**: 低血量目标即死
+- **Berserk**: 增加伤害但降低命中率
+- **Grace**: 增加命中率但降低伤害
+- **Frenzy**: 连续命中增加伤害和精确度
+- **Focus**: 连续失误增加命中率
+- **Finale**: 每回合不使用武器增加伤害
+- **Wind-up**: 蓄力后增加伤害
+- **Rage**: 概率性多次攻击 (2-8次)
+- **Smurf**: 基于等级差异增加伤害
+
+### 4. 状态效果测试 ✅ (11个特效)
+测试DOT效果、debuff效果等：
+- **Bleed**: 流血DOT效果 (9回合衰减)
+- **Disarm**: 缴械效果 (禁用武器N回合)
+- **Slow**: 降低速度25% (x3层)
+- **Cripple**: 降低敏捷25% (x3层)
+- **Weaken**: 降低防御25% (x3层)
+- **Wither**: 降低力量25% (x3层)
+- **Eviscerate**: 目标受到额外伤害
+- **Motivation**: 增加所有属性10% (最多5层)
+- **Paralyzed**: 瘫痪 (50%概率失去回合)
+- **Suppress**: 压制 (25%概率失去未来回合)
+- **Irradiate**: 辐射中毒 (1-3小时)
+
+### 5. 条件特效测试 ✅ (8个特效)
+测试基于特定条件的特效：
+
+**身体部位条件：**
 - **Crusher**: 头部伤害加成
-- **Blindside**: 满血目标伤害加成
-- **Comeback**: 低血量伤害加成
-- **Assassinate**: 首回合伤害加成
+- **Cupid**: 心脏伤害加成
+- **Achilles**: 脚部伤害加成
+- **Throttle**: 喉咙伤害加成
+- **Roshambo**: 腹股沟伤害加成
 
-### 4. 状态特效测试（待实现）
-测试产生状态效果的武器特效，如：
-- **Disarm**: 缴械效果
-- **Slow**: 减速效果
-- **Motivation**: 属性提升buff
+**其他条件：**
+- **Blindside**: 目标满血时伤害加成
+- **Comeback**: 自己低血量时伤害加成
+- **Assassinate**: 第一回合伤害加成
+- **Backstab**: 目标分心时双倍伤害
+
+## 📊 测试覆盖率统计
+
+### ✅ 已实现测试 (45+个特效)
+- **基础特效**: 9个 - 100%覆盖
+- **概率特效**: 9个 - 100%覆盖  
+- **复杂特效**: 9个 - 100%覆盖
+- **状态效果**: 11个 - 100%覆盖
+- **条件特效**: 8个 - 100%覆盖
+
+### ⚠️ 待补充测试 (~8个特效)
+主要是非核心战斗功能的特效：
+- **Revitalize**: 能量恢复
+- **Plunder**: 抢劫增益
+- **Warlord**: 尊重增益
+- **Stricken**: 住院时间增加
+- **Proficiency**: 经验增益
+- 其他非战斗核心特效
+
+**总体测试覆盖率：~85%** (45+/53)
 
 ## 🔧 测试工具
 
@@ -291,24 +359,59 @@ for (const value of values) {
    console.log("触发的特效:", result.triggeredEffects);
    ```
 
-## 🚧 待实现功能
+## 🚧 持续改进计划
 
-- [ ] 条件特效测试模块
-- [ ] 状态效果测试模块
-- [ ] 复杂特效测试模块
-- [ ] HTML格式测试报告
-- [ ] 测试覆盖率统计
-- [ ] 性能基准测试
+### ✅ 已完成功能
+- [x] 基础特效测试模块
+- [x] 概率特效测试模块  
+- [x] 复杂特效测试模块
+- [x] 状态效果测试模块
+- [x] 条件特效测试模块
+- [x] 测试覆盖率统计
+- [x] 性能基准测试
+- [x] 详细测试报告
+
+### 🔄 改进中功能
+- [ ] HTML格式可视化报告
 - [ ] 历史结果对比
-- [ ] CI/CD集成
+- [ ] CI/CD集成优化
+- [ ] 剩余8个特效测试补充
+
+### 🆕 计划新增功能
+- [ ] 测试数据可视化图表
+- [ ] 自动化回归测试
+- [ ] 特效性能基准比较
+- [ ] 错误模式分析报告
 
 ## 🤝 贡献指南
 
-1. 添加新的测试用例时，请在 `mockData.ts` 中添加相应的测试数据
-2. 为新特效编写测试时，请参考现有的测试模式
-3. 确保所有测试都有适当的错误处理和详细的错误信息
-4. 概率测试应该包含多个数值和适当的容差设置
+### 添加新特效测试
+1. **确定特效类别** - 选择合适的测试文件
+2. **更新测试数据** - 在 `mockData.ts` 中添加测试配置
+3. **实现测试函数** - 参考现有测试模式
+4. **集成到测试套件** - 在主测试函数中调用
+
+### 代码质量要求
+1. 每个测试都应该独立且可重复
+2. 提供详细的错误信息和调试数据
+3. 使用适当的容差和迭代次数
+4. 包含边界值和异常情况测试
+
+### 测试最佳实践
+1. **测试隔离** - 使用 `clearTriggeredEffects()` 清理状态
+2. **数据验证** - 验证输入输出的合理性
+3. **错误处理** - 捕获异常并继续执行
+4. **性能考虑** - 合理选择测试参数
 
 ---
 
-这个测试框架提供了全面、直观的武器特效测试能力，帮助确保游戏机制的正确性和稳定性。 
+## 📋 总结
+
+这个**武器特效完整测试系统**已经实现了对游戏中85%以上武器特效的全面测试覆盖，包括：
+
+🎯 **核心特效全覆盖**：所有影响战斗的关键特效都已纳入测试
+📊 **测试质量保证**：多层次验证确保特效实现的正确性
+🔧 **开发友好**：提供简单易用的API和详细的测试报告
+⚡ **性能优化**：支持快速测试和精确测试模式
+
+这套测试系统为游戏战斗系统的稳定性和正确性提供了强有力的保障。 
