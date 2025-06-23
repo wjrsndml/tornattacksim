@@ -1079,7 +1079,7 @@ const RageProcessor: WeaponBonusProcessor = {
 		const rageChance = bonusValue / 100;
 		if (Math.random() < rageChance) {
 			addTriggeredEffect("Rage");
-			const extraAttacks = Math.floor(Math.random() * 7) + 1; // 1-7 额外攻击
+			const extraAttacks = Math.floor(Math.random() * 7) + 2; // 2-8 额外攻击
 			return { extraAttacks };
 		}
 		return 0;
@@ -1149,13 +1149,18 @@ const DisarmProcessor: WeaponBonusProcessor = {
 	) => {
 		if (
 			damage > 0 &&
-			(context.bodyPart === "hand" || context.bodyPart === "arm")
+			(context.bodyPart.includes("hand") || context.bodyPart.includes("arm"))
 		) {
 			const disarmChance = bonusValue / 100;
 			if (Math.random() < disarmChance) {
 				addTriggeredEffect("Disarm");
 				initializeStatusEffectsV2(target);
-				addStatus(target, "disarm", Math.floor(bonusValue / 10), 1); // 持续回合数为 value/10
+				addStatus(
+					target,
+					"disarm",
+					Math.max(1, Math.floor(bonusValue / 10)),
+					1,
+				); // 持续回合数为 value/10，最少1回合
 			}
 		}
 		return 0;
