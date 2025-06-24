@@ -8,7 +8,16 @@
     "643": {"set": "n/a", "type": "Construction Helmet", "armour_range": [30, 35]},
     "644": {"set": "n/a", "type": "Welding Helmet", "armour_range": [34, 39]},
     "647": {"set": "Leather", "type": "Leather Helmet", "armour_range": [20, 25]},
-    "651": {"set": "Combat", "type": "Combat Helmet", "armour_range": [38, 43]}
+    "651": {"set": "Combat", "type": "Combat Helmet", "armour_range": [38, 43]},
+    "655": {"set": "Riot", "type": "Riot Helmet", "armour_range": [40, 60]},
+    "660": {"set": "Dune", "type": "Dune Helmet", "armour_range": [40, 60]},
+    "665": {"set": "Assault", "type": "Assault Helmet", "armour_range": [40, 60]},
+    "670": {"set": "Delta", "type": "Delta Gas Mask", "armour_range": [40, 60]},
+    "675": {"set": "Marauder", "type": "Marauder Face Mask", "armour_range": [40, 60]},
+    "680": {"set": "EOD", "type": "EOD Helmet", "armour_range": [40, 60]},
+    "1164": {"set": "M'aol", "type": "M'aol Visage", "armour_range": [40, 60]},
+    "1307": {"set": "Sentinel", "type": "Sentinel Helmet", "armour_range": [40, 60]},
+    "1355": {"set": "Vanguard", "type": "Vanguard Respirator", "armour_range": [40, 60]}
   },
   "body": {
     "0": {"set": "n/a", "type": "", "armour_range": [0, 0]},
@@ -21,24 +30,62 @@
     "178": {"set": "n/a", "type": "Flak Jacket", "armour_range": [30, 35]},
     "332": {"set": "Combat", "type": "Combat Vest", "armour_range": [38, 43]},
     "333": {"set": "n/a", "type": "Liquid Body Armor", "armour_range": [40, 45]},
-    "334": {"set": "n/a", "type": "Flexible Body Armor", "armour_range": [42, 47]}
+    "334": {"set": "n/a", "type": "Flexible Body Armor", "armour_range": [42, 47]},
+    "656": {"set": "Riot", "type": "Riot Body", "armour_range": [40, 60]},
+    "661": {"set": "Dune", "type": "Dune Vest", "armour_range": [40, 60]},
+    "666": {"set": "Assault", "type": "Assault Body", "armour_range": [40, 60]},
+    "671": {"set": "Delta", "type": "Delta Body", "armour_range": [40, 60]},
+    "676": {"set": "Marauder", "type": "Marauder Body", "armour_range": [40, 60]},
+    "681": {"set": "EOD", "type": "EOD Apron", "armour_range": [40, 60]},
+    "848": {"set": "n/a", "type": "Kevlar Lab Coat", "armour_range": [40, 60]},
+    "1165": {"set": "M'aol", "type": "M'aol Spathe", "armour_range": [40, 60]},
+    "1174": {"set": "n/a", "type": "Starshield Breastplate", "armour_range": [40, 60]},
+    "1308": {"set": "Sentinel", "type": "Sentinel Apron", "armour_range": [40, 60]},
+    "1356": {"set": "Vanguard", "type": "Vanguard Body", "armour_range": [40, 60]}
   },
   "hands": {
     "0": {"set": "n/a", "type": "", "armour_range": [0, 0]},
     "654": {"set": "Combat", "type": "Combat Gloves", "armour_range": [38, 43], "default":true},
     "640": {"set": "n/a", "type": "Kevlar Gloves", "armour_range": [32, 37]},
-    "650": {"set": "Leather", "type": "Leather Gloves", "armour_range": [20, 25]}
+    "650": {"set": "Leather", "type": "Leather Gloves", "armour_range": [20, 25]},
+    "659": {"set": "Riot", "type": "Riot Gloves", "armour_range": [40, 60]},
+    "664": {"set": "Dune", "type": "Dune Gloves", "armour_range": [40, 60]},
+    "669": {"set": "Assault", "type": "Assault Gloves", "armour_range": [40, 60]},
+    "674": {"set": "Delta", "type": "Delta Gloves", "armour_range": [40, 60]},
+    "679": {"set": "Marauder", "type": "Marauder Gloves", "armour_range": [40, 60]},
+    "684": {"set": "EOD", "type": "EOD Gloves", "armour_range": [40, 60]},
+    "1168": {"set": "M'aol", "type": "M'aol Clawshields", "armour_range": [40, 60]},
+    "1311": {"set": "Sentinel", "type": "Sentinel Gloves", "armour_range": [40, 60]},
+    "1359": {"set": "Vanguard", "type": "Vanguard Gloves", "armour_range": [40, 60]}
   },
   "legs": {
     "0": {"set": "n/a", "type": "", "armour_range": [0, 0]},
     "652": {"set": "Combat", "type": "Combat Pants", "armour_range": [38, 43], "default":true},
-    "648": {"set": "Leather", "type": "Leather Pants", "armour_range": [20, 25]}
+    "648": {"set": "Leather", "type": "Leather Pants", "armour_range": [20, 25]},
+    "657": {"set": "Riot", "type": "Riot Pants", "armour_range": [40, 60]},
+    "662": {"set": "Dune", "type": "Dune Pants", "armour_range": [40, 60]},
+    "667": {"set": "Assault", "type": "Assault Pants", "armour_range": [40, 60]},
+    "672": {"set": "Delta", "type": "Delta Pants", "armour_range": [40, 60]},
+    "677": {"set": "Marauder", "type": "Marauder Pants", "armour_range": [40, 60]},
+    "682": {"set": "EOD", "type": "EOD Pants", "armour_range": [40, 60]},
+    "1166": {"set": "M'aol", "type": "M'aol Britches", "armour_range": [40, 60]},
+    "1309": {"set": "Sentinel", "type": "Sentinel Pants", "armour_range": [40, 60]},
+    "1357": {"set": "Vanguard", "type": "Vanguard Pants", "armour_range": [40, 60]}
   },
   "feet": {
     "0": {"set": "n/a", "type": "", "armour_range": [0, 0]},
     "653": {"set": "Combat", "type": "Combat Boots", "armour_range": [38, 43], "default":true},
     "645": {"set": "n/a", "type": "Safety Boots", "armour_range": [30, 35]},
     "646": {"set": "n/a", "type": "Hiking Boots", "armour_range": [24, 29]},
-    "649": {"set": "Leather", "type": "Leather Boots", "armour_range": [20, 25]}
+    "649": {"set": "Leather", "type": "Leather Boots", "armour_range": [20, 25]},
+    "658": {"set": "Riot", "type": "Riot Boots", "armour_range": [40, 60]},
+    "663": {"set": "Dune", "type": "Dune Boots", "armour_range": [40, 60]},
+    "668": {"set": "Assault", "type": "Assault Boots", "armour_range": [40, 60]},
+    "673": {"set": "Delta", "type": "Delta Boots", "armour_range": [40, 60]},
+    "678": {"set": "Marauder", "type": "Marauder Boots", "armour_range": [40, 60]},
+    "683": {"set": "EOD", "type": "EOD Boots", "armour_range": [40, 60]},
+    "1167": {"set": "M'aol", "type": "M'aol Hooves", "armour_range": [40, 60]},
+    "1310": {"set": "Sentinel", "type": "Sentinel Boots", "armour_range": [40, 60]},
+    "1358": {"set": "Vanguard", "type": "Vanguard Boots", "armour_range": [40, 60]}
   }
 }
