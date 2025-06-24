@@ -1777,12 +1777,13 @@
     }
   },
   "tempBlock": {
-      "Pepper Spray": ["Hazmat Suit", "Motorcycle Helmet", "Welding Helmet"],
-      "Tear Gas": ["Hazmat Suit"],
+      "Pepper Spray": ["Hazmat Suit", "Motorcycle Helmet", "Welding Helmet", "EOD Helmet","Delta Gas Mask","Marauder Face Mask","Riot Helmet","Vanguard Respirator"],
+      "Tear Gas": ["Hazmat Suit","Delta Gas Mask","Vanguard Respirator"],
       "Flash Grenade": ["Welding Helmet"],
       "Sand": ["Hazmat Suit", "Motorcycle Helmet", "Welding Helmet"],
-      "Concussion Grenade": [],
-      "Smoke Grenade": []
+      "Concussion Grenade": ["EOD Helmet"],
+      "Smoke Grenade": [],
+      "Nerve Gas": ["Delta Gas Mask","Vanguard Respirator"]
   },
   "temporary" : {
     "0": {

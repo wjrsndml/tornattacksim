@@ -2329,6 +2329,29 @@ function action(
 					}
 				}
 			}
+
+			// 对于非伤害性临时武器（如Smoke Grenade、Pepper Spray等），处理完特殊效果后直接返回
+			// 只有投掷武器（如Ninja Stars、Throwing Knife）需要继续执行伤害计算
+			if (
+				temporaryWeapon.name !== "Ninja Stars" &&
+				temporaryWeapon.name !== "Throwing Knife"
+			) {
+				return [
+					log,
+					xCL,
+					yCL,
+					xWS,
+					yWS,
+					xSE,
+					ySE,
+					xDOT,
+					yDOT,
+					x_set,
+					y_set,
+					x_temps,
+					y_temps,
+				];
+			}
 		}
 
 		// 应用Eviscerate效果增加受到的伤害

@@ -65,10 +65,7 @@ export default function ArmourSelector({
 	};
 
 	const getDisplayName = (armour: ArmourData) => {
-		if (armour.set === "n/a" || !armour.set) {
-			return armour.type || "无护甲";
-		}
-		return armour.set;
+		return armour.type || "无护甲";
 	};
 
 	if (loading) {
@@ -87,9 +84,7 @@ export default function ArmourSelector({
 			<Label htmlFor={`${playerId}-${armourType}-armour`}>{label}</Label>
 			<Select
 				value={
-					armours.find(
-						(a) => getDisplayName(a.armour) === getDisplayName(selectedArmour),
-					)?.id || ""
+					armours.find((a) => a.armour.type === selectedArmour.type)?.id || ""
 				}
 				onValueChange={handleArmourSelect}
 			>
