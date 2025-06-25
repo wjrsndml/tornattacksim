@@ -55,12 +55,12 @@ export function getCurrentTurnTriggeredEffects(): string[] {
 // 1. Powerful - 增加伤害百分比
 const PowerfulProcessor: WeaponBonusProcessor = {
 	name: "Powerful",
-	applyToDamage: (
-		damage: number,
+	applyToDamageBonus: (
+		baseDamageBonus: number,
 		bonusValue: number,
 		_context: DamageContext,
 	) => {
-		return Math.round(damage * (1 + bonusValue / 100));
+		return baseDamageBonus + bonusValue;
 	},
 };
 
@@ -86,17 +86,19 @@ const QuickenProcessor: WeaponBonusProcessor = {
 	},
 };
 
-// 4. Deadeye - 增加暴击伤害
+// 4. Deadeye - 增加暴击伤害（只在暴击时生效）
 const DeadeyeProcessor: WeaponBonusProcessor = {
 	name: "Deadeye",
-	applyToCritical: (
-		critChance: number,
-		critDamage: number,
+	applyToDamageBonus: (
+		baseDamageBonus: number,
 		bonusValue: number,
-		_context: DamageContext,
+		context: DamageContext,
 	) => {
-		const newCritDamage = critDamage * (1 + bonusValue / 100);
-		return [critChance, newCritDamage];
+		// 只在暴击时增加伤害加成
+		if (context.isCritical) {
+			return baseDamageBonus + bonusValue;
+		}
+		return baseDamageBonus;
 	},
 };
 
@@ -129,15 +131,33 @@ const ConserveProcessor: WeaponBonusProcessor = {
 	},
 };
 
-// 7. Specialist - 增加伤害但限制单弹夹
+// 7. Specialist - 增加伤害但限制单弹夹（只有第一个弹夹有伤害加成）
 const SpecialistProcessor: WeaponBonusProcessor = {
 	name: "Specialist",
-	applyToDamage: (
-		damage: number,
+	applyToDamageBonus: (
+		baseDamageBonus: number,
 		bonusValue: number,
-		_context: DamageContext,
+		context: DamageContext,
 	) => {
-		return Math.round(damage * (1 + bonusValue / 100));
+		// 检查武器状态，只有在第一个弹夹时才增加伤害
+		const weaponSlot = context.currentWeaponSlot;
+		if (
+			(weaponSlot === "primary" || weaponSlot === "secondary") &&
+			context.weaponState
+		) {
+			const weaponState =
+				context.weaponState[weaponSlot as "primary" | "secondary"];
+			// 检查是否还有剩余弹夹（clipsleft > 0）
+			// 如果clipsleft > 0，说明还没用完第一个弹夹，应该有伤害加成
+			if (
+				weaponState &&
+				"clipsleft" in weaponState &&
+				weaponState.clipsleft > 0
+			) {
+				return baseDamageBonus + bonusValue;
+			}
+		}
+		return baseDamageBonus;
 	},
 	modifyWeaponState: (weaponState: WeaponState, _bonusValue: number) => {
 		// 限制为单弹夹
@@ -225,7 +245,7 @@ const AchillesProcessor: WeaponBonusProcessor = {
 		bonusValue: number,
 		context: DamageContext,
 	) => {
-		if (context.bodyPart === "foot") {
+		if (context.bodyPart.includes("foot")) {
 			return Math.round(damage * (1 + bonusValue / 100));
 		}
 		return damage;
@@ -394,20 +414,20 @@ const DoubleEdgedProcessor: WeaponBonusProcessor = {
 // 25. Execute - 低血量秒杀
 const ExecuteProcessor: WeaponBonusProcessor = {
 	name: "Execute",
-	applyPostDamage: (
-		_attacker: FightPlayer,
-		target: FightPlayer,
+	applyToDamage: (
 		damage: number,
 		bonusValue: number,
-		_context: DamageContext,
+		context: DamageContext,
 	) => {
 		const executeThreshold = bonusValue / 100;
-		const targetHealthPercent = target.life / target.maxLife;
+		const targetHealthPercent = context.target.life / context.target.maxLife;
+		// 如果目标血量低于阈值且造成了伤害，返回足够大的伤害确保击杀
 		if (targetHealthPercent <= executeThreshold && damage > 0) {
 			addTriggeredEffect("Execute");
-			// 直接击败目标 - 这个需要在战斗引擎中处理
+			// 返回目标当前生命值加上一些额外伤害，确保击杀
+			return context.target.life + 1000;
 		}
-		return 0;
+		return damage;
 	},
 };
 
@@ -832,16 +852,15 @@ export function getTriggeredBonuses(
 		}
 		// 伤害修改类特效（命中时触发）
 		else if (processor.applyToDamage && context.attacker) {
-			// 基础伤害特效
-			if (bonus.name === "Powerful" || bonus.name === "Specialist") {
-				triggered = true;
-			}
-			// 部位特效 - 只有命中对应部位时才显示
-			else if (bonus.name === "Crusher" && context.bodyPart === "head") {
+			// 部位特效 - 修复：支持带有left/right前缀的身体部位
+			if (bonus.name === "Crusher" && context.bodyPart === "head") {
 				triggered = true;
 			} else if (bonus.name === "Cupid" && context.bodyPart === "heart") {
 				triggered = true;
-			} else if (bonus.name === "Achilles" && context.bodyPart === "foot") {
+			} else if (
+				bonus.name === "Achilles" &&
+				context.bodyPart.includes("foot")
+			) {
 				triggered = true;
 			} else if (bonus.name === "Throttle" && context.bodyPart === "throat") {
 				triggered = true;
@@ -861,6 +880,11 @@ export function getTriggeredBonuses(
 				triggered = true;
 			} else if (bonus.name === "Assassinate" && context.turn === 1) {
 				triggered = true;
+			} else if (
+				bonus.name === "Execute" &&
+				context.target.life / context.target.maxLife <= bonus.value / 100
+			) {
+				triggered = true; // Execute在目标血量低于阈值时显示
 			}
 			// 新增困难特效的触发条件
 			else if (bonus.name === "Berserk" || bonus.name === "Grace") {
@@ -888,10 +912,25 @@ export function getTriggeredBonuses(
 		}
 		// 暴击相关特效（命中时触发）
 		else if (processor.applyToCritical && context.attacker) {
-			if (bonus.name === "Deadeye" && context.isCritical) {
-				triggered = true;
-			} else if (bonus.name === "Expose") {
+			if (bonus.name === "Expose") {
 				triggered = true; // 暴击率提升总是生效
+			}
+		}
+		// 伤害加成特效（命中时触发）
+		else if (processor.applyToDamageBonus && context.attacker) {
+			if (bonus.name === "Powerful") {
+				triggered = true;
+			} else if (
+				bonus.name === "Specialist" &&
+				context.weaponState &&
+				(context.currentWeaponSlot === "primary" ||
+					context.currentWeaponSlot === "secondary")
+			) {
+				// 简化显示逻辑：只要是主武器或副武器就显示
+				// 实际生效逻辑在处理器中已经正确处理了
+				triggered = true;
+			} else if (bonus.name === "Deadeye" && context.isCritical) {
+				triggered = true; // 只在暴击时显示
 			}
 		}
 		// 护甲穿透特效（命中时触发）
@@ -1343,3 +1382,27 @@ registerProcessor(CrippleProcessor);
 registerProcessor(WeakenProcessor);
 registerProcessor(WitherProcessor);
 registerProcessor(EviscerateProcessor);
+
+// 新增：应用武器特效到伤害加成
+export function applyWeaponBonusesToDamageBonus(
+	baseDamageBonus: number,
+	weapon: { weaponBonuses?: Array<{ name: string; value: number }> },
+	context: DamageContext,
+): number {
+	if (!weapon.weaponBonuses) return baseDamageBonus;
+
+	let modifiedDamageBonus = baseDamageBonus;
+
+	for (const bonus of weapon.weaponBonuses) {
+		const processor = getWeaponBonusProcessor(bonus.name);
+		if (processor?.applyToDamageBonus) {
+			modifiedDamageBonus = processor.applyToDamageBonus(
+				modifiedDamageBonus,
+				bonus.value,
+				context,
+			);
+		}
+	}
+
+	return modifiedDamageBonus;
+}

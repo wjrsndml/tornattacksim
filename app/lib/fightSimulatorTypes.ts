@@ -424,6 +424,7 @@ export interface DamageContext {
 	isCritical: boolean;
 	turn: number;
 	currentWeaponSlot: string;
+	weaponState?: WeaponState; // 新增：武器状态信息，用于Specialist等需要检查弹夹状态的特效
 }
 
 export interface WeaponBonusProcessor {
@@ -477,6 +478,12 @@ export interface WeaponBonusProcessor {
 		target: FightPlayer,
 		context: DamageContext,
 	) => void;
+	// 新增：修改伤害加成的接口
+	applyToDamageBonus?: (
+		baseDamageBonus: number,
+		bonusValue: number,
+		context: DamageContext,
+	) => number;
 }
 
 export interface WeaponBonusEffects {
