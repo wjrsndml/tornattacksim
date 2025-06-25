@@ -147,12 +147,13 @@ const SpecialistProcessor: WeaponBonusProcessor = {
 		) {
 			const weaponState =
 				context.weaponState[weaponSlot as "primary" | "secondary"];
-			// 检查是否还有剩余弹夹（clipsleft > 0）
-			// 如果clipsleft > 0，说明还没用完第一个弹夹，应该有伤害加成
+			// 修复逻辑：检查当前弹夹是否为第一个弹夹
+			// 如果clipsleft === 1，说明这是第一个（也是唯一的）弹夹，应该有伤害加成
+			// 如果clipsleft === 0，说明弹夹已经用完，不应该有伤害加成
 			if (
 				weaponState &&
 				"clipsleft" in weaponState &&
-				weaponState.clipsleft > 0
+				weaponState.clipsleft === 1
 			) {
 				return baseDamageBonus + bonusValue;
 			}
@@ -364,13 +365,11 @@ const FuryProcessor: WeaponBonusProcessor = {
 		_target: FightPlayer,
 		_damage: number,
 		bonusValue: number,
-		context: DamageContext,
+		_context: DamageContext,
 	) => {
 		const furyChance = bonusValue / 100;
 		const random = Math.random();
-		// 只在近战武器上触发
-		const isMelee = ["CL", "PI", "SL"].includes(context.weapon.category);
-		if (isMelee && random < furyChance) {
+		if (random < furyChance) {
 			addTriggeredEffect("Fury");
 			return { extraAttacks: 1 };
 		}
@@ -419,13 +418,20 @@ const ExecuteProcessor: WeaponBonusProcessor = {
 		bonusValue: number,
 		context: DamageContext,
 	) => {
-		const executeThreshold = bonusValue / 100;
-		const targetHealthPercent = context.target.life / context.target.maxLife;
-		// 如果目标血量低于阈值且造成了伤害，返回足够大的伤害确保击杀
+		// bonusValue是百分比阈值，比如15表示15%
+		const executeThreshold = bonusValue;
+
+		// 使用当前生命值而不是最大生命值
+		const currentTargetLife =
+			context.currentLife?.target ?? context.target.life;
+		const maxTargetLife = context.target.maxLife || context.target.life;
+		const targetHealthPercent = (currentTargetLife / maxTargetLife) * 100;
+
+		// 如果目标血量百分比低于阈值且造成了伤害，执行秒杀
 		if (targetHealthPercent <= executeThreshold && damage > 0) {
 			addTriggeredEffect("Execute");
 			// 返回目标当前生命值加上一些额外伤害，确保击杀
-			return context.target.life + 1000;
+			return currentTargetLife + 1000;
 		}
 		return damage;
 	},
@@ -439,8 +445,13 @@ const BlindsideProcessor: WeaponBonusProcessor = {
 		bonusValue: number,
 		context: DamageContext,
 	) => {
+		// 使用当前生命值检查目标是否满血
+		const currentTargetLife =
+			context.currentLife?.target ?? context.target.life;
+		const maxTargetLife = context.target.maxLife || context.target.life;
+
 		// 检查目标是否满血
-		if (context.target.life >= context.target.maxLife) {
+		if (currentTargetLife >= maxTargetLife) {
 			return Math.round(damage * (1 + bonusValue / 100));
 		}
 		return damage;
@@ -455,9 +466,13 @@ const ComebackProcessor: WeaponBonusProcessor = {
 		bonusValue: number,
 		context: DamageContext,
 	) => {
+		// 使用当前生命值而不是最大生命值
+		const currentAttackerLife =
+			context.currentLife?.attacker ?? context.attacker.life;
+		const maxAttackerLife = context.attacker.maxLife || context.attacker.life;
+		const attackerHealthPercent = currentAttackerLife / maxAttackerLife;
+
 		// 检查自己血量是否低于25%
-		const attackerHealthPercent =
-			context.attacker.life / context.attacker.maxLife;
 		if (attackerHealthPercent <= 0.25) {
 			return Math.round(damage * (1 + bonusValue / 100));
 		}
@@ -485,16 +500,19 @@ const StunProcessor: WeaponBonusProcessor = {
 	name: "Stun",
 	applyPostDamage: (
 		_attacker: FightPlayer,
-		_target: FightPlayer,
+		target: FightPlayer,
 		damage: number,
 		bonusValue: number,
 		_context: DamageContext,
 	) => {
-		const stunChance = bonusValue / 100;
-		const random = Math.random();
-		if (random < stunChance && damage > 0) {
-			addTriggeredEffect("Stun");
-			// 设置眩晕状态 - 这个需要在战斗引擎中处理状态效果
+		if (damage > 0) {
+			const stunChance = bonusValue / 100;
+			const random = Math.random();
+			if (random < stunChance) {
+				addTriggeredEffect("Stun");
+				initializeStatusEffectsV2(target);
+				addStatus(target, "stun", 2, 1); // 眩晕2回合，保证对手下回合跳过行动
+			}
 		}
 		return 0;
 	},
@@ -503,22 +521,44 @@ const StunProcessor: WeaponBonusProcessor = {
 // 30. Home Run - 反弹临时物品
 const HomeRunProcessor: WeaponBonusProcessor = {
 	name: "Home Run",
-	applyToHitChance: (
-		hitChance: number,
+	applyPostDamage: (
+		_attacker: FightPlayer,
+		target: FightPlayer,
+		damage: number,
 		bonusValue: number,
 		context: DamageContext,
 	) => {
-		// 如果对方使用临时武器，有几率反弹
-		if (context.currentWeaponSlot === "temporary") {
-			const deflectChance = bonusValue / 100;
-			const random = Math.random();
-			if (random < deflectChance) {
-				addTriggeredEffect("Home Run");
-				// 反弹攻击，设置命中率为0
-				return 0;
+		// 只有在成功造成伤害时才可能触发Home Run
+		if (damage > 0) {
+			// 关键：检查目标当前回合是否正在使用临时武器
+			if (context.targetWeaponSlot === "temporary") {
+				const targetTempWeapon = target.weapons.temporary;
+				if (targetTempWeapon?.name && targetTempWeapon.name !== "None") {
+					const deflectChance = bonusValue / 100;
+					const random = Math.random();
+					if (random < deflectChance) {
+						// 检查是否为免疫Home Run的特殊临时武器
+						const immuneTemps = [
+							"Tyrosine",
+							"Serotonin",
+							"Melatonin",
+							"Epinephrine",
+						];
+						const isImmune = immuneTemps.some((immuneTemp) =>
+							targetTempWeapon.name.includes(immuneTemp),
+						);
+
+						if (!isImmune) {
+							addTriggeredEffect("Home Run");
+							// 注意：Home Run的实际效果需要在战斗引擎层面处理
+							// 这里只是标记特效触发，实际的武器失效由战斗引擎处理
+							// 避免直接修改玩家对象造成跨战斗影响
+						}
+					}
+				}
 			}
 		}
-		return hitChance;
+		return 0; // 不产生额外治疗或额外攻击
 	},
 };
 
@@ -870,19 +910,25 @@ export function getTriggeredBonuses(
 			// 条件伤害特效 - 只有满足条件时才显示
 			else if (
 				bonus.name === "Blindside" &&
-				context.target.life >= context.target.maxLife
+				(context.currentLife?.target ?? context.target.life) >=
+					(context.target.maxLife || context.target.life)
 			) {
 				triggered = true;
 			} else if (
 				bonus.name === "Comeback" &&
-				context.attacker.life / context.attacker.maxLife <= 0.25
+				(context.currentLife?.attacker ?? context.attacker.life) /
+					(context.attacker.maxLife || context.attacker.life) <=
+					0.25
 			) {
 				triggered = true;
 			} else if (bonus.name === "Assassinate" && context.turn === 1) {
 				triggered = true;
 			} else if (
 				bonus.name === "Execute" &&
-				context.target.life / context.target.maxLife <= bonus.value / 100
+				((context.currentLife?.target ?? context.target.life) /
+					(context.target.maxLife || context.target.life)) *
+					100 <=
+					bonus.value
 			) {
 				triggered = true; // Execute在目标血量低于阈值时显示
 			}
@@ -926,9 +972,17 @@ export function getTriggeredBonuses(
 				(context.currentWeaponSlot === "primary" ||
 					context.currentWeaponSlot === "secondary")
 			) {
-				// 简化显示逻辑：只要是主武器或副武器就显示
-				// 实际生效逻辑在处理器中已经正确处理了
-				triggered = true;
+				// 修复Specialist显示逻辑：只有在第一个弹夹时才显示
+				const weaponSlot = context.currentWeaponSlot;
+				const weaponState =
+					context.weaponState[weaponSlot as "primary" | "secondary"];
+				if (
+					weaponState &&
+					"clipsleft" in weaponState &&
+					weaponState.clipsleft === 1
+				) {
+					triggered = true;
+				}
 			} else if (bonus.name === "Deadeye" && context.isCritical) {
 				triggered = true; // 只在暴击时显示
 			}
@@ -946,6 +1000,33 @@ export function getTriggeredBonuses(
 			bonus.name === "Bloodlust"
 		) {
 			triggered = true;
+		}
+		// 状态效果类特效（applyPostDamage）- 修复日志显示问题
+		else if (processor.applyPostDamage && context.attacker) {
+			// 这些特效需要在造成伤害时显示触发状态，但只有真正触发时才显示
+			if (
+				[
+					"Motivation",
+					"Slow",
+					"Cripple",
+					"Weaken",
+					"Wither",
+					"Eviscerate",
+				].includes(bonus.name)
+			) {
+				// 这些特效总是有概率触发，先显示
+				triggered = true;
+			} else if (bonus.name === "Stun") {
+				// Stun只有在真正触发时才显示（通过currentTriggeredEffects检查）
+				// 注意：此时applyPostDamage还未执行，所以这里不会显示
+				// 真正的Stun状态日志将在applyPostDamage后由战斗引擎添加
+				triggered = false;
+			} else if (
+				bonus.name === "Disarm" &&
+				(context.bodyPart.includes("hand") || context.bodyPart.includes("arm"))
+			) {
+				triggered = true;
+			}
 		}
 
 		if (triggered) {
