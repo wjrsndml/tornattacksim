@@ -32,6 +32,7 @@ import {
 	applyWeaponBonusesToDamage,
 	applyWeaponBonusesToDamageBonus,
 	applyWeaponBonusesToHitChance,
+	applyWeaponBonusesToIncomingDamage,
 	applyWeaponBonusesToStats,
 	applyWeaponBonusesToWeaponState,
 	clearTriggeredEffects,
@@ -77,6 +78,19 @@ function getAmmoDisplayName(ammo: string | undefined): string {
  */
 export function setModData(modData: { [key: string]: ModData }) {
 	cachedModData = modData;
+}
+
+// Add the AttackLogInfo interface
+interface AttackLogInfo {
+	attacker: string;
+	target: string;
+	weapon: string;
+	bodyPart: string;
+	originalDamage: number;
+	bonusText: string;
+	rounds?: number;
+	ammo?: string;
+	attackType?: "melee" | "ranged";
 }
 
 /**
@@ -1651,6 +1665,9 @@ function action(
 			}
 		}
 
+		// 声明日志信息变量
+		let logInfo: AttackLogInfo | null = null;
+
 		// 根据武器类型处理攻击
 		if (xCW === "primary") {
 			let xRF: number;
@@ -1742,6 +1759,9 @@ function action(
 
 				xRF = roundsFired(xW[xCW], xWS[xCW]);
 				if (xHOM) {
+					// 先记录原始伤害，用于后续日志生成
+					const originalDamage = xDMG;
+
 					// 检测触发的特效
 					const triggeredBonuses = getTriggeredBonuses(primaryWeapon, {
 						attacker: x,
@@ -1761,22 +1781,18 @@ function action(
 							? ` [${triggeredBonuses.join(", ")}]`
 							: "";
 
-					log.push(
-						x.name +
-							" fired " +
-							xRF +
-							" " +
-							getAmmoDisplayName(primaryWeapon.ammo) +
-							" rounds of their " +
-							xW[xCW].name +
-							" hitting " +
-							y.name +
-							" in the " +
-							xBP[0] +
-							" for " +
-							xDMG +
-							bonusText,
-					);
+					// 日志将在应用防御性特效后生成，这里暂时不生成
+					// 保存日志信息供后续使用
+					logInfo = {
+						attacker: x.name,
+						rounds: xRF,
+						ammo: getAmmoDisplayName(primaryWeapon.ammo),
+						weapon: xW[xCW].name,
+						target: y.name,
+						bodyPart: xBP[0],
+						originalDamage: originalDamage,
+						bonusText: bonusText,
+					};
 
 					// 处理主武器特�?
 					if (primaryWeapon.bonus?.name === "Demoralize") {
@@ -2122,18 +2138,16 @@ function action(
 							? ` [${triggeredBonuses.join(", ")}]`
 							: "";
 
-					log.push(
-						x.name +
-							" hit " +
-							y.name +
-							" with their " +
-							weaponName +
-							" in the " +
-							xBP[0] +
-							" for " +
-							xDMG +
-							bonusText,
-					);
+					// 保存近战攻击的日志信息
+					logInfo = {
+						attacker: x.name,
+						target: y.name,
+						weapon: weaponName,
+						bodyPart: xBP[0],
+						originalDamage: xDMG,
+						bonusText: bonusText,
+						attackType: "melee",
+					};
 
 					// 处理近战武器特效
 					if (meleeWeapon.bonus?.name === "Toxin") {
@@ -2421,8 +2435,65 @@ function action(
 			xDMG = applyEviscerateToIncomingDamage(y, xDMG);
 		}
 
+		// 应用目标的防御性武器特效（如Parry）
+		if (xDMG > 0) {
+			// 检查目标的所有武器是否有防御性特效
+			const targetWeapons = [
+				y.weapons.primary,
+				y.weapons.secondary,
+				y.weapons.melee,
+				y.weapons.temporary,
+			];
+			for (const targetWeapon of targetWeapons) {
+				if (targetWeapon?.weaponBonuses) {
+					xDMG = applyWeaponBonusesToIncomingDamage(xDMG, targetWeapon, {
+						attacker: x,
+						target: y,
+						weapon: currentWeapon, // 攻击者的武器
+						bodyPart: xBP[0],
+						isCritical: xBP[1] >= 1,
+						turn: turn,
+						currentWeaponSlot: xCW,
+						weaponState: xWS,
+						currentLife: { attacker: xCL, target: yCL },
+						targetWeaponSlot: yCW,
+					});
+				}
+			}
+		}
+
 		// 扣除伤害
 		yCL -= xDMG;
+
+		// 生成攻击日志（在应用防御特效后）
+		if (xHOM && logInfo !== null) {
+			const currentTriggeredEffects = getCurrentTurnTriggeredEffects();
+			const isParried = currentTriggeredEffects.includes("Parry");
+
+			if (isParried && xDMG === 0) {
+				// Parry成功，显示特殊消息
+				if (logInfo.attackType === "melee") {
+					log.push(
+						`${logInfo.attacker} hit ${logInfo.target} with their ${logInfo.weapon} in the ${logInfo.bodyPart} but the attack was parried!${logInfo.bonusText}`,
+					);
+				} else {
+					log.push(
+						`${logInfo.attacker} fired ${logInfo.rounds} ${logInfo.ammo} rounds of their ${logInfo.weapon} hitting ${logInfo.target} in the ${logInfo.bodyPart} but the attack was parried!${logInfo.bonusText}`,
+					);
+				}
+			} else {
+				// 正常攻击或部分减伤
+				if (logInfo.attackType === "melee") {
+					log.push(
+						`${logInfo.attacker} hit ${logInfo.target} with their ${logInfo.weapon} in the ${logInfo.bodyPart} for ${xDMG}${logInfo.bonusText}`,
+					);
+				} else {
+					log.push(
+						`${logInfo.attacker} fired ${logInfo.rounds} ${logInfo.ammo} rounds of their ${logInfo.weapon} hitting ${logInfo.target} in the ${logInfo.bodyPart} for ${xDMG}${logInfo.bonusText}`,
+					);
+				}
+			}
+		}
 
 		// 检查Execute特效是否触发
 		if (getCurrentTurnTriggeredEffects().includes("Execute")) {
@@ -2587,6 +2658,36 @@ function action(
 						// 应用Eviscerate效果
 						if (extraDamage > 0) {
 							extraDamage = applyEviscerateToIncomingDamage(y, extraDamage);
+						}
+
+						// 应用目标的防御性武器特效（如Parry）到额外攻击
+						if (extraDamage > 0) {
+							const targetWeapons = [
+								y.weapons.primary,
+								y.weapons.secondary,
+								y.weapons.melee,
+								y.weapons.temporary,
+							];
+							for (const targetWeapon of targetWeapons) {
+								if (targetWeapon?.weaponBonuses) {
+									extraDamage = applyWeaponBonusesToIncomingDamage(
+										extraDamage,
+										targetWeapon,
+										{
+											attacker: x,
+											target: y,
+											weapon: currentWeapon,
+											bodyPart: extraBodyPart[0],
+											isCritical: extraBodyPart[1] >= 1,
+											turn: turn,
+											currentWeaponSlot: xCW,
+											weaponState: xWS,
+											currentLife: { attacker: xCL, target: yCL },
+											targetWeaponSlot: yCW,
+										},
+									);
+								}
+							}
 						}
 
 						if (extraDamage > yCL) {
