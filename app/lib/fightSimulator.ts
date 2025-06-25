@@ -28,6 +28,7 @@ import {
 	applyWeaponBonusesToArmour,
 	applyWeaponBonusesToCritical,
 	applyWeaponBonusesToDamage,
+	applyWeaponBonusesToDamageBonus,
 	applyWeaponBonusesToHitChance,
 	applyWeaponBonusesToStats,
 	applyWeaponBonusesToWeaponState,
@@ -1521,7 +1522,7 @@ function action(
 								target: y,
 								weapon: currentWeapon,
 								bodyPart: xBP[0],
-								isCritical: xBP[1] > 1,
+								isCritical: xBP[1] >= 1, // 修复：暴击部位倍数是1，非暴击部位倍数小于1
 								turn: turn,
 								currentWeaponSlot: xCW,
 							},
@@ -1541,19 +1542,19 @@ function action(
 								target: y,
 								weapon: currentWeapon,
 								bodyPart: xBP[0], // 使用新身体部位
-								isCritical: xBP[1] > 1,
+								isCritical: xBP[1] >= 1, // 修复：暴击部位倍数是1，非暴击部位倍数小于1
 								turn: turn,
 								currentWeaponSlot: xCW,
 							},
 						);
 
 						// 更新暴击倍数
-						if (xBP[1] > 1) {
+						if (xBP[1] >= 1) {
 							xBP[1] = newModifiedCritDamage;
 						}
 					} else {
 						// 暴击率未被修改，直接使用原始计算的暴击倍数
-						if (xBP[1] > 1) {
+						if (xBP[1] >= 1) {
 							xBP[1] = modifiedCritDamage;
 						}
 					}
@@ -1573,13 +1574,29 @@ function action(
 						target: y,
 						weapon: currentWeapon,
 						bodyPart: xBP[0],
-						isCritical: xBP[1] > 1,
+						isCritical: xBP[1] >= 1,
 						turn: turn,
 						currentWeaponSlot: xCW,
 					},
 				);
 				yAM = (100 - modifiedArmourMitigation / x_pen) / 100;
 				xDV = variance();
+
+				// 应用武器特效到伤害加成（如Powerful、Deadeye等）
+				const modifiedDamageBonus = applyWeaponBonusesToDamageBonus(
+					x_dmg_bonus,
+					currentWeapon,
+					{
+						attacker: x,
+						target: y,
+						weapon: currentWeapon,
+						bodyPart: xBP[0],
+						isCritical: xBP[1] >= 1, // 修复：暴击部位倍数是1，非暴击部位倍数小于1
+						turn: turn,
+						currentWeaponSlot: xCW,
+						weaponState: xWS, // 添加武器状态信息
+					},
+				);
 
 				xDMG = Math.round(
 					xBP[1] *
@@ -1588,7 +1605,7 @@ function action(
 						xWDM *
 						yAM *
 						xDV *
-						(1 + x_dmg_bonus / 100) *
+						(1 + modifiedDamageBonus / 100) *
 						x_ammo_dmg,
 				);
 
@@ -1598,9 +1615,10 @@ function action(
 					target: y,
 					weapon: currentWeapon,
 					bodyPart: xBP[0],
-					isCritical: xBP[1] > 1,
+					isCritical: xBP[1] >= 1, // 修复：暴击部位倍数是1，非暴击部位倍数小于1
 					turn: turn,
 					currentWeaponSlot: xCW,
+					weaponState: xWS, // 添加武器状态信息
 				});
 
 				if (Number.isNaN(xDMG)) {
@@ -1706,7 +1724,7 @@ function action(
 						target: y,
 						weapon: primaryWeapon,
 						bodyPart: xBP[0],
-						isCritical: xBP[1] > 1,
+						isCritical: xBP[1] >= 1,
 						turn: turn,
 						currentWeaponSlot: xCW,
 					});
@@ -1871,7 +1889,7 @@ function action(
 						target: y,
 						weapon: primaryWeapon,
 						bodyPart: xBP[0],
-						isCritical: xBP[1] > 1,
+						isCritical: xBP[1] >= 1,
 						turn: turn,
 						currentWeaponSlot: xCW,
 					},
@@ -1913,7 +1931,7 @@ function action(
 					target: y,
 					weapon: secondaryWeapon,
 					bodyPart: xBP[0],
-					isCritical: xBP[1] > 1,
+					isCritical: xBP[1] >= 1,
 					turn: turn,
 					currentWeaponSlot: xCW,
 				});
@@ -1992,7 +2010,7 @@ function action(
 						target: y,
 						weapon: secondaryWeapon,
 						bodyPart: xBP[0],
-						isCritical: xBP[1] > 1,
+						isCritical: xBP[1] >= 1,
 						turn: turn,
 						currentWeaponSlot: xCW,
 					},
@@ -2061,7 +2079,7 @@ function action(
 						target: y,
 						weapon: meleeWeapon,
 						bodyPart: xBP[0],
-						isCritical: xBP[1] > 1,
+						isCritical: xBP[1] >= 1,
 						turn: turn,
 						currentWeaponSlot: xCW,
 					});
@@ -2282,7 +2300,7 @@ function action(
 						target: y,
 						weapon: temporaryWeapon,
 						bodyPart: xBP[0],
-						isCritical: xBP[1] > 1,
+						isCritical: xBP[1] >= 1,
 						turn: turn,
 						currentWeaponSlot: xCW,
 					});
@@ -2331,10 +2349,18 @@ function action(
 			}
 
 			// 对于非伤害性临时武器（如Smoke Grenade、Pepper Spray等），处理完特殊效果后直接返回
-			// 只有投掷武器（如Ninja Stars、Throwing Knife）需要继续执行伤害计算
+			// 只有投掷武器（如Ninja Stars、Throwing Knife、HEG、Grenade等）需要继续执行伤害计算
 			if (
 				temporaryWeapon.name !== "Ninja Stars" &&
-				temporaryWeapon.name !== "Throwing Knife"
+				temporaryWeapon.name !== "Throwing Knife" &&
+				temporaryWeapon.name !== "HEG" &&
+				temporaryWeapon.name !== "Grenade" &&
+				temporaryWeapon.name !== "Stick Grenade" &&
+				temporaryWeapon.name !== "Nail Bomb" &&
+				temporaryWeapon.name !== "Fireworks" &&
+				temporaryWeapon.name !== "Molotov Cocktail" &&
+				temporaryWeapon.name !== "Snowball" &&
+				temporaryWeapon.name !== "Trout"
 			) {
 				return [
 					log,
@@ -2380,7 +2406,7 @@ function action(
 					target: y,
 					weapon: currentWeapon,
 					bodyPart: xBP[0],
-					isCritical: xBP[1] > 1,
+					isCritical: xBP[1] >= 1,
 					turn: turn,
 					currentWeaponSlot: xCW,
 				},
@@ -2480,9 +2506,10 @@ function action(
 								target: y,
 								weapon: currentWeapon,
 								bodyPart: extraBodyPart[0],
-								isCritical: extraBodyPart[1] > 1,
+								isCritical: extraBodyPart[1] >= 1, // 修复：使用一致的暴击判断
 								turn: turn,
 								currentWeaponSlot: xCW,
+								weaponState: xWS, // 添加武器状态信息
 							},
 						);
 

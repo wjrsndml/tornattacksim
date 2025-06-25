@@ -1,0 +1,21 @@
+Deadeye未生效 - 已修复：现在只在暴击时增加伤害加成
+Specialist 对于第二个弹夹依然生效
+Cupid未生效 - 已修复：身体部位映射问题
+Achilles未生效 - 已修复：身体部位映射问题，现在支持left foot和right foot
+Throttle未生效 - 已修复：身体部位映射问题
+Roshambo未生效 - 已修复：身体部位映射问题
+Fury未生效
+Execute未生效
+Comeback未生效
+Stun未生效
+Home Run未生效
+临时武器heg降低胜率 - 已修复：HEG现在已加入伤害性临时武器白名单
+Parry未生效
+Frenzy似乎永久生效
+Finale有时候能触发
+Motivation胜率太离谱，实现方式可能有问题。以及特效在日志中显示不出来。
+Slow在日志中显示不出来。
+Disarm未生效
+Cripple在日志中显示不出来。
+Wither在日志中显示不出来。
+Eviscerate在日志中显示不出来。
