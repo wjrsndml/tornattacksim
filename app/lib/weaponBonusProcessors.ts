@@ -562,25 +562,26 @@ const HomeRunProcessor: WeaponBonusProcessor = {
 	},
 };
 
+const meleeCategories = ["Clubbing", "Piercing", "Slashing", "CL", "PI", "SL"];
+
 // 31. Parry - 格挡近战攻击
 const ParryProcessor: WeaponBonusProcessor = {
 	name: "Parry",
-	applyToDamage: (
-		damage: number,
+	applyToIncomingDamage: (
+		incomingDamage: number,
 		bonusValue: number,
 		context: DamageContext,
 	) => {
-		// 只对近战攻击有效
-		const isMeleeAttack = ["CL", "PI", "SL"].includes(context.weapon.category);
-		if (isMeleeAttack) {
+		const attackerWeapon = context.weapon;
+		const isMeleeAttack = meleeCategories.includes(attackerWeapon.category);
+		if (isMeleeAttack && incomingDamage > 0) {
 			const parryChance = bonusValue / 100;
-			const random = Math.random();
-			if (random < parryChance) {
+			if (Math.random() < parryChance) {
 				addTriggeredEffect("Parry");
-				return 0; // 格挡成功，伤害为0
+				return 0;
 			}
 		}
-		return damage;
+		return incomingDamage;
 	},
 };
 
@@ -1000,6 +1001,14 @@ export function getTriggeredBonuses(
 			bonus.name === "Bloodlust"
 		) {
 			triggered = true;
+		}
+		// 防御性特效（受到攻击时可能触发）
+		else if (processor.applyToIncomingDamage && bonus.name === "Parry") {
+			const attackerWeapon = context.weapon;
+			const isMeleeAttack = meleeCategories.includes(attackerWeapon.category);
+			if (isMeleeAttack) {
+				triggered = true;
+			}
 		}
 		// 状态效果类特效（applyPostDamage）- 修复日志显示问题
 		else if (processor.applyPostDamage && context.attacker) {
@@ -1486,4 +1495,28 @@ export function applyWeaponBonusesToDamageBonus(
 	}
 
 	return modifiedDamageBonus;
+}
+
+// 新增：应用武器特效到传入伤害（用于防御性特效如Parry）
+export function applyWeaponBonusesToIncomingDamage(
+	incomingDamage: number,
+	weapon: { weaponBonuses?: Array<{ name: string; value: number }> },
+	context: DamageContext,
+): number {
+	if (!weapon.weaponBonuses) return incomingDamage;
+
+	let modifiedIncomingDamage = incomingDamage;
+
+	for (const bonus of weapon.weaponBonuses) {
+		const processor = getWeaponBonusProcessor(bonus.name);
+		if (processor?.applyToIncomingDamage) {
+			modifiedIncomingDamage = processor.applyToIncomingDamage(
+				modifiedIncomingDamage,
+				bonus.value,
+				context,
+			);
+		}
+	}
+
+	return modifiedIncomingDamage;
 }

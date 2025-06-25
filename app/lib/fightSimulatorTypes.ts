@@ -440,6 +440,11 @@ export interface WeaponBonusProcessor {
 		bonusValue: number,
 		context: DamageContext,
 	) => number;
+	applyToIncomingDamage?: (
+		incomingDamage: number,
+		bonusValue: number,
+		context: DamageContext,
+	) => number;
 	applyToHitChance?: (
 		hitChance: number,
 		bonusValue: number,
