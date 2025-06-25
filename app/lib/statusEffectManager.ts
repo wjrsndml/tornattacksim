@@ -14,6 +14,13 @@ export function initializeStatusEffectsV2(player: FightPlayer): void {
 }
 
 /**
+ * 清空玩家的所有状态效果V2 - 用于新战斗开始时
+ */
+export function clearAllStatusEffects(player: FightPlayer): void {
+	player.statusEffectsV2 = {};
+}
+
+/**
  * 添加状态效果
  */
 export function addStatus(

@@ -425,6 +425,11 @@ export interface DamageContext {
 	turn: number;
 	currentWeaponSlot: string;
 	weaponState?: WeaponState; // 新增：武器状态信息，用于Specialist等需要检查弹夹状态的特效
+	currentLife?: {
+		attacker: number;
+		target: number;
+	}; // 新增：当前生命值信息，用于Execute、Comeback等需要检查当前血量的特效
+	targetWeaponSlot?: string; // 新增：目标当前回合选择的武器槽，用于Home Run等需要检查对手武器选择的特效
 }
 
 export interface WeaponBonusProcessor {

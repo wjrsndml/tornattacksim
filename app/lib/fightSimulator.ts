@@ -14,8 +14,10 @@ import type {
 	WeaponState,
 } from "./fightSimulatorTypes";
 import {
+	// addStatus,
 	applyEviscerateToIncomingDamage,
 	applyStatusEffectsToStats,
+	clearAllStatusEffects,
 	decrementStatusEffects,
 	hasStatus,
 	initializeStatusEffectsV2,
@@ -89,6 +91,10 @@ export function fight(
 	villain: FightPlayer,
 	results: FightResults,
 ): FightResults {
+	// 清空所有状态效果，确保每次新战斗开始时状态为空
+	clearAllStatusEffects(hero);
+	clearAllStatusEffects(villain);
+
 	const hPrim = hero.weapons.primary;
 	const hSec = hero.weapons.secondary;
 	const vPrim = villain.weapons.primary;
@@ -391,8 +397,24 @@ export function takeTurns(
 		];
 	}
 
-	// 反派行动
-	if (!vShouldSkip) {
+	// 反派行动 - 重新检查是否在当前回合被Stun
+	const vShouldSkipAfterHeroAction = shouldSkipTurn(v);
+
+	// 检查是否触发了Home Run效果，如果是且反派要使用临时武器，则阻止攻击
+	let vShouldSkipDueToHomeRun = false;
+	if (getCurrentTurnTriggeredEffects().includes("Home Run")) {
+		const vChosenWeapon = chooseWeapon(v, v_set);
+		if (vChosenWeapon === "temporary") {
+			vShouldSkipDueToHomeRun = true;
+			log.push(
+				`${v.name}'s temporary weapon attack was deflected by Home Run!`,
+			);
+			// 将临时武器设置为不可用，防止后续回合使用
+			v_set.temporary.setting = 0;
+		}
+	}
+
+	if (!vShouldSkip && !vShouldSkipAfterHeroAction && !vShouldSkipDueToHomeRun) {
 		const v_action = action(
 			[],
 			v,
@@ -1595,6 +1617,7 @@ function action(
 						turn: turn,
 						currentWeaponSlot: xCW,
 						weaponState: xWS, // 添加武器状态信息
+						currentLife: { attacker: xCL, target: yCL }, // 添加当前生命值信息
 					},
 				);
 
@@ -1619,6 +1642,7 @@ function action(
 					turn: turn,
 					currentWeaponSlot: xCW,
 					weaponState: xWS, // 添加武器状态信息
+					currentLife: { attacker: xCL, target: yCL }, // 添加当前生命值信息
 				});
 
 				if (Number.isNaN(xDMG)) {
@@ -1727,6 +1751,9 @@ function action(
 						isCritical: xBP[1] >= 1,
 						turn: turn,
 						currentWeaponSlot: xCW,
+						weaponState: xWS,
+						currentLife: { attacker: xCL, target: yCL },
+						targetWeaponSlot: yCW, // 添加目标的武器选择
 					});
 
 					const bonusText =
@@ -1934,6 +1961,9 @@ function action(
 					isCritical: xBP[1] >= 1,
 					turn: turn,
 					currentWeaponSlot: xCW,
+					weaponState: xWS,
+					currentLife: { attacker: xCL, target: yCL },
+					targetWeaponSlot: yCW, // 添加目标的武器选择
 				});
 
 				const bonusText =
@@ -2082,6 +2112,9 @@ function action(
 						isCritical: xBP[1] >= 1,
 						turn: turn,
 						currentWeaponSlot: xCW,
+						weaponState: xWS,
+						currentLife: { attacker: xCL, target: yCL },
+						targetWeaponSlot: yCW, // 添加目标的武器选择
 					});
 
 					const bonusText =
@@ -2303,6 +2336,9 @@ function action(
 						isCritical: xBP[1] >= 1,
 						turn: turn,
 						currentWeaponSlot: xCW,
+						weaponState: xWS,
+						currentLife: { attacker: xCL, target: yCL },
+						targetWeaponSlot: yCW, // 添加目标的武器选择
 					});
 
 					const bonusText =
@@ -2396,6 +2432,10 @@ function action(
 
 		// 应用武器特效的后处理效果（如Bloodlust生命回复）
 		if (xDMG > 0) {
+			// 记录应用前的状态效果，用于检测新触发的效果
+			const triggeredEffectsBefore = getCurrentTurnTriggeredEffects().slice();
+
+			// 应用攻击者武器的特效
 			const postDamageResult = applyWeaponBonusesPostDamage(
 				x,
 				y,
@@ -2409,8 +2449,39 @@ function action(
 					isCritical: xBP[1] >= 1,
 					turn: turn,
 					currentWeaponSlot: xCW,
+					targetWeaponSlot: yCW, // 添加目标的武器选择
 				},
 			);
+
+			// 检查新触发的状态效果并添加日志
+			const triggeredEffectsAfter = getCurrentTurnTriggeredEffects();
+			const newlyTriggeredEffects = triggeredEffectsAfter.filter(
+				(effect) => !triggeredEffectsBefore.includes(effect),
+			);
+
+			// 为新触发的状态效果添加特殊日志
+			for (const effect of newlyTriggeredEffects) {
+				if (effect === "Stun") {
+					log.push(`${y.name} has been stunned and will miss their next turn!`);
+				} else if (effect === "Slow") {
+					log.push(`${y.name} has been slowed!`);
+				} else if (effect === "Cripple") {
+					log.push(`${y.name} has been crippled!`);
+				} else if (effect === "Weaken") {
+					log.push(`${y.name} has been weakened!`);
+				} else if (effect === "Wither") {
+					log.push(`${y.name} has been withered!`);
+				} else if (effect === "Eviscerate") {
+					log.push(`${y.name} is bleeding heavily!`);
+				} else if (effect === "Disarm") {
+					log.push(`${y.name} has been disarmed!`);
+				} else if (effect === "Motivation") {
+					log.push(`${x.name} feels motivated!`);
+				} else if (effect === "Home Run") {
+					// Home Run效果的具体处理在takeTurns函数中进行
+					// 这里只记录基础触发信息
+				}
+			}
 
 			// 处理生命回复和自伤
 			if (postDamageResult.healing !== 0) {
