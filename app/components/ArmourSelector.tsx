@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { getArmourList, loadGameData } from "../lib/dataLoader";
-import type { ArmourData } from "../lib/fightSimulatorTypes";
+import type { ArmourData, ArmourEffect } from "../lib/fightSimulatorTypes";
+import ArmourEffectSelector from "./ArmourEffectSelector";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import {
@@ -53,7 +54,30 @@ export default function ArmourSelector({
 		const armourData = armours.find((a) => a.id === armourId);
 		if (!armourData) return;
 
-		onArmourChange(armourData.armour);
+		// 保持现有的特效设置
+		const updatedArmour: ArmourData = {
+			...armourData.armour,
+		};
+
+		if (selectedArmour.effects) {
+			updatedArmour.effects = selectedArmour.effects; // 保持现有特效
+		}
+
+		onArmourChange(updatedArmour);
+	};
+
+	const handleEffectChange = (effect?: ArmourEffect) => {
+		const updatedArmour: ArmourData = {
+			...selectedArmour,
+		};
+
+		if (effect) {
+			updatedArmour.effects = [effect]; // 只允许一个特效
+		} else {
+			delete updatedArmour.effects; // 删除effects属性而不是设置为undefined
+		}
+
+		onArmourChange(updatedArmour);
 	};
 
 	const getArmourRating = (armour: number) => {
@@ -154,6 +178,14 @@ export default function ArmourSelector({
 					护甲的防护值，影响伤害减免
 				</div>
 			</div>
+
+			{/* 护甲特效选择 */}
+			<ArmourEffectSelector
+				selectedEffect={selectedArmour.effects?.[0]}
+				onEffectChange={handleEffectChange}
+				playerId={playerId}
+				armourType={armourType}
+			/>
 		</div>
 	);
 }

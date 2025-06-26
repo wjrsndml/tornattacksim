@@ -1,3 +1,9 @@
+import {
+	applyArmourEffectsToDamage,
+	clearTriggeredArmourEffects,
+	// getCurrentTurnTriggeredArmourEffects,
+	getTriggeredArmourEffects,
+} from "./armourEffectProcessors";
 import { canArmourBlock, getArmourCoverage } from "./dataLoader";
 import type {
 	ActionResults,
@@ -92,6 +98,7 @@ interface AttackLogInfo {
 	rounds?: number;
 	ammo?: string;
 	attackType?: "melee" | "ranged";
+	armourEffectsText?: string; // 新增：护甲特效信息
 }
 
 /**
@@ -1265,6 +1272,7 @@ function action(
 ): ActionResults {
 	// 清空上一回合触发的武器特效记录
 	clearTriggeredEffects();
+	clearTriggeredArmourEffects();
 
 	const xW = Object.assign({}, x.weapons);
 	const yA = JSON.parse(JSON.stringify(y.armour));
@@ -2605,6 +2613,72 @@ function action(
 			}
 		}
 
+		// 应用护甲特效（如Impenetrable, Impregnable, Insurmountable, Impassable）
+		if (xDMG > 0) {
+			// 根据攻击的身体部位，找到对应的护甲部件
+			let targetArmourPiece = null;
+			const bodyPartToArmour: { [key: string]: keyof ArmourSet } = {
+				head: "head",
+				neck: "head", // 颈部攻击算头部护甲
+				chest: "body",
+				stomach: "body",
+				groin: "body",
+				"left arm": "hands",
+				"right arm": "hands",
+				"left hand": "hands",
+				"right hand": "hands",
+				"left leg": "legs",
+				"right leg": "legs",
+				"left foot": "feet",
+				"right foot": "feet",
+			};
+
+			const armourSlot = bodyPartToArmour[xBP[0]];
+			if (armourSlot) {
+				targetArmourPiece = yA[armourSlot];
+			}
+
+			// 如果找到了对应的护甲部件，应用护甲特效
+			if (targetArmourPiece?.effects) {
+				// 收集触发的护甲特效信息（在应用前）
+				const triggeredArmourEffects = getTriggeredArmourEffects(
+					targetArmourPiece,
+					{
+						attacker: x,
+						target: y,
+						weapon: currentWeapon,
+						bodyPart: xBP[0],
+						isCritical: xBP[1] >= 1,
+						turn: turn,
+						currentWeaponSlot: xCW,
+					},
+					yCL, // 目标当前生命值
+					y.maxLife, // 目标最大生命值
+				);
+
+				xDMG = applyArmourEffectsToDamage(
+					xDMG,
+					targetArmourPiece,
+					{
+						attacker: x,
+						target: y,
+						weapon: currentWeapon,
+						bodyPart: xBP[0],
+						isCritical: xBP[1] >= 1,
+						turn: turn,
+						currentWeaponSlot: xCW,
+					},
+					yCL, // 目标当前生命值
+					y.maxLife, // 目标最大生命值
+				);
+
+				// 更新日志信息中的护甲特效文本
+				if (logInfo && triggeredArmourEffects.length > 0) {
+					logInfo.armourEffectsText = ` [Armour: ${triggeredArmourEffects.join(", ")}]`;
+				}
+			}
+		}
+
 		// 扣除伤害
 		yCL -= xDMG;
 
@@ -2634,21 +2708,22 @@ function action(
 				}
 			} else {
 				// 正常攻击或部分减伤
+				const armourEffectsText = logInfo.armourEffectsText || "";
 				if (logInfo.weapon === "fists") {
 					log.push(
-						`${logInfo.attacker} used fists hitting ${logInfo.target} in the ${logInfo.bodyPart} for ${xDMG}${logInfo.bonusText}`,
+						`${logInfo.attacker} used fists hitting ${logInfo.target} in the ${logInfo.bodyPart} for ${xDMG}${logInfo.bonusText}${armourEffectsText}`,
 					);
 				} else if (logInfo.weapon === "kick") {
 					log.push(
-						`${logInfo.attacker} kicked ${logInfo.target} in the ${logInfo.bodyPart} for ${xDMG}${logInfo.bonusText}`,
+						`${logInfo.attacker} kicked ${logInfo.target} in the ${logInfo.bodyPart} for ${xDMG}${logInfo.bonusText}${armourEffectsText}`,
 					);
 				} else if (logInfo.attackType === "melee") {
 					log.push(
-						`${logInfo.attacker} hit ${logInfo.target} with their ${logInfo.weapon} in the ${logInfo.bodyPart} for ${xDMG}${logInfo.bonusText}`,
+						`${logInfo.attacker} hit ${logInfo.target} with their ${logInfo.weapon} in the ${logInfo.bodyPart} for ${xDMG}${logInfo.bonusText}${armourEffectsText}`,
 					);
 				} else {
 					log.push(
-						`${logInfo.attacker} fired ${logInfo.rounds} ${logInfo.ammo} rounds of their ${logInfo.weapon} hitting ${logInfo.target} in the ${logInfo.bodyPart} for ${xDMG}${logInfo.bonusText}`,
+						`${logInfo.attacker} fired ${logInfo.rounds} ${logInfo.ammo} rounds of their ${logInfo.weapon} hitting ${logInfo.target} in the ${logInfo.bodyPart} for ${xDMG}${logInfo.bonusText}${armourEffectsText}`,
 					);
 				}
 			}

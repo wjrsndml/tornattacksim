@@ -79,6 +79,7 @@ function convertToFightArmour(armour: ArmourData): ArmourData {
 		armour: armour.armour || 0,
 		set: armour.set || "n/a",
 		type: armour.type || "",
+		effects: armour.effects,
 	};
 }
 
