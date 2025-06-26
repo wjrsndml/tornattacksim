@@ -23,9 +23,12 @@ export interface StatusEffectsV2 {
 	weaken?: StatusFlag;
 	wither?: StatusFlag;
 	eviscerate?: StatusFlag;
-	disarm?: StatusFlag;
-	distracted?: StatusFlag;
+	disarm_primary?: StatusFlag;
+	disarm_secondary?: StatusFlag;
+	disarm_melee?: StatusFlag;
+	disarm_temporary?: StatusFlag;
 	motivation?: StatusFlag;
+	distracted?: StatusFlag;
 }
 
 // 真实武器数据接口
