@@ -201,6 +201,10 @@ function convertToFightPlayer(
 			property: { ...defaultPerks.property, ...playerData.perks?.property },
 			merit: { ...defaultPerks.merit, ...playerData.perks?.merit },
 		},
+		// 初始化武器特效相关状态
+		comboCounter: 0,
+		lastUsedTurn: {},
+		windup: false,
 	};
 }
 
@@ -282,8 +286,8 @@ export async function runClientSimulation(
 					battleNumber: i + 1,
 					winner: winner,
 					turns: fightResults[3], // 这场战斗的回合数
-					heroDamageDealt: hero.life - fightResults[5], // 初始生命 - 对手剩余生命
-					villainDamageDealt: villain.life - fightResults[4], // 初始生命 - 对手剩余生命
+					heroDamageDealt: villain.maxLife - fightResults[5], // 对手最大生命值 - 对手剩余生命（可为负，表示过量伤害）
+					villainDamageDealt: hero.maxLife - fightResults[4], // 同理，计算反派对英雄造成的真实伤害
 					heroFinalLife: fightResults[4], // 英雄剩余生命
 					villainFinalLife: fightResults[5], // 反派剩余生命
 					battleLog: fightResults[6] as string[], // 具体的战斗日志

@@ -109,6 +109,14 @@ export function fight(
 	clearAllStatusEffects(hero);
 	clearAllStatusEffects(villain);
 
+	// 重置武器特效相关状态，确保每次战斗都是全新开始
+	hero.comboCounter = 0;
+	hero.lastUsedTurn = {};
+	hero.windup = false;
+	villain.comboCounter = 0;
+	villain.lastUsedTurn = {};
+	villain.windup = false;
+
 	const hPrim = hero.weapons.primary;
 	const hSec = hero.weapons.secondary;
 	const vPrim = villain.weapons.primary;
@@ -277,11 +285,11 @@ export function fight(
 		h_temps = turnReturn[11];
 		v_temps = turnReturn[12];
 
-		if (hCL === 0) {
+		if (hCL <= 0) {
 			results[1] += 1; // villain wins
 			fightLogMessage.push(`${villain.name} won. `);
 			break;
-		} else if (vCL === 0) {
+		} else if (vCL <= 0) {
 			results[0] += 1; // hero wins
 			fightLogMessage.push(`${hero.name} won. `);
 			break;
@@ -294,13 +302,14 @@ export function fight(
 	}
 
 	results[3] += turns;
-	results[4] += Math.max(0, hCL); // 确保累积的也是非负生命值
-	results[5] += Math.max(0, vCL); // 确保累积的也是非负生命值
+	// 累积剩余生命值（允许负值，用于统计过量伤害）
+	results[4] += hCL;
+	results[5] += vCL;
 	results[6] = fightLogMessage;
 
 	// 确保生命值不为负数，死亡时记录为0
-	const finalHeroLife = Math.max(0, hCL);
-	const finalVillainLife = Math.max(0, vCL);
+	const finalHeroLife = hCL;
+	const finalVillainLife = vCL;
 
 	if (results[8][finalHeroLife] === undefined) {
 		results[8][finalHeroLife] = 1;
@@ -393,7 +402,7 @@ export function takeTurns(
 		v_temps = h_action[12];
 	}
 
-	if (vCL === 0) {
+	if (vCL <= 0) {
 		return [
 			log,
 			hCL,
@@ -1683,9 +1692,9 @@ function action(
 				const x_proc = procBonus(primaryWeapon.bonus?.proc || 0);
 				if (x_proc === 1) {
 					xDMG *= 2;
-					if (xDMG > yCL) {
-						xDMG = yCL;
-					}
+					// if (xDMG > yCL) {
+					// 	xDMG = yCL;
+					// }
 
 					xRF = primaryWeaponState.maxammo;
 					if (xHOM) {
@@ -1718,9 +1727,9 @@ function action(
 						);
 					}
 				} else {
-					if (xDMG > yCL) {
-						xDMG = yCL;
-					}
+					// if (xDMG > yCL) {
+					// 	xDMG = yCL;
+					// }
 					xRF = roundsFired(xW[xCW], xWS[xCW]);
 					if (xHOM) {
 						log.push(
@@ -1753,9 +1762,9 @@ function action(
 					}
 				}
 			} else {
-				if (xDMG > yCL) {
-					xDMG = yCL;
-				}
+				// if (xDMG > yCL) {
+				// 	xDMG = yCL;
+				// }
 
 				xRF = roundsFired(xW[xCW], xWS[xCW]);
 				if (xHOM) {
@@ -1848,9 +1857,9 @@ function action(
 									}
 								}
 
-								if (totalDMG + xDMG > yCL) {
-									xDMG = yCL - totalDMG;
-								}
+								// if (totalDMG + xDMG > yCL) {
+								// 	xDMG = yCL - totalDMG;
+								// }
 
 								xRF = roundsFired(xW[xCW], xWS[xCW]);
 
@@ -1961,9 +1970,9 @@ function action(
 			const secondaryWeapon = xW[xCW];
 			const secondaryWeaponState = xWS[xCW];
 
-			if (xDMG > yCL) {
-				xDMG = yCL;
-			}
+			// if (xDMG > yCL) {
+			// 	xDMG = yCL;
+			// }
 
 			const xRF = roundsFired(secondaryWeapon, secondaryWeaponState);
 
@@ -2084,9 +2093,9 @@ function action(
 		else if (xCW === "melee") {
 			const meleeWeapon = xW[xCW];
 			const meleeWeaponState = xWS[xCW];
-			if (xDMG > yCL) {
-				xDMG = yCL;
-			}
+			// if (xDMG > yCL) {
+			// 	xDMG = yCL;
+			// }
 
 			// Storage特效处理
 			if (
@@ -2690,9 +2699,10 @@ function action(
 							}
 						}
 
-						if (extraDamage > yCL) {
-							extraDamage = yCL;
-						}
+						// 删除额外攻击的伤害限制，允许记录真实伤害
+						// if (extraDamage > yCL) {
+						// 	extraDamage = yCL;
+						// }
 
 						log.push(
 							`${x.name} extra attack hits ${y.name} in the ${extraBodyPart[0]} for ${extraDamage}`,
@@ -2706,7 +2716,7 @@ function action(
 			}
 		}
 
-		if (yCL === 0) {
+		if (yCL <= 0) {
 			return [
 				log,
 				xCL,
