@@ -12,6 +12,7 @@ export interface BattleStats {
 export interface StatusFlag {
 	turns: number;
 	stacks?: number;
+	baseDamage?: number; // 仅 Bleed 等DOT效果使用
 }
 
 // 新版状态效果 V2 - 具名结构体
@@ -29,6 +30,8 @@ export interface StatusEffectsV2 {
 	disarm_temporary?: StatusFlag;
 	motivation?: StatusFlag;
 	distracted?: StatusFlag;
+	bleed?: StatusFlag;
+	paralyzed?: StatusFlag;
 }
 
 // 真实武器数据接口

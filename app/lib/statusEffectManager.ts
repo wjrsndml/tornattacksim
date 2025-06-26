@@ -188,6 +188,11 @@ export function shouldSkipTurn(player: FightPlayer): boolean {
 		return Math.random() < 0.25;
 	}
 
+	// Paralyzed: 50% 几率跳过回合
+	if (hasStatus(player, "paralyzed")) {
+		return Math.random() < 0.5;
+	}
+
 	return false;
 }
 
