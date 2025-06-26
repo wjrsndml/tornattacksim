@@ -7,6 +7,7 @@ import type {
 	FightResults,
 	ModData,
 	StatusEffects,
+	StatusEffectsV2,
 	TempEffects,
 	TurnResults,
 	WeaponData,
@@ -495,16 +496,26 @@ export function chooseWeapon(
 	p: FightPlayer,
 	weaponSettings: WeaponSettings,
 ): string {
-	// 检查是否被缴械，如果是则强制使用拳脚
-	if (hasStatus(p, "disarm")) {
+	// 辅助函数：判定某个槽位是否被缴械
+	const isSlotDisarmed = (slot: string): boolean => {
+		return hasStatus(p, `disarm_${slot}` as keyof StatusEffectsV2);
+	};
+
+	const allSlots = ["primary", "secondary", "melee", "temporary"] as const;
+
+	// 如果所有主副近战临时武器都被缴械，则只能使用拳头/脚踢
+	if (allSlots.every((s) => isSlotDisarmed(s))) {
 		return p.perks.education.preferKick ? "kick" : "fists";
 	}
+
+	// 根据攻击或防御姿态选择武器，但需跳过已被缴械的槽位
 
 	if (p.position === "attack") {
 		let weaponChoice: string = "primary";
 		let settingInteger = 5;
 
 		for (const weapon in weaponSettings) {
+			if (isSlotDisarmed(weapon)) continue; // 跳过被缴械的武器
 			const weaponSetting = weaponSettings[weapon];
 			if (weaponSetting && weaponSetting.setting !== 0) {
 				if (weaponSetting.setting < settingInteger) {
@@ -514,7 +525,7 @@ export function chooseWeapon(
 			}
 		}
 
-		// 如果所有武器设置都为0，则使用拳脚
+		// 如果没有可用武器（全部设置为0或被缴械），使用拳头/脚踢
 		if (settingInteger === 5) {
 			return p.perks.education.preferKick ? "kick" : "fists";
 		}
@@ -526,6 +537,7 @@ export function chooseWeapon(
 		let settingSum = 0;
 
 		for (const weapon in weaponSettings) {
+			if (isSlotDisarmed(weapon)) continue; // 跳过被缴械的武器
 			const weaponSetting = weaponSettings[weapon as keyof WeaponSettings];
 			if (weaponSetting && !Number.isNaN(weaponSetting.setting)) {
 				settingSum += weaponSetting.setting;
@@ -535,15 +547,24 @@ export function chooseWeapon(
 			}
 		}
 
-		// 如果所有武器设置都为0，则使用拳脚
+		// 如果没有可用武器，则使用拳脚
 		if (settingSum === 0) {
 			return p.perks.education.preferKick ? "kick" : "fists";
 		}
 
 		const rng = Math.ceil(Math.random() * settingSum + 1);
-		const primarySetting = weaponSettings.primary?.setting || 0;
-		const secondarySetting = weaponSettings.secondary?.setting || 0;
-		const meleeSetting = weaponSettings.melee?.setting || 0;
+		const primarySetting = isSlotDisarmed("primary")
+			? 0
+			: weaponSettings.primary?.setting || 0;
+		const secondarySetting = isSlotDisarmed("secondary")
+			? 0
+			: weaponSettings.secondary?.setting || 0;
+		const meleeSetting = isSlotDisarmed("melee")
+			? 0
+			: weaponSettings.melee?.setting || 0;
+		// const temporarySetting = isSlotDisarmed("temporary")
+		// 	? 0
+		// 	: weaponSettings.temporary?.setting || 0;
 
 		if (rng >= 1 && rng <= 1 + primarySetting) {
 			weaponChoice = "primary";
@@ -559,6 +580,11 @@ export function chooseWeapon(
 			weaponChoice = "melee";
 		} else {
 			weaponChoice = "temporary";
+		}
+
+		// 最终检查选中的槽位是否被缴械，若被缴械则回退到拳脚
+		if (isSlotDisarmed(weaponChoice)) {
+			return p.perks.education.preferKick ? "kick" : "fists";
 		}
 
 		return weaponChoice;

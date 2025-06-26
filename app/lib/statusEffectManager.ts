@@ -28,19 +28,23 @@ export function addStatus(
 	statusName: keyof StatusEffectsV2,
 	turns: number,
 	maxStacks: number = 1,
-): void {
+): boolean {
 	initializeStatusEffectsV2(player);
 
 	const current = player.statusEffectsV2?.[statusName];
 	if (current) {
 		// 刷新回合数，增加层数（不超过上限）
 		current.turns = turns;
-		current.stacks = Math.min(maxStacks, (current.stacks || 1) + 1);
+		const oldStacks = current.stacks || 1;
+		current.stacks = Math.min(maxStacks, oldStacks + 1);
+		// 返回是否增加了新层
+		return current.stacks > oldStacks;
 	} else {
 		// 新增状态
 		if (player.statusEffectsV2) {
 			player.statusEffectsV2[statusName] = { turns, stacks: 1 };
 		}
+		return true; // 新增状态总是返回 true
 	}
 }
 

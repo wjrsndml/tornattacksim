@@ -2,6 +2,7 @@ import type {
 	BattleStats,
 	DamageContext,
 	FightPlayer,
+	StatusEffectsV2,
 	WeaponBonusProcessor,
 	WeaponState,
 } from "./fightSimulatorTypes";
@@ -431,7 +432,7 @@ const ExecuteProcessor: WeaponBonusProcessor = {
 		if (targetHealthPercent <= executeThreshold && damage > 0) {
 			addTriggeredEffect("Execute");
 			// 返回目标当前生命值加上一些额外伤害，确保击杀
-			return currentTargetLife + 1000;
+			return currentTargetLife;
 		}
 		return damage;
 	},
@@ -1228,9 +1229,11 @@ const MotivationProcessor: WeaponBonusProcessor = {
 		if (damage > 0) {
 			const motivationChance = bonusValue / 100;
 			if (Math.random() < motivationChance) {
-				addTriggeredEffect("Motivation");
 				initializeStatusEffectsV2(attacker);
-				addStatus(attacker, "motivation", 99, 5); // 最多叠加5层
+				const wasAdded = addStatus(attacker, "motivation", 99, 5); // 最多叠加5层
+				if (wasAdded) {
+					addTriggeredEffect("Motivation");
+				}
 			}
 		}
 		return 0;
@@ -1278,19 +1281,19 @@ const DisarmProcessor: WeaponBonusProcessor = {
 	) => {
 		if (
 			damage > 0 &&
+			context.turn > 1 && // 首回合不生效
 			(context.bodyPart.includes("hand") || context.bodyPart.includes("arm"))
 		) {
-			const disarmChance = bonusValue / 100;
-			if (Math.random() < disarmChance) {
-				addTriggeredEffect("Disarm");
-				initializeStatusEffectsV2(target);
-				addStatus(
-					target,
-					"disarm",
-					Math.max(1, Math.floor(bonusValue / 10)),
-					1,
-				); // 持续回合数为 value/10，最少1回合
+			const slot = context.targetWeaponSlot;
+			// 拳头和脚踢不可被缴械
+			if (slot === "fists" || slot === "kick") {
+				return 0;
 			}
+
+			const statusName = `disarm_${slot}` as keyof StatusEffectsV2;
+			addTriggeredEffect("Disarm");
+			initializeStatusEffectsV2(target);
+			addStatus(target, statusName, bonusValue, 1);
 		}
 		return 0;
 	},
@@ -1309,9 +1312,11 @@ const SlowProcessor: WeaponBonusProcessor = {
 		if (damage > 0) {
 			const slowChance = bonusValue / 100;
 			if (Math.random() < slowChance) {
-				addTriggeredEffect("Slow");
 				initializeStatusEffectsV2(target);
-				addStatus(target, "slow", 3, 3); // 持续3回合，最多叠加3层
+				const wasAdded = addStatus(target, "slow", 99, 3); // 持续99回合，最多叠加3层
+				if (wasAdded) {
+					addTriggeredEffect("Slow");
+				}
 			}
 		}
 		return 0;
@@ -1331,9 +1336,11 @@ const CrippleProcessor: WeaponBonusProcessor = {
 		if (damage > 0) {
 			const crippleChance = bonusValue / 100;
 			if (Math.random() < crippleChance) {
-				addTriggeredEffect("Cripple");
 				initializeStatusEffectsV2(target);
-				addStatus(target, "cripple", 3, 3); // 持续3回合，最多叠加3层
+				const wasAdded = addStatus(target, "cripple", 99, 3); // 持续99回合，最多叠加3层
+				if (wasAdded) {
+					addTriggeredEffect("Cripple");
+				}
 			}
 		}
 		return 0;
@@ -1353,9 +1360,11 @@ const WeakenProcessor: WeaponBonusProcessor = {
 		if (damage > 0) {
 			const weakenChance = bonusValue / 100;
 			if (Math.random() < weakenChance) {
-				addTriggeredEffect("Weaken");
 				initializeStatusEffectsV2(target);
-				addStatus(target, "weaken", 3, 3); // 持续3回合，最多叠加3层
+				const wasAdded = addStatus(target, "weaken", 99, 3); // 持续99回合，最多叠加3层
+				if (wasAdded) {
+					addTriggeredEffect("Weaken");
+				}
 			}
 		}
 		return 0;
@@ -1375,9 +1384,11 @@ const WitherProcessor: WeaponBonusProcessor = {
 		if (damage > 0) {
 			const witherChance = bonusValue / 100;
 			if (Math.random() < witherChance) {
-				addTriggeredEffect("Wither");
 				initializeStatusEffectsV2(target);
-				addStatus(target, "wither", 3, 3); // 持续3回合，最多叠加3层
+				const wasAdded = addStatus(target, "wither", 99, 3); // 持续99回合，最多叠加3层
+				if (wasAdded) {
+					addTriggeredEffect("Wither");
+				}
 			}
 		}
 		return 0;
@@ -1397,9 +1408,11 @@ const EviscerateProcessor: WeaponBonusProcessor = {
 		if (damage > 0) {
 			const eviscerateChance = bonusValue / 100;
 			if (Math.random() < eviscerateChance) {
-				addTriggeredEffect("Eviscerate");
 				initializeStatusEffectsV2(target);
-				addStatus(target, "eviscerate", 3, 3); // 持续3回合，最多叠加3层
+				const wasAdded = addStatus(target, "eviscerate", 99, 1); // 持续99回合，最多叠加1层
+				if (wasAdded) {
+					addTriggeredEffect("Eviscerate");
+				}
 			}
 		}
 		return 0;
