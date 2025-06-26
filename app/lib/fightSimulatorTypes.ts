@@ -158,6 +158,7 @@ export interface EducationPerks {
 	heavyartilleryaccuracy?: boolean;
 	shotgunaccuracy?: boolean;
 	temporaryaccuracy?: boolean;
+	preferKick?: boolean; // 新增：是否优先使用脚踢而不是拳头
 }
 
 // 派系技能接口

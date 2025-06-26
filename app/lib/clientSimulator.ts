@@ -107,6 +107,7 @@ function convertToFightPlayer(
 			shotgunaccuracy: false,
 			ammocontrol1: false,
 			ammocontrol2: false,
+			preferKick: false, // 默认使用拳头而不是脚踢
 		},
 		faction: {
 			accuracy: 0,
@@ -158,18 +159,18 @@ function convertToFightPlayer(
 				: getDefaultWeapon("temporary"),
 			fists: {
 				name: "Fists",
-				damage: 50,
+				damage: 10, // 从 weapons.json 中的数据
 				accuracy: 50,
-				category: "Fists",
+				category: "Unarmed",
 				clipsize: 0,
 				rateoffire: [1, 1],
 				experience: 0,
 			},
 			kick: {
 				name: "Kick",
-				damage: 40,
-				accuracy: 55,
-				category: "Fists",
+				damage: 30, // 从 weapons.json 中的数据
+				accuracy: 40.71,
+				category: "Unarmed",
 				clipsize: 0,
 				rateoffire: [1, 1],
 				experience: 0,

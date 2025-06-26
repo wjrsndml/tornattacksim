@@ -935,6 +935,17 @@ export default function PlayerConfig({
 											<label className="flex items-center space-x-2">
 												<input
 													type="checkbox"
+													checked={player.perks.education.preferKick || false}
+													onChange={(e) =>
+														updateEducation("preferKick", e.target.checked)
+													}
+													className="rounded border-slate-300 accent-slate-600 focus:ring-slate-500"
+												/>
+												<span>优先脚踢 (默认拳头)</span>
+											</label>
+											<label className="flex items-center space-x-2">
+												<input
+													type="checkbox"
 													checked={player.perks.education.neckdamage}
 													onChange={(e) =>
 														updateEducation("neckdamage", e.target.checked)

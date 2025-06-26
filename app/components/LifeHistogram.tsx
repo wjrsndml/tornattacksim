@@ -32,8 +32,8 @@ export default function LifeHistogram({
 
 		if (validLifeData.length === 0) return [];
 
-		// 分离死亡(0)和存活(>0)玩家
-		const deadPlayers = validLifeData.filter((life) => life === 0);
+		// 分离死亡(≤0)和存活(>0)玩家，支持负血量统计
+		const deadPlayers = validLifeData.filter((life) => life <= 0);
 		const alivePlayers = validLifeData.filter((life) => life > 0);
 
 		const bins = [];
@@ -41,11 +41,11 @@ export default function LifeHistogram({
 		// 第一个区间：死亡玩家 (生命值 = 0)
 		if (deadPlayers.length > 0) {
 			bins.push({
-				min: 0,
+				min: Math.min(...deadPlayers),
 				max: 0,
 				count: deadPlayers.length,
 				percentage: (deadPlayers.length / totalFights) * 100,
-				label: "死亡 (0)",
+				label: `死亡 (≤0)`,
 			});
 		}
 
