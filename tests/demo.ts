@@ -122,7 +122,7 @@ console.log(
 	`精确测试 (5000次): ${preciseTime}ms, 结果: ${(preciseResult.actualRate * 100).toFixed(1)}%`,
 );
 
-console.log("\n" + "=".repeat(50));
+console.log(`\n${"=".repeat(50)}`);
 console.log("🏁 演示完成！");
 console.log("\n💡 提示:");
 console.log("- 运行 'npm run test:weapons' 执行完整测试");
@@ -313,7 +313,7 @@ function main(): void {
 		demo.func();
 	});
 
-	console.log("\n" + "=".repeat(60));
+	console.log(`\n${"=".repeat(60)}`);
 	console.log("🎉 演示完成！");
 	console.log("\n💡 提示: 设置环境变量来运行特定演示:");
 	console.log("   DEMO_TYPE=all - 完整测试套件");

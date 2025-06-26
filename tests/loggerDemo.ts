@@ -215,7 +215,7 @@ async function main(): Promise<void> {
 
 		demonstrateConfigurations();
 
-		console.log("\n" + "=".repeat(50));
+		console.log(`\n${"=".repeat(50)}`);
 		console.log("🏁 日志系统演示完成");
 		console.log("📁 请查看 tests/reports/ 目录下的生成文件");
 		console.log("=".repeat(50));
