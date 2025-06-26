@@ -311,7 +311,6 @@ const createDefaultPlayer = (name: string, isAttacker: boolean): Player => {
 
 export default function Home() {
 	const simulationCountId = useId();
-	const enableLogId = useId();
 	const [_simulations, _setSimulations] = useState(10000);
 	const [isSimulating, setIsSimulating] = useState(false);
 	const [results, setResults] = useState<SimulationResult | null>(null);
@@ -522,9 +521,8 @@ export default function Home() {
 							</div>
 
 							<div className="flex flex-col justify-center space-y-2">
-								<div className="flex items-center space-x-2">
+								<label className="flex items-center space-x-2 text-sm">
 									<input
-										id={enableLogId}
 										type="checkbox"
 										checked={simulationSettings.enableLog}
 										onChange={(e) =>
@@ -535,11 +533,9 @@ export default function Home() {
 										}
 										className="rounded border-slate-300 accent-slate-600 focus:ring-slate-500"
 									/>
-									<Label htmlFor={enableLogId} className="text-sm">
-										启用战斗日志记录
-									</Label>
-								</div>
-								<div className="flex items-center space-x-2">
+									启用战斗日志记录
+								</label>
+								<label className="flex items-center space-x-2 text-sm">
 									<input
 										type="checkbox"
 										checked={simulationSettings.enableLifeHisto}
@@ -551,8 +547,8 @@ export default function Home() {
 										}
 										className="rounded border-slate-300 accent-slate-600 focus:ring-slate-500"
 									/>
-									<Label className="text-sm">启用生命值分布图</Label>
-								</div>
+									启用生命值分布图
+								</label>
 							</div>
 						</div>
 

@@ -161,11 +161,11 @@ function testDisarmEffect(duration: number): TestResult {
 	try {
 		const target = createTestPlayer(createStandardTarget());
 
-		// 手动应用Disarm状态
-		addStatusEffect(target, "disarm", duration);
+		// 手动应用Disarm状态 (测试主武器缴械)
+		addStatusEffect(target, "disarm_primary", duration);
 
-		const hasDisarmStatus = hasStatus(target, "disarm");
-		const statusStacks = target.statusEffectsV2?.disarm?.stacks || 0;
+		const hasDisarmStatus = hasStatus(target, "disarm_primary");
+		const statusStacks = target.statusEffectsV2?.disarm_primary?.stacks || 0;
 
 		return {
 			success: hasDisarmStatus && statusStacks === duration,

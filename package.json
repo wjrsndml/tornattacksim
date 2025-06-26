@@ -4,7 +4,7 @@
 	"private": true,
 	"scripts": {
 		"dev": "next dev",
-		"build": "next build",
+		"build": "npm run check && npm run lint && next build",
 		"start": "next start",
 		"check": "tsc --noEmit",
 		"lint": "biome check .",
@@ -57,6 +57,9 @@
 		"*.{ts,tsx,js,jsx}": [
 			"biome check --write",
 			"biome format --write"
+		],
+		"*.{ts,tsx}": [
+			"bash -c 'npm run check'"
 		]
 	}
 }
