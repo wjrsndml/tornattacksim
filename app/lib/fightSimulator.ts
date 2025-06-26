@@ -353,22 +353,43 @@ export function takeTurns(
 	initializeStatusEffectsV2(h);
 	initializeStatusEffectsV2(v);
 
+	// 在递减回合数之前处理 Bleed DOT 伤害
+	const applyBleedDamage = (
+		player: FightPlayer,
+		currentLife: number,
+		logArr: string[],
+	): number => {
+		if (hasStatus(player, "bleed")) {
+			const bleedStatus = player.statusEffectsV2!.bleed!;
+			if (bleedStatus.baseDamage && bleedStatus.turns > 0) {
+				// 伤害按剩余回合线性递减
+				const dmg = Math.round(
+					bleedStatus.baseDamage * (bleedStatus.turns / 9),
+				);
+				const maxPossible = currentLife - 1;
+				const actualDMG = dmg > maxPossible ? maxPossible : dmg;
+				if (actualDMG > 0) {
+					logArr.push(`${player.name} suffers ${actualDMG} bleeding damage`);
+					return currentLife - actualDMG;
+				}
+			}
+		}
+		return currentLife;
+	};
+
+	hCL = applyBleedDamage(h, hCL, log);
+	vCL = applyBleedDamage(v, vCL, log);
+
 	// 递减状态效果回合数
 	decrementStatusEffects(h);
 	decrementStatusEffects(v);
 
-	// 检查是否应该跳过回合
+	// 英雄行动 - 在轮到英雄时检查是否跳过
 	const hShouldSkip = shouldSkipTurn(h);
-	const vShouldSkip = shouldSkipTurn(v);
-
 	if (hShouldSkip) {
 		log.push(`${h.name} is stunned/suppressed and skips their turn`);
 	}
-	if (vShouldSkip) {
-		log.push(`${v.name} is stunned/suppressed and skips their turn`);
-	}
 
-	// 英雄行动
 	if (!hShouldSkip) {
 		const h_action = action(
 			[],
@@ -421,12 +442,15 @@ export function takeTurns(
 		];
 	}
 
-	// 反派行动 - 重新检查是否在当前回合被Stun
-	const vShouldSkipAfterHeroAction = shouldSkipTurn(v);
+	// 反派行动 - 检查是否跳过回合
+	const vShouldSkip = shouldSkipTurn(v);
+	if (vShouldSkip) {
+		log.push(`${v.name} is stunned/suppressed and skips their turn`);
+	}
 
 	// 检查是否触发了Home Run效果，如果是且反派要使用临时武器，则阻止攻击
 	let vShouldSkipDueToHomeRun = false;
-	if (getCurrentTurnTriggeredEffects().includes("Home Run")) {
+	if (!vShouldSkip && getCurrentTurnTriggeredEffects().includes("Home Run")) {
 		const vChosenWeapon = chooseWeapon(v, v_set);
 		if (vChosenWeapon === "temporary") {
 			vShouldSkipDueToHomeRun = true;
@@ -438,7 +462,7 @@ export function takeTurns(
 		}
 	}
 
-	if (!vShouldSkip && !vShouldSkipAfterHeroAction && !vShouldSkipDueToHomeRun) {
+	if (!vShouldSkip && !vShouldSkipDueToHomeRun) {
 		const v_action = action(
 			[],
 			v,
@@ -2681,6 +2705,12 @@ function action(
 					log.push(`${y.name} is bleeding heavily!`);
 				} else if (effect === "Disarm") {
 					log.push(`${y.name} has been disarmed!`);
+				} else if (effect === "Suppress") {
+					log.push(`${y.name} has been suppressed and may miss future turns!`);
+				} else if (effect === "Bleed") {
+					log.push(`${y.name} is bleeding!`);
+				} else if (effect === "Paralyzed") {
+					log.push(`${y.name} has been paralyzed!`);
 				} else if (effect === "Motivation") {
 					log.push(`${x.name} feels motivated!`);
 				} else if (effect === "Home Run") {

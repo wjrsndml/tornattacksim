@@ -1463,6 +1463,12 @@ export function getBonusEffectText(
 			return "target withered";
 		case "Eviscerate":
 			return "target eviscerated";
+		case "Suppress":
+			return "target suppressed";
+		case "Bleed":
+			return "target bleeding";
+		case "Paralyzed":
+			return "target paralyzed";
 		default:
 			return `${bonusName} triggered`;
 	}
@@ -1533,3 +1539,86 @@ export function applyWeaponBonusesToIncomingDamage(
 
 	return modifiedIncomingDamage;
 }
+
+// 49. Bleed - 流血DOT效果
+const BleedProcessor: WeaponBonusProcessor = {
+	name: "Bleed",
+	applyPostDamage: (
+		_attacker: FightPlayer,
+		target: FightPlayer,
+		damage: number,
+		bonusValue: number,
+		_context: DamageContext,
+	) => {
+		if (damage > 0) {
+			const bleedChance = bonusValue / 100;
+			if (Math.random() < bleedChance) {
+				initializeStatusEffectsV2(target);
+				const wasAdded = addStatus(target, "bleed", 9, 1); // 持续9回合，不叠加
+				if (wasAdded) {
+					addTriggeredEffect("Bleed");
+					// 设置初始流血伤害基础值（45% 的造成伤害）
+					if (target.statusEffectsV2?.bleed) {
+						target.statusEffectsV2.bleed.baseDamage = Math.round(damage * 0.45);
+					}
+				}
+			}
+		}
+		return 0;
+	},
+};
+
+// 50. Suppress - 压制效果
+const SuppressProcessor: WeaponBonusProcessor = {
+	name: "Suppress",
+	applyPostDamage: (
+		_attacker: FightPlayer,
+		target: FightPlayer,
+		damage: number,
+		bonusValue: number,
+		_context: DamageContext,
+	) => {
+		if (damage > 0) {
+			const suppressChance = bonusValue / 100;
+			if (Math.random() < suppressChance) {
+				initializeStatusEffectsV2(target);
+				const wasAdded = addStatus(target, "suppress", 99, 1); // 持续99回合，不叠加
+				if (wasAdded) {
+					addTriggeredEffect("Suppress");
+				}
+			}
+		}
+		return 0;
+	},
+};
+
+// 51. Paralyzed - 麻痹效果
+const ParalyzedProcessor: WeaponBonusProcessor = {
+	name: "Paralyzed",
+	applyPostDamage: (
+		_attacker: FightPlayer,
+		target: FightPlayer,
+		damage: number,
+		bonusValue: number,
+		_context: DamageContext,
+	) => {
+		if (damage > 0) {
+			const paralyzedChance = bonusValue / 100;
+			if (Math.random() < paralyzedChance) {
+				initializeStatusEffectsV2(target);
+				// 在模拟器中，我们简化为持续固定回合数而不是真实时间
+				// 300秒 ≈ 5分钟，我们简化为持续10回合
+				const wasAdded = addStatus(target, "paralyzed", 10, 1);
+				if (wasAdded) {
+					addTriggeredEffect("Paralyzed");
+				}
+			}
+		}
+		return 0;
+	},
+};
+
+// 注册所有新的特效处理器
+registerProcessor(BleedProcessor);
+registerProcessor(SuppressProcessor);
+registerProcessor(ParalyzedProcessor);
