@@ -360,8 +360,8 @@ export function takeTurns(
 		logArr: string[],
 	): number => {
 		if (hasStatus(player, "bleed")) {
-			const bleedStatus = player.statusEffectsV2!.bleed!;
-			if (bleedStatus.baseDamage && bleedStatus.turns > 0) {
+			const bleedStatus = player.statusEffectsV2?.bleed;
+			if (bleedStatus?.baseDamage && bleedStatus.turns > 0) {
 				// 伤害按剩余回合线性递减
 				const dmg = Math.round(
 					bleedStatus.baseDamage * (bleedStatus.turns / 9),
