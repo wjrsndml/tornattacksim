@@ -24,6 +24,7 @@ import ArmourCoverage from "./ArmourCoverage";
 import ArmourSelector from "./ArmourSelector";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { FormattedInput } from "./ui/formatted-input";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import {
@@ -503,67 +504,46 @@ export default function PlayerConfig({
 									<h4 className="text-md font-semibold">基础属性</h4>
 									<div className="grid grid-cols-2 gap-4">
 										<div className="space-y-2">
-											<Label htmlFor={`${playerId}-strength`}>力量</Label>
-											<Input
+											<Label htmlFor={`${playerId}-strength`}>力量(STR)</Label>
+											<FormattedInput
 												id={`${playerId}-strength`}
-												type="number"
 												value={player.stats.strength}
-												onChange={(e) =>
-													updateStats(
-														"strength",
-														parseInt(e.target.value) || 1000,
-													)
-												}
-												min="100"
-												max="10000000"
+												onChange={(value) => updateStats("strength", value)}
+												min={100}
+												max={10000000}
 												aria-label={`${playerName}力量`}
 											/>
 										</div>
 										<div className="space-y-2">
-											<Label htmlFor={`${playerId}-speed`}>速度</Label>
-											<Input
+											<Label htmlFor={`${playerId}-speed`}>速度(SPD)</Label>
+											<FormattedInput
 												id={`${playerId}-speed`}
-												type="number"
 												value={player.stats.speed}
-												onChange={(e) =>
-													updateStats("speed", parseInt(e.target.value) || 1000)
-												}
-												min="100"
-												max="10000000"
+												onChange={(value) => updateStats("speed", value)}
+												min={100}
+												max={10000000}
 												aria-label={`${playerName}速度`}
 											/>
 										</div>
 										<div className="space-y-2">
-											<Label htmlFor={`${playerId}-defense`}>防御</Label>
-											<Input
+											<Label htmlFor={`${playerId}-defense`}>防御(DEF)</Label>
+											<FormattedInput
 												id={`${playerId}-defense`}
-												type="number"
 												value={player.stats.defense}
-												onChange={(e) =>
-													updateStats(
-														"defense",
-														parseInt(e.target.value) || 1000,
-													)
-												}
-												min="100"
-												max="10000000"
+												onChange={(value) => updateStats("defense", value)}
+												min={100}
+												max={10000000}
 												aria-label={`${playerName}防御`}
 											/>
 										</div>
 										<div className="space-y-2">
-											<Label htmlFor={`${playerId}-dexterity`}>敏捷</Label>
-											<Input
+											<Label htmlFor={`${playerId}-dexterity`}>敏捷(DEX)</Label>
+											<FormattedInput
 												id={`${playerId}-dexterity`}
-												type="number"
 												value={player.stats.dexterity}
-												onChange={(e) =>
-													updateStats(
-														"dexterity",
-														parseInt(e.target.value) || 1000,
-													)
-												}
-												min="100"
-												max="10000000"
+												onChange={(value) => updateStats("dexterity", value)}
+												min={100}
+												max={10000000}
 												aria-label={`${playerName}敏捷`}
 											/>
 										</div>
