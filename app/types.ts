@@ -46,6 +46,7 @@ export interface EducationPerks {
 	shotgunaccuracy: boolean;
 	ammocontrol1: boolean;
 	ammocontrol2: boolean;
+	preferKick: boolean; // 新增：是否优先使用脚踢而不是拳头
 }
 
 export interface FactionPerks {

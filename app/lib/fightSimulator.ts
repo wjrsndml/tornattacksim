@@ -495,9 +495,9 @@ export function chooseWeapon(
 	p: FightPlayer,
 	weaponSettings: WeaponSettings,
 ): string {
-	// 检查是否被缴械，如果是则强制使用拳头
+	// 检查是否被缴械，如果是则强制使用拳脚
 	if (hasStatus(p, "disarm")) {
-		return "melee"; // 或者返回 "fists"，取决于系统设计
+		return p.perks.education.preferKick ? "kick" : "fists";
 	}
 
 	if (p.position === "attack") {
@@ -514,6 +514,11 @@ export function chooseWeapon(
 			}
 		}
 
+		// 如果所有武器设置都为0，则使用拳脚
+		if (settingInteger === 5) {
+			return p.perks.education.preferKick ? "kick" : "fists";
+		}
+
 		return weaponChoice;
 	} else if (p.position === "defend") {
 		let weaponChoice: string = "primary";
@@ -528,6 +533,11 @@ export function chooseWeapon(
 					weaponArray.push(weapon);
 				}
 			}
+		}
+
+		// 如果所有武器设置都为0，则使用拳脚
+		if (settingSum === 0) {
+			return p.perks.education.preferKick ? "kick" : "fists";
 		}
 
 		const rng = Math.ceil(Math.random() * settingSum + 1);
@@ -2438,6 +2448,80 @@ function action(
 				];
 			}
 		}
+		// 拳头攻击
+		else if (xCW === "fists") {
+			const fistsWeapon = xW[xCW];
+			if (xHOM) {
+				// 检测触发的特效
+				const triggeredBonuses = getTriggeredBonuses(fistsWeapon, {
+					attacker: x,
+					target: y,
+					weapon: fistsWeapon,
+					bodyPart: xBP[0],
+					isCritical: xBP[1] >= 1,
+					turn: turn,
+					currentWeaponSlot: xCW,
+					weaponState: xWS,
+					currentLife: { attacker: xCL, target: yCL },
+					targetWeaponSlot: yCW,
+				});
+
+				const bonusText =
+					triggeredBonuses.length > 0
+						? ` [${triggeredBonuses.join(", ")}]`
+						: "";
+
+				// 保存拳头攻击的日志信息
+				logInfo = {
+					attacker: x.name,
+					target: y.name,
+					weapon: "fists",
+					bodyPart: xBP[0],
+					originalDamage: xDMG,
+					bonusText: bonusText,
+					attackType: "melee",
+				};
+			} else {
+				log.push(`${x.name} used fists missing ${y.name}`);
+			}
+		}
+		// 脚踢攻击
+		else if (xCW === "kick") {
+			const kickWeapon = xW[xCW];
+			if (xHOM) {
+				// 检测触发的特效
+				const triggeredBonuses = getTriggeredBonuses(kickWeapon, {
+					attacker: x,
+					target: y,
+					weapon: kickWeapon,
+					bodyPart: xBP[0],
+					isCritical: xBP[1] >= 1,
+					turn: turn,
+					currentWeaponSlot: xCW,
+					weaponState: xWS,
+					currentLife: { attacker: xCL, target: yCL },
+					targetWeaponSlot: yCW,
+				});
+
+				const bonusText =
+					triggeredBonuses.length > 0
+						? ` [${triggeredBonuses.join(", ")}]`
+						: "";
+
+				// 保存脚踢攻击的日志信息
+				logInfo = {
+					attacker: x.name,
+					target: y.name,
+					weapon: "kick",
+					bodyPart: xBP[0],
+					originalDamage: xDMG,
+					bonusText: bonusText,
+					attackType: "melee",
+				};
+			} else {
+				log.push(`${x.name} kicked missing ${y.name}`);
+			}
+		}
 
 		// 应用Eviscerate效果增加受到的伤害
 		if (xDMG > 0) {
@@ -2481,7 +2565,15 @@ function action(
 
 			if (isParried && xDMG === 0) {
 				// Parry成功，显示特殊消息
-				if (logInfo.attackType === "melee") {
+				if (logInfo.weapon === "fists") {
+					log.push(
+						`${logInfo.attacker} used fists hitting ${logInfo.target} in the ${logInfo.bodyPart} but the attack was parried!${logInfo.bonusText}`,
+					);
+				} else if (logInfo.weapon === "kick") {
+					log.push(
+						`${logInfo.attacker} kicked ${logInfo.target} in the ${logInfo.bodyPart} but the attack was parried!${logInfo.bonusText}`,
+					);
+				} else if (logInfo.attackType === "melee") {
 					log.push(
 						`${logInfo.attacker} hit ${logInfo.target} with their ${logInfo.weapon} in the ${logInfo.bodyPart} but the attack was parried!${logInfo.bonusText}`,
 					);
@@ -2492,7 +2584,15 @@ function action(
 				}
 			} else {
 				// 正常攻击或部分减伤
-				if (logInfo.attackType === "melee") {
+				if (logInfo.weapon === "fists") {
+					log.push(
+						`${logInfo.attacker} used fists hitting ${logInfo.target} in the ${logInfo.bodyPart} for ${xDMG}${logInfo.bonusText}`,
+					);
+				} else if (logInfo.weapon === "kick") {
+					log.push(
+						`${logInfo.attacker} kicked ${logInfo.target} in the ${logInfo.bodyPart} for ${xDMG}${logInfo.bonusText}`,
+					);
+				} else if (logInfo.attackType === "melee") {
 					log.push(
 						`${logInfo.attacker} hit ${logInfo.target} with their ${logInfo.weapon} in the ${logInfo.bodyPart} for ${xDMG}${logInfo.bonusText}`,
 					);
@@ -2984,6 +3084,11 @@ function applyPMT(
 		if (x_edu.tempdamage) {
 			x_dmg += 5;
 		}
+	} else if (xCW === "fists") {
+		// 拳头技能加成：100%拳头伤害加成
+		if (x_edu.fistdamage) {
+			x_dmg += x_wep.damage; // 增加一倍基础伤害，实现100%加成
+		}
 	}
 
 	// 同样处理y玩家
@@ -3012,6 +3117,11 @@ function applyPMT(
 		}
 		if (y_edu.tempdamage) {
 			y_dmg += 5;
+		}
+	} else if (yCW === "fists") {
+		// 拳头技能加成：100%拳头伤害加成
+		if (y_edu.fistdamage) {
+			y_dmg += y_wep.damage; // 增加一倍基础伤害，实现100%加成
 		}
 	}
 
@@ -3064,6 +3174,10 @@ function applyPMT(
 		if (x_edu.smgaccuracy) {
 			x_acc += 1;
 		}
+	} else if (x_wep.category === "Unarmed") {
+		// 徒手攻击受到近战掌握技能影响
+		x_acc += 0.2 * (x_merit.meleemastery || 0);
+		x_dmg += x_merit.meleemastery || 0;
 	}
 
 	// 武器类别掌握技能处理 - y玩家
@@ -3115,6 +3229,10 @@ function applyPMT(
 		if (y_edu?.smgaccuracy) {
 			y_acc += 1;
 		}
+	} else if (y_wep.category === "Unarmed") {
+		// 徒手攻击受到近战掌握技能影响
+		y_acc += 0.2 * (y_merit.meleemastery || 0);
+		y_dmg += y_merit.meleemastery || 0;
 	}
 
 	// 计算最终属性
