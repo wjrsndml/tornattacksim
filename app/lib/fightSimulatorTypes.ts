@@ -74,11 +74,18 @@ export interface RealArmourData {
 	default?: boolean;
 }
 
+// 护甲特效接口
+export interface ArmourEffect {
+	name: string; // 特效名称：Impenetrable, Impregnable, Insurmountable, Impassable
+	value: number; // 特效数值（百分比）
+}
+
 // 简化护甲数据接口
 export interface ArmourData {
 	armour: number;
 	set: string;
 	type?: string;
+	effects?: ArmourEffect[] | undefined; // 新增：护甲特效数组，可选
 }
 
 // 护甲套装接口
@@ -511,4 +518,22 @@ export interface WeaponBonusEffects {
 	armourPenetration: number;
 	ammoConservation: number;
 	statModifiers: Partial<BattleStats>;
+}
+
+// 护甲特效处理器接口
+export interface ArmourEffectProcessor {
+	name: string;
+	applyToDamage?: (
+		damage: number,
+		effectValue: number,
+		context: DamageContext,
+		targetCurrentLife?: number,
+		targetMaxLife?: number,
+	) => number;
+	description: string;
+	triggerCondition?: (
+		context: DamageContext,
+		targetCurrentLife?: number,
+		targetMaxLife?: number,
+	) => boolean;
 }
