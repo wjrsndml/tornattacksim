@@ -313,7 +313,7 @@ export interface FightPlayer {
 	perks: PlayerPerks;
 }
 
-// 战斗结果类型：[英雄胜利, 反派胜利, 平局, 总回合数, 英雄剩余生命, 反派剩余生命, 战斗日志, 英雄特效次数, 英雄生命分布, 反派生命分布]
+// 战斗结果类型：[英雄胜利, 反派胜利, 平局, 总回合数, 英雄剩余生命, 反派剩余生命, 战斗日志, 英雄特效次数, 英雄生命分布, 反派生命分布, 详细统计数据]
 export type FightResults = [
 	number,
 	number,
@@ -325,6 +325,7 @@ export type FightResults = [
 	number,
 	Record<string, number>, // 英雄生命分布 - 修正为对象类型
 	Record<string, number>, // 反派生命分布 - 修正为对象类型
+	BattleStatsCollector | null, // 新增：详细统计数据
 ];
 
 // 回合结果类型
@@ -537,3 +538,91 @@ export interface ArmourEffectProcessor {
 		targetMaxLife?: number,
 	) => boolean;
 }
+
+// 战斗统计收集器接口
+export interface BattleStatsCollector {
+	// 伤害统计
+	damageStats: {
+		[playerName: string]: {
+			weaponDamage: {
+				primary: number;
+				secondary: number;
+				melee: number;
+				temporary: number;
+				fists: number;
+				kick: number;
+			};
+			damageTypes: {
+				normal: number;
+				critical: number;
+				dot: number;
+				maxSingleHit: number;
+				totalHits: number;
+			};
+			hitStats: {
+				totalAttacks: number;
+				hits: number;
+				criticals: number;
+			};
+		};
+	};
+	// 武器特效统计
+	weaponEffects: {
+		[playerName: string]: {
+			[effectName: string]: {
+				triggered: number;
+				opportunities: number;
+				extraDamage: number;
+				ammoSaved: number;
+			};
+		};
+	};
+	// 护甲特效统计
+	armourEffects: {
+		[playerName: string]: {
+			effects: {
+				[effectName: string]: {
+					triggered: number;
+					damageReduced: number;
+					totalBlocked: number;
+				};
+			};
+			bodyPartHits: {
+				head: number;
+				body: number;
+				hands: number;
+				legs: number;
+				feet: number;
+			};
+		};
+	};
+	// 武器使用统计
+	weaponUsage: {
+		[playerName: string]: {
+			ammoConsumption: {
+				[weaponSlot: string]: number;
+			};
+			reloadCount: {
+				[weaponSlot: string]: number;
+			};
+			weaponChoices: {
+				attack: { [weaponSlot: string]: number };
+				defend: { [weaponSlot: string]: number };
+			};
+		};
+	};
+	// 状态效果统计
+	statusEffects: {
+		[playerName: string]: {
+			appliedEffects: { [effectName: string]: number };
+			receivedEffects: { [effectName: string]: number };
+			controlTurnsLost: number;
+		};
+	};
+}
+
+// 初始化统计收集器的函数类型
+export type InitializeStatsCollector = (
+	player1Name: string,
+	player2Name: string,
+) => BattleStatsCollector;

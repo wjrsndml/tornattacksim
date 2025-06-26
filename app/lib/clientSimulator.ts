@@ -5,6 +5,7 @@ import { fight, setModData } from "./fightSimulator";
 import type {
 	ArmourData,
 	BattleStats,
+	BattleStatsCollector,
 	FightPlayer,
 	FightResults,
 	PlayerPerks,
@@ -242,6 +243,7 @@ export async function runClientSimulation(
 			0, // hProcs
 			{}, // hLifeStats - 使用对象而不是数组
 			{}, // vLifeStats - 使用对象而不是数组
+			null, // detailedStats - 新增
 		];
 
 		// 用于存储所有战斗日志的数组
@@ -254,6 +256,7 @@ export async function runClientSimulation(
 			heroFinalLife: number;
 			villainFinalLife: number;
 			battleLog: string[];
+			detailedStats?: BattleStatsCollector; // 添加详细统计数据
 		}> = [];
 
 		// 运行模拟
@@ -270,6 +273,7 @@ export async function runClientSimulation(
 				0, // hProcs
 				{}, // hLifeStats - 使用对象而不是数组
 				{}, // vLifeStats - 使用对象而不是数组
+				null, // detailedStats - 新增
 			];
 
 			const fightResults = fight(hero, villain, singleFightResults);
@@ -284,7 +288,7 @@ export async function runClientSimulation(
 					winner = player1.name; // hero wins
 				}
 
-				allBattleLogs.push({
+				const battleData = {
 					battleNumber: i + 1,
 					winner: winner,
 					turns: fightResults[3], // 这场战斗的回合数
@@ -293,7 +297,9 @@ export async function runClientSimulation(
 					heroFinalLife: fightResults[4], // 英雄剩余生命
 					villainFinalLife: fightResults[5], // 反派剩余生命
 					battleLog: fightResults[6] as string[], // 具体的战斗日志
-				});
+					...(fightResults[10] && { detailedStats: fightResults[10] }), // 只在有数据时添加
+				};
+				allBattleLogs.push(battleData);
 			}
 
 			// 累积到总结果中

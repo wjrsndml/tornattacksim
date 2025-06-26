@@ -8,6 +8,7 @@ import { canArmourBlock, getArmourCoverage } from "./dataLoader";
 import type {
 	ActionResults,
 	ArmourSet,
+	BattleStatsCollector,
 	DOTEffects,
 	FightPlayer,
 	FightResults,
@@ -70,6 +71,9 @@ function hasAmmoSystem(
 // 改装数据缓存
 let cachedModData: { [key: string]: ModData } = {};
 
+// 统计收集器全局变量
+let battleStatsCollector: BattleStatsCollector | null = null;
+
 /**
  * 获取弹药显示名称
  */
@@ -113,6 +117,9 @@ export function fight(
 	villain: FightPlayer,
 	results: FightResults,
 ): FightResults {
+	// 初始化统计收集器
+	battleStatsCollector = initializeStatsCollector(hero.name, villain.name);
+
 	// 清空所有状态效果，确保每次新战斗开始时状态为空
 	clearAllStatusEffects(hero);
 	clearAllStatusEffects(villain);
@@ -330,6 +337,10 @@ export function fight(
 	} else {
 		results[9][finalVillainLife] += 1;
 	}
+
+	// 获取详细统计数据并添加到返回结果中
+	const detailedStats = getFinalBattleStats();
+	results[10] = detailedStats;
 
 	return results;
 }
@@ -1315,6 +1326,10 @@ function action(
 	const xCW = chooseWeapon(x, x_set);
 	const yCW = chooseWeapon(y, y_set);
 
+	// 记录武器选择统计
+	recordWeaponChoice(x.name, x.position, xCW);
+	recordWeaponChoice(y.name, y.position, yCW);
+
 	// 应用技能、改装、临时效果
 	// 应用技能、改装、临时效�?
 	const pmt = applyPMT(
@@ -1414,6 +1429,8 @@ function action(
 			if (weaponState && hasAmmoSystem(weaponState)) {
 				weaponState.ammoleft = weaponState.maxammo;
 			}
+			// 记录重装统计
+			recordReload(x.name, xCW);
 		} else {
 			// 武器无效，停止使用该武器
 			if (x_set[xCW]) {
@@ -2016,6 +2033,8 @@ function action(
 				);
 
 				primaryWeaponState.ammoleft -= modifiedAmmoConsumed;
+				// 记录弹药消耗统计
+				recordAmmoConsumption(x.name, xCW, modifiedAmmoConsumed);
 				if (modifiedAmmoConsumed < xRF) {
 					log.push(
 						`${x.name}'s weapon conserved ${xRF - modifiedAmmoConsumed} rounds [Conserve]`,
@@ -2681,6 +2700,19 @@ function action(
 
 		// 扣除伤害
 		yCL -= xDMG;
+
+		// 记录攻击和伤害统计
+		if (logInfo !== null) {
+			// 记录攻击统计（命中、暴击）
+			recordAttack(x.name, xHOM, xBP[1] >= 1);
+
+			if (xHOM) {
+				// 记录伤害统计
+				recordDamage(x.name, xCW, xDMG, xBP[1] >= 1);
+				// 记录身体部位命中统计
+				recordBodyPartHit(y.name, xBP[0]);
+			}
+		}
 
 		// 生成攻击日志（在应用防御特效后）
 		if (xHOM && logInfo !== null) {
@@ -3665,4 +3697,211 @@ function applyPMT(
 		[x_acc, x_dmg, x_crit],
 		[y_acc, y_dmg, y_crit],
 	];
+}
+
+// 初始化统计收集器
+function initializeStatsCollector(
+	player1Name: string,
+	player2Name: string,
+): BattleStatsCollector {
+	const emptyPlayerStats = {
+		weaponDamage: {
+			primary: 0,
+			secondary: 0,
+			melee: 0,
+			temporary: 0,
+			fists: 0,
+			kick: 0,
+		},
+		damageTypes: {
+			normal: 0,
+			critical: 0,
+			dot: 0,
+			maxSingleHit: 0,
+			totalHits: 0,
+		},
+		hitStats: {
+			totalAttacks: 0,
+			hits: 0,
+			criticals: 0,
+		},
+	};
+
+	const emptyWeaponEffects = {};
+	const emptyArmourEffects = {
+		effects: {},
+		bodyPartHits: {
+			head: 0,
+			body: 0,
+			hands: 0,
+			legs: 0,
+			feet: 0,
+		},
+	};
+
+	const emptyWeaponUsage = {
+		ammoConsumption: {},
+		reloadCount: {},
+		weaponChoices: {
+			attack: {},
+			defend: {},
+		},
+	};
+
+	const emptyStatusEffects = {
+		appliedEffects: {},
+		receivedEffects: {},
+		controlTurnsLost: 0,
+	};
+
+	return {
+		damageStats: {
+			[player1Name]: emptyPlayerStats,
+			[player2Name]: emptyPlayerStats,
+		},
+		weaponEffects: {
+			[player1Name]: emptyWeaponEffects,
+			[player2Name]: emptyWeaponEffects,
+		},
+		armourEffects: {
+			[player1Name]: emptyArmourEffects,
+			[player2Name]: emptyArmourEffects,
+		},
+		weaponUsage: {
+			[player1Name]: emptyWeaponUsage,
+			[player2Name]: emptyWeaponUsage,
+		},
+		statusEffects: {
+			[player1Name]: emptyStatusEffects,
+			[player2Name]: emptyStatusEffects,
+		},
+	};
+}
+
+// 统计收集工具函数
+function recordDamage(
+	attacker: string,
+	weaponSlot: string,
+	damage: number,
+	isCritical: boolean,
+): void {
+	if (!battleStatsCollector) return;
+
+	const stats = battleStatsCollector.damageStats[attacker];
+	if (!stats) return;
+
+	// 记录武器伤害分类
+	if (weaponSlot in stats.weaponDamage) {
+		stats.weaponDamage[weaponSlot as keyof typeof stats.weaponDamage] += damage;
+	}
+
+	// 记录伤害类型
+	if (isCritical) {
+		stats.damageTypes.critical += damage;
+	} else {
+		stats.damageTypes.normal += damage;
+	}
+
+	// 更新最大单次伤害
+	stats.damageTypes.maxSingleHit = Math.max(
+		stats.damageTypes.maxSingleHit,
+		damage,
+	);
+	stats.damageTypes.totalHits++;
+}
+
+function recordAttack(attacker: string, hit: boolean, critical: boolean): void {
+	if (!battleStatsCollector) return;
+
+	const stats = battleStatsCollector.damageStats[attacker];
+	if (!stats) return;
+
+	stats.hitStats.totalAttacks++;
+	if (hit) {
+		stats.hitStats.hits++;
+		if (critical) {
+			stats.hitStats.criticals++;
+		}
+	}
+}
+
+function recordBodyPartHit(defender: string, bodyPart: string): void {
+	if (!battleStatsCollector) return;
+
+	const armourStats = battleStatsCollector.armourEffects[defender];
+	if (!armourStats) return;
+
+	const partKey =
+		bodyPart.toLowerCase() as keyof typeof armourStats.bodyPartHits;
+	if (partKey in armourStats.bodyPartHits) {
+		armourStats.bodyPartHits[partKey]++;
+	}
+}
+
+function recordWeaponChoice(
+	player: string,
+	position: "attack" | "defend",
+	weaponSlot: string,
+): void {
+	if (!battleStatsCollector) return;
+
+	const usage = battleStatsCollector.weaponUsage[player];
+	if (!usage) return;
+
+	if (!usage.weaponChoices[position][weaponSlot]) {
+		usage.weaponChoices[position][weaponSlot] = 0;
+	}
+	usage.weaponChoices[position][weaponSlot]++;
+}
+
+function recordAmmoConsumption(
+	player: string,
+	weaponSlot: string,
+	ammoUsed: number,
+): void {
+	if (!battleStatsCollector) return;
+
+	const usage = battleStatsCollector.weaponUsage[player];
+	if (!usage) return;
+
+	if (!usage.ammoConsumption[weaponSlot]) {
+		usage.ammoConsumption[weaponSlot] = 0;
+	}
+	usage.ammoConsumption[weaponSlot] += ammoUsed;
+}
+
+function recordReload(player: string, weaponSlot: string): void {
+	if (!battleStatsCollector) return;
+
+	const usage = battleStatsCollector.weaponUsage[player];
+	if (!usage) return;
+
+	if (!usage.reloadCount[weaponSlot]) {
+		usage.reloadCount[weaponSlot] = 0;
+	}
+	usage.reloadCount[weaponSlot]++;
+}
+
+// 获取当前战斗的统计数据并计算派生指标
+function getFinalBattleStats(): BattleStatsCollector | null {
+	if (!battleStatsCollector) return null;
+
+	// 计算命中率和暴击率
+	for (const playerName in battleStatsCollector.damageStats) {
+		const stats = battleStatsCollector.damageStats[playerName];
+		if (stats && stats.hitStats.totalAttacks > 0) {
+			stats.hitStats["hitRate" as keyof typeof stats.hitStats] =
+				Math.round(
+					(stats.hitStats.hits / stats.hitStats.totalAttacks) * 100 * 100,
+				) / 100;
+		}
+		if (stats && stats.hitStats.hits > 0) {
+			stats.hitStats["critRate" as keyof typeof stats.hitStats] =
+				Math.round(
+					(stats.hitStats.criticals / stats.hitStats.hits) * 100 * 100,
+				) / 100;
+		}
+	}
+
+	return JSON.parse(JSON.stringify(battleStatsCollector)); // 返回深拷贝
 }

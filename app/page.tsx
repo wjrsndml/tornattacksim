@@ -655,7 +655,7 @@ export default function Home() {
 													准备开始战斗模拟
 												</h3>
 												<p className="text-sm text-slate-500 max-w-md mx-auto">
-													配置好攻击方和防守方的属性、武器装备后，点击上方的"开始战斗"按钮来运行蒙特卡洛模拟
+													配置好攻击方和防守方的属性、武器装备后，点击上方的"开始战斗"按钮来运行模拟
 												</p>
 											</div>
 

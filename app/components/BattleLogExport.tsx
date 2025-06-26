@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
+import type { BattleStatsCollector } from "../lib/fightSimulatorTypes";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -15,6 +16,8 @@ interface BattleLogData {
 	heroFinalLife: number;
 	villainFinalLife: number;
 	battleLog: string[];
+	// 新增：详细统计数据
+	detailedStats?: BattleStatsCollector;
 }
 
 interface BattleLogExportProps {
@@ -34,35 +37,206 @@ export default function BattleLogExport({
 		null,
 	);
 
+	// 新增：导出选项状态
+	const [exportOptions, setExportOptions] = useState({
+		basicSummary: true,
+		damageStats: false,
+		weaponEffects: false,
+		armourEffects: false,
+		weaponUsage: false,
+		statusEffects: false,
+		detailedLogs: false, // 新增：详细战斗日志选项
+	});
+
 	const exportToCSV = () => {
 		if (!allBattleLogs || allBattleLogs.length === 0) {
 			alert("没有战斗日志可导出");
 			return;
 		}
 
-		// CSV 头部
-		const headers = [
-			"战斗编号",
-			"胜利者",
-			"回合数",
-			`${player1Name}造成伤害`,
-			`${player2Name}造成伤害`,
-			`${player1Name}剩余生命`,
-			`${player2Name}剩余生命`,
-			"详细战斗日志",
-		];
+		// 检查是否有任何选项被选中
+		const hasSelectedOptions = Object.values(exportOptions).some(Boolean);
+		if (!hasSelectedOptions) {
+			alert("请至少选择一个导出选项");
+			return;
+		}
+
+		let csvData: string[][] = [];
+		let headers: string[] = [];
+
+		// 基础战斗摘要
+		if (exportOptions.basicSummary) {
+			headers = [
+				"战斗编号",
+				"胜利者",
+				"回合数",
+				`${player1Name}造成伤害`,
+				`${player2Name}造成伤害`,
+				`${player1Name}剩余生命`,
+				`${player2Name}剩余生命`,
+			];
+		}
+
+		// 详细战斗日志
+		if (exportOptions.detailedLogs) {
+			headers.push("详细战斗日志");
+		}
+
+		// 伤害统计
+		if (exportOptions.damageStats) {
+			// 添加伤害统计相关的列
+			for (const playerName of [player1Name, player2Name]) {
+				headers.push(
+					`${playerName}_主武器伤害`,
+					`${playerName}_副武器伤害`,
+					`${playerName}_近战武器伤害`,
+					`${playerName}_临时武器伤害`,
+					`${playerName}_徒手伤害`,
+					`${playerName}_脚踢伤害`,
+					`${playerName}_普通伤害`,
+					`${playerName}_暴击伤害`,
+					`${playerName}_最大单次伤害`,
+					`${playerName}_总攻击次数`,
+					`${playerName}_命中次数`,
+					`${playerName}_暴击次数`,
+					`${playerName}_命中率`,
+					`${playerName}_暴击率`,
+				);
+			}
+		}
+
+		// 武器使用统计
+		if (exportOptions.weaponUsage) {
+			for (const playerName of [player1Name, player2Name]) {
+				headers.push(
+					`${playerName}_主武器弹药消耗`,
+					`${playerName}_副武器弹药消耗`,
+					`${playerName}_主武器重装次数`,
+					`${playerName}_副武器重装次数`,
+					`${playerName}_攻击时主武器选择`,
+					`${playerName}_攻击时副武器选择`,
+					`${playerName}_攻击时近战武器选择`,
+					`${playerName}_防御时主武器选择`,
+					`${playerName}_防御时副武器选择`,
+					`${playerName}_防御时近战武器选择`,
+				);
+			}
+		}
+
+		// 身体部位命中统计
+		if (exportOptions.armourEffects) {
+			for (const playerName of [player1Name, player2Name]) {
+				headers.push(
+					`${playerName}_头部被击中次数`,
+					`${playerName}_身体被击中次数`,
+					`${playerName}_手部被击中次数`,
+					`${playerName}_腿部被击中次数`,
+					`${playerName}_脚部被击中次数`,
+				);
+			}
+		}
 
 		// 转换数据为CSV格式
-		const csvData = allBattleLogs.map((battle) => [
-			battle.battleNumber,
-			battle.winner,
-			battle.turns,
-			battle.heroDamageDealt,
-			battle.villainDamageDealt,
-			battle.heroFinalLife,
-			battle.villainFinalLife,
-			`"${battle.battleLog.join("; ")}"`, // 用分号分隔日志条目，用引号包围以处理逗号
-		]);
+		csvData = allBattleLogs.map((battle) => {
+			const row: string[] = [];
+
+			// 基础战斗摘要
+			if (exportOptions.basicSummary) {
+				row.push(
+					String(battle.battleNumber),
+					battle.winner,
+					String(battle.turns),
+					String(battle.heroDamageDealt),
+					String(battle.villainDamageDealt),
+					String(battle.heroFinalLife),
+					String(battle.villainFinalLife),
+				);
+			}
+
+			// 详细战斗日志
+			if (exportOptions.detailedLogs) {
+				row.push(`"${battle.battleLog.join("; ")}"`);
+			}
+
+			// 伤害统计
+			if (exportOptions.damageStats && battle.detailedStats) {
+				for (const playerName of [player1Name, player2Name]) {
+					const stats = battle.detailedStats.damageStats[playerName];
+					if (stats) {
+						row.push(
+							String(stats.weaponDamage.primary),
+							String(stats.weaponDamage.secondary),
+							String(stats.weaponDamage.melee),
+							String(stats.weaponDamage.temporary),
+							String(stats.weaponDamage.fists),
+							String(stats.weaponDamage.kick),
+							String(stats.damageTypes.normal),
+							String(stats.damageTypes.critical),
+							String(stats.damageTypes.maxSingleHit),
+							String(stats.hitStats.totalAttacks),
+							String(stats.hitStats.hits),
+							String(stats.hitStats.criticals),
+							String(
+								stats.hitStats.totalAttacks > 0
+									? (stats.hitStats.hits / stats.hitStats.totalAttacks) * 100
+									: 0,
+							),
+							String(
+								stats.hitStats.hits > 0
+									? (stats.hitStats.criticals / stats.hitStats.hits) * 100
+									: 0,
+							),
+						);
+					} else {
+						// 如果没有统计数据，填充空值
+						row.push(...new Array(14).fill("0"));
+					}
+				}
+			}
+
+			// 武器使用统计
+			if (exportOptions.weaponUsage && battle.detailedStats) {
+				for (const playerName of [player1Name, player2Name]) {
+					const usage = battle.detailedStats.weaponUsage[playerName];
+					if (usage) {
+						row.push(
+							String(usage.ammoConsumption.primary || 0),
+							String(usage.ammoConsumption.secondary || 0),
+							String(usage.reloadCount.primary || 0),
+							String(usage.reloadCount.secondary || 0),
+							String(usage.weaponChoices.attack.primary || 0),
+							String(usage.weaponChoices.attack.secondary || 0),
+							String(usage.weaponChoices.attack.melee || 0),
+							String(usage.weaponChoices.defend.primary || 0),
+							String(usage.weaponChoices.defend.secondary || 0),
+							String(usage.weaponChoices.defend.melee || 0),
+						);
+					} else {
+						row.push(...new Array(10).fill("0"));
+					}
+				}
+			}
+
+			// 身体部位命中统计
+			if (exportOptions.armourEffects && battle.detailedStats) {
+				for (const playerName of [player1Name, player2Name]) {
+					const armour = battle.detailedStats.armourEffects[playerName];
+					if (armour) {
+						row.push(
+							String(armour.bodyPartHits.head),
+							String(armour.bodyPartHits.body),
+							String(armour.bodyPartHits.hands),
+							String(armour.bodyPartHits.legs),
+							String(armour.bodyPartHits.feet),
+						);
+					} else {
+						row.push(...new Array(5).fill("0"));
+					}
+				}
+			}
+
+			return row;
+		});
 
 		// 创建CSV内容
 		const csvContent = [
@@ -73,14 +247,14 @@ export default function BattleLogExport({
 		// 创建并下载文件
 		const blob = new Blob([`\uFEFF${csvContent}`], {
 			type: "text/csv;charset=utf-8;",
-		}); // 添加BOM以支持中文
+		});
 		const link = document.createElement("a");
 		const url = URL.createObjectURL(blob);
 
 		link.setAttribute("href", url);
 		link.setAttribute(
 			"download",
-			`battle_logs_${new Date().toISOString().slice(0, 10)}.csv`,
+			`battle_stats_${new Date().toISOString().slice(0, 10)}.csv`,
 		);
 		link.style.visibility = "hidden";
 
@@ -211,13 +385,241 @@ export default function BattleLogExport({
 						</Button>
 					</div>
 
+					{/* 导出选项 */}
+					<div className="space-y-4 border border-slate-200 rounded-lg p-4">
+						<div className="flex items-center justify-between">
+							<h4 className="font-medium text-slate-700">选择导出数据类型</h4>
+							<div className="flex space-x-2">
+								<Button
+									variant="outline"
+									size="sm"
+									onClick={() =>
+										setExportOptions({
+											basicSummary: true,
+											detailedLogs: false,
+											damageStats: true,
+											weaponUsage: false,
+											armourEffects: false,
+											weaponEffects: false,
+											statusEffects: false,
+										})
+									}
+									className="text-xs"
+								>
+									快速分析
+								</Button>
+								<Button
+									variant="outline"
+									size="sm"
+									onClick={() =>
+										setExportOptions({
+											basicSummary: true,
+											detailedLogs: true,
+											damageStats: true,
+											weaponUsage: true,
+											armourEffects: true,
+											weaponEffects: false,
+											statusEffects: false,
+										})
+									}
+									className="text-xs"
+								>
+									完整导出
+								</Button>
+								<Button
+									variant="outline"
+									size="sm"
+									onClick={() =>
+										setExportOptions({
+											basicSummary: false,
+											detailedLogs: true,
+											damageStats: false,
+											weaponUsage: false,
+											armourEffects: false,
+											weaponEffects: false,
+											statusEffects: false,
+										})
+									}
+									className="text-xs"
+								>
+									仅日志
+								</Button>
+							</div>
+						</div>
+
+						{/* 基础数据选项 */}
+						<div className="space-y-3">
+							<h5 className="text-sm font-medium text-slate-600">基础数据</h5>
+							<div className="grid grid-cols-2 gap-3">
+								<label className="flex items-center space-x-2 cursor-pointer">
+									<input
+										type="checkbox"
+										checked={exportOptions.basicSummary}
+										onChange={(e) =>
+											setExportOptions((prev) => ({
+												...prev,
+												basicSummary: e.target.checked,
+											}))
+										}
+										className="rounded border-slate-300"
+									/>
+									<span className="text-sm">基础战斗摘要</span>
+								</label>
+
+								<label className="flex items-center space-x-2 cursor-pointer">
+									<input
+										type="checkbox"
+										checked={exportOptions.detailedLogs}
+										onChange={(e) =>
+											setExportOptions((prev) => ({
+												...prev,
+												detailedLogs: e.target.checked,
+											}))
+										}
+										className="rounded border-slate-300"
+									/>
+									<span className="text-sm">详细战斗日志</span>
+								</label>
+							</div>
+						</div>
+
+						{/* 统计数据选项 */}
+						<div className="space-y-3">
+							<h5 className="text-sm font-medium text-slate-600">统计数据</h5>
+							<div className="grid grid-cols-2 gap-3">
+								<label className="flex items-center space-x-2 cursor-pointer">
+									<input
+										type="checkbox"
+										checked={exportOptions.damageStats}
+										onChange={(e) =>
+											setExportOptions((prev) => ({
+												...prev,
+												damageStats: e.target.checked,
+											}))
+										}
+										className="rounded border-slate-300"
+									/>
+									<span className="text-sm">伤害统计详情</span>
+								</label>
+
+								<label className="flex items-center space-x-2 cursor-pointer">
+									<input
+										type="checkbox"
+										checked={exportOptions.weaponUsage}
+										onChange={(e) =>
+											setExportOptions((prev) => ({
+												...prev,
+												weaponUsage: e.target.checked,
+											}))
+										}
+										className="rounded border-slate-300"
+									/>
+									<span className="text-sm">武器使用统计</span>
+								</label>
+
+								<label className="flex items-center space-x-2 cursor-pointer">
+									<input
+										type="checkbox"
+										checked={exportOptions.armourEffects}
+										onChange={(e) =>
+											setExportOptions((prev) => ({
+												...prev,
+												armourEffects: e.target.checked,
+											}))
+										}
+										className="rounded border-slate-300"
+									/>
+									<span className="text-sm">身体部位统计</span>
+								</label>
+
+								<label className="flex items-center space-x-2 cursor-pointer">
+									<input
+										type="checkbox"
+										checked={exportOptions.weaponEffects}
+										onChange={(e) =>
+											setExportOptions((prev) => ({
+												...prev,
+												weaponEffects: e.target.checked,
+											}))
+										}
+										className="rounded border-slate-300"
+									/>
+									<span className="text-sm text-slate-400">
+										武器特效分析 (开发中)
+									</span>
+								</label>
+
+								<label className="flex items-center space-x-2 cursor-pointer">
+									<input
+										type="checkbox"
+										checked={exportOptions.statusEffects}
+										onChange={(e) =>
+											setExportOptions((prev) => ({
+												...prev,
+												statusEffects: e.target.checked,
+											}))
+										}
+										className="rounded border-slate-300"
+									/>
+									<span className="text-sm text-slate-400">
+										状态效果统计 (开发中)
+									</span>
+								</label>
+							</div>
+						</div>
+					</div>
+
 					<div className="text-xs text-slate-600 bg-slate-50 p-3 rounded-md border border-slate-200">
-						<p className="font-medium mb-2">导出的CSV文件包含以下列：</p>
-						<ul className="list-disc list-inside space-y-1">
-							<li>战斗编号、胜利者、回合数</li>
-							<li>双方造成的伤害和剩余生命值</li>
-							<li>完整的战斗日志详情</li>
-						</ul>
+						<p className="font-medium mb-2">导出功能说明：</p>
+						<div className="space-y-2">
+							<div>
+								<p className="font-medium text-slate-700">基础数据：</p>
+								<ul className="list-disc list-inside ml-2 space-y-1">
+									<li>
+										<strong>基础战斗摘要</strong>
+										：战斗编号、胜利者、回合数、伤害和生命值
+									</li>
+									<li>
+										<strong>详细战斗日志</strong>：完整的回合制战斗过程记录
+									</li>
+								</ul>
+							</div>
+							<div>
+								<p className="font-medium text-slate-700">统计数据：</p>
+								<ul className="list-disc list-inside ml-2 space-y-1">
+									<li>
+										<strong>伤害统计详情</strong>
+										：各武器类型伤害、命中率、暴击率等
+									</li>
+									<li>
+										<strong>武器使用统计</strong>
+										：弹药消耗、重装次数、武器选择偏好
+									</li>
+									<li>
+										<strong>身体部位统计</strong>：各身体部位被攻击的次数统计
+									</li>
+								</ul>
+							</div>
+						</div>
+						<div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded">
+							<p className="text-blue-700 text-xs">
+								<strong>💡 使用建议：</strong>
+							</p>
+							<ul className="text-blue-600 text-xs list-disc list-inside ml-2 space-y-1">
+								<li>
+									<strong>快速分析</strong>：仅选择基础摘要 + 伤害统计
+								</li>
+								<li>
+									<strong>深度分析</strong>：选择多个统计选项进行综合分析
+								</li>
+								<li>
+									<strong>问题调试</strong>：包含详细日志查看具体战斗过程
+								</li>
+								<li>
+									<strong>文件大小</strong>：详细日志会显著增加文件大小
+								</li>
+							</ul>
+						</div>
 					</div>
 				</div>
 			</div>

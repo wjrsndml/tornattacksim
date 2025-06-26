@@ -22,9 +22,6 @@ export default function RootLayout({
 								<Swords className="w-6 h-6 text-slate-700" />
 								Torn 战斗模拟器
 							</h1>
-							<p className="text-sm text-slate-600">
-								基于蒙特卡洛算法的精确战斗预测
-							</p>
 						</div>
 					</div>
 				</header>
