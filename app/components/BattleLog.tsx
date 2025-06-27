@@ -113,6 +113,7 @@ export default function BattleLog({
 								checked={autoScroll}
 								onChange={(e) => setAutoScroll(e.target.checked)}
 								className="mr-2 w-4 h-4 rounded border-slate-300 accent-slate-600 focus:ring-slate-500"
+								aria-label="自动滚动"
 							/>
 							自动滚动
 						</Label>

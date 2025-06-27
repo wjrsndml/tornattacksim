@@ -107,20 +107,27 @@ export default function BattleLogExport({
 
 		// 武器使用统计
 		if (exportOptions.weaponUsage) {
-			for (const playerName of [player1Name, player2Name]) {
-				headers.push(
-					`${playerName}_主武器弹药消耗`,
-					`${playerName}_副武器弹药消耗`,
-					`${playerName}_主武器重装次数`,
-					`${playerName}_副武器重装次数`,
-					`${playerName}_攻击时主武器选择`,
-					`${playerName}_攻击时副武器选择`,
-					`${playerName}_攻击时近战武器选择`,
-					`${playerName}_防御时主武器选择`,
-					`${playerName}_防御时副武器选择`,
-					`${playerName}_防御时近战武器选择`,
-				);
-			}
+			// Attacker (player1) 只有攻击时的武器选择
+			headers.push(
+				`${player1Name}_主武器弹药消耗`,
+				`${player1Name}_副武器弹药消耗`,
+				`${player1Name}_主武器重装次数`,
+				`${player1Name}_副武器重装次数`,
+				`${player1Name}_攻击时主武器选择`,
+				`${player1Name}_攻击时副武器选择`,
+				`${player1Name}_攻击时近战武器选择`,
+			);
+
+			// Defender (player2) 只有防御时的武器选择
+			headers.push(
+				`${player2Name}_主武器弹药消耗`,
+				`${player2Name}_副武器弹药消耗`,
+				`${player2Name}_主武器重装次数`,
+				`${player2Name}_副武器重装次数`,
+				`${player2Name}_防御时主武器选择`,
+				`${player2Name}_防御时副武器选择`,
+				`${player2Name}_防御时近战武器选择`,
+			);
 		}
 
 		// 身体部位命中统计
@@ -132,6 +139,11 @@ export default function BattleLogExport({
 					`${playerName}_手部被击中次数`,
 					`${playerName}_腿部被击中次数`,
 					`${playerName}_脚部被击中次数`,
+					`${playerName}_头部受到伤害`,
+					`${playerName}_身体受到伤害`,
+					`${playerName}_手部受到伤害`,
+					`${playerName}_腿部受到伤害`,
+					`${playerName}_脚部受到伤害`,
 				);
 			}
 		}
@@ -196,24 +208,36 @@ export default function BattleLogExport({
 
 			// 武器使用统计
 			if (exportOptions.weaponUsage && battle.detailedStats) {
-				for (const playerName of [player1Name, player2Name]) {
-					const usage = battle.detailedStats.weaponUsage[playerName];
-					if (usage) {
-						row.push(
-							String(usage.ammoConsumption.primary || 0),
-							String(usage.ammoConsumption.secondary || 0),
-							String(usage.reloadCount.primary || 0),
-							String(usage.reloadCount.secondary || 0),
-							String(usage.weaponChoices.attack.primary || 0),
-							String(usage.weaponChoices.attack.secondary || 0),
-							String(usage.weaponChoices.attack.melee || 0),
-							String(usage.weaponChoices.defend.primary || 0),
-							String(usage.weaponChoices.defend.secondary || 0),
-							String(usage.weaponChoices.defend.melee || 0),
-						);
-					} else {
-						row.push(...new Array(10).fill("0"));
-					}
+				// Attacker (player1) 数据
+				const attackerUsage = battle.detailedStats.weaponUsage[player1Name];
+				if (attackerUsage) {
+					row.push(
+						String(attackerUsage.ammoConsumption.primary || 0),
+						String(attackerUsage.ammoConsumption.secondary || 0),
+						String(attackerUsage.reloadCount.primary || 0),
+						String(attackerUsage.reloadCount.secondary || 0),
+						String(attackerUsage.weaponChoices.attack.primary || 0),
+						String(attackerUsage.weaponChoices.attack.secondary || 0),
+						String(attackerUsage.weaponChoices.attack.melee || 0),
+					);
+				} else {
+					row.push(...new Array(7).fill("0"));
+				}
+
+				// Defender (player2) 数据
+				const defenderUsage = battle.detailedStats.weaponUsage[player2Name];
+				if (defenderUsage) {
+					row.push(
+						String(defenderUsage.ammoConsumption.primary || 0),
+						String(defenderUsage.ammoConsumption.secondary || 0),
+						String(defenderUsage.reloadCount.primary || 0),
+						String(defenderUsage.reloadCount.secondary || 0),
+						String(defenderUsage.weaponChoices.defend.primary || 0),
+						String(defenderUsage.weaponChoices.defend.secondary || 0),
+						String(defenderUsage.weaponChoices.defend.melee || 0),
+					);
+				} else {
+					row.push(...new Array(7).fill("0"));
 				}
 			}
 
@@ -228,9 +252,14 @@ export default function BattleLogExport({
 							String(armour.bodyPartHits.hands),
 							String(armour.bodyPartHits.legs),
 							String(armour.bodyPartHits.feet),
+							String(armour.bodyPartDamage?.head || 0),
+							String(armour.bodyPartDamage?.body || 0),
+							String(armour.bodyPartDamage?.hands || 0),
+							String(armour.bodyPartDamage?.legs || 0),
+							String(armour.bodyPartDamage?.feet || 0),
 						);
 					} else {
-						row.push(...new Array(5).fill("0"));
+						row.push(...new Array(10).fill("0"));
 					}
 				}
 			}
@@ -254,7 +283,7 @@ export default function BattleLogExport({
 		link.setAttribute("href", url);
 		link.setAttribute(
 			"download",
-			`battle_stats_${new Date().toISOString().slice(0, 10)}.csv`,
+			`battle_logs_${new Date().toISOString().slice(0, 10)}.csv`,
 		);
 		link.style.visibility = "hidden";
 
