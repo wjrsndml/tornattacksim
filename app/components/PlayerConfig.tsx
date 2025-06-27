@@ -82,6 +82,9 @@ interface PlayerConfigProps {
 	playerName: string;
 	isAttacker: boolean;
 	onCopyFromOther: () => void;
+	// 新增：用于导出时获取双方的攻击设置
+	attackerSettings?: Player["attacksettings"];
+	defenderSettings?: Player["attacksettings"];
 }
 
 export default function PlayerConfig({
@@ -90,6 +93,8 @@ export default function PlayerConfig({
 	playerName,
 	isAttacker,
 	onCopyFromOther,
+	attackerSettings,
+	defenderSettings,
 }: PlayerConfigProps) {
 	const [companies, setCompanies] = useState<string[]>([]);
 	const [_showAdvanced, _setShowAdvanced] = useState(false);
@@ -295,8 +300,8 @@ export default function PlayerConfig({
 				},
 			}, // 6: weapons
 			player.armour, // 7: armour
-			isAttacker ? player.attacksettings : "", // 8: attackSettings
-			!isAttacker ? player.defendsettings : "", // 9: defendSettings
+			attackerSettings || player.attacksettings, // 8: 攻击方的攻击设置
+			defenderSettings || player.defendsettings, // 9: 防守方的攻击设置
 			player.perks.education, // 10: educationPerks
 			player.perks.faction, // 11: factionPerks
 			player.perks.company, // 12: companyPerks
@@ -347,6 +352,17 @@ export default function PlayerConfig({
 					return [];
 				};
 
+				// 根据当前位置选择合适的攻击设置
+				let finalAttackSettings = player.attacksettings;
+				let finalDefendSettings = player.defendsettings;
+				if (isAttacker) {
+					// 导入到攻击方 -> 更新 attacksettings
+					finalAttackSettings = attacksettings || player.attacksettings;
+				} else {
+					// 导入到防守方 -> 更新 defendsettings
+					finalDefendSettings = defendsettings || player.defendsettings;
+				}
+
 				updatePlayer({
 					name,
 					life,
@@ -365,8 +381,8 @@ export default function PlayerConfig({
 						temporary: weapons.temporary || player.weapons.temporary,
 					},
 					armour,
-					attacksettings: attacksettings || player.attacksettings,
-					defendsettings: defendsettings || player.defendsettings,
+					attacksettings: finalAttackSettings,
+					defendsettings: finalDefendSettings,
 					perks: {
 						education,
 						faction,
@@ -377,6 +393,21 @@ export default function PlayerConfig({
 				});
 			} else if (typeof importData === "object" && !Array.isArray(importData)) {
 				// 处理对象格式（新格式兼容）
+				// 根据当前位置选择合适的攻击设置
+				// attacksettings = 攻击方的攻击设置
+				// defendsettings = 防守方的攻击设置
+				const objAttackerSettings =
+					importData.attacksettings || player.attacksettings;
+				const objDefenderSettings =
+					importData.defendsettings || player.defendsettings;
+
+				const finalObjAttackSettings = isAttacker
+					? objAttackerSettings // 导入到攻击方：使用攻击方的攻击设置
+					: objDefenderSettings; // 导入到防守方：使用防守方的攻击设置
+
+				// 防守设置保持当前角色的设置不变
+				const finalObjDefendSettings = player.defendsettings;
+
 				updatePlayer({
 					name: importData.name || player.name,
 					life: importData.life || player.life,
@@ -384,8 +415,8 @@ export default function PlayerConfig({
 					passives: importData.passives || player.passives,
 					weapons: importData.weapons || player.weapons,
 					armour: importData.armour || player.armour,
-					attacksettings: importData.attacksettings || player.attacksettings,
-					defendsettings: importData.defendsettings || player.defendsettings,
+					attacksettings: finalObjAttackSettings,
+					defendsettings: finalObjDefendSettings,
 					perks: importData.perks || player.perks,
 				});
 			} else {

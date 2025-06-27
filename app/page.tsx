@@ -497,26 +497,47 @@ export default function Home() {
 									htmlFor={simulationCountId}
 									className="text-sm font-medium"
 								>
-									模拟次数: {simulationSettings.fights.toLocaleString()}
+									模拟次数
 								</Label>
 								<Input
 									id={simulationCountId}
-									type="range"
+									type="number"
 									min="100"
 									max="100000"
 									step="100"
 									value={simulationSettings.fights}
-									onChange={(e) =>
-										setSimulationSettings((prev) => ({
-											...prev,
-											fights: parseInt(e.target.value),
-										}))
-									}
-									className="w-48 accent-slate-600"
+									onChange={(e) => {
+										const value = parseInt(e.target.value);
+										if (
+											!Number.isNaN(value) &&
+											value >= 100 &&
+											value <= 100000
+										) {
+											setSimulationSettings((prev) => ({
+												...prev,
+												fights: value,
+											}));
+										}
+									}}
+									onBlur={(e) => {
+										const value = parseInt(e.target.value);
+										if (Number.isNaN(value) || value < 100) {
+											setSimulationSettings((prev) => ({
+												...prev,
+												fights: 100,
+											}));
+										} else if (value > 100000) {
+											setSimulationSettings((prev) => ({
+												...prev,
+												fights: 100000,
+											}));
+										}
+									}}
+									className="w-32"
+									placeholder="100-100000"
 								/>
-								<div className="flex justify-between text-xs text-slate-500">
-									<span>100</span>
-									<span>100,000</span>
+								<div className="text-xs text-slate-500">
+									范围: 100 - 100,000
 								</div>
 							</div>
 
@@ -582,6 +603,8 @@ export default function Home() {
 						playerName="Attacker"
 						isAttacker={true}
 						onCopyFromOther={() => copyPlayer(player2, 1)}
+						attackerSettings={player1.attacksettings}
+						defenderSettings={player2.defendsettings}
 					/>
 				</div>
 
@@ -593,6 +616,8 @@ export default function Home() {
 						playerName="Defender"
 						isAttacker={false}
 						onCopyFromOther={() => copyPlayer(player1, 2)}
+						attackerSettings={player1.attacksettings}
+						defenderSettings={player2.defendsettings}
 					/>
 				</div>
 

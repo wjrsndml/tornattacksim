@@ -552,6 +552,42 @@
           "name": "n/a",
           "procrange": "n/a"
       }
+    },
+    "1155": {
+      "name": "PKM",
+      "category": "Machine Gun",
+      "damage_range": [70, 75],
+      "accuracy_range": [45, 50],
+      "clipsize": 50,
+      "rateoffire": [9,17],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "1156": {
+      "name": "Negev NG-5",
+      "category": "Machine Gun",
+      "damage_range": [68, 73],
+      "accuracy_range": [36, 41],
+      "clipsize": 200,
+      "rateoffire": [18,27],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "1157": {
+      "name": "Stoner 96",
+      "category": "Machine Gun",
+      "damage_range": [69, 74],
+      "accuracy_range": [49, 54],
+      "clipsize": 100,
+      "rateoffire": [9,14],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
     }
   },
   "secondary" : {
@@ -922,6 +958,42 @@
       "damage_range": [15, 20],
       "accuracy_range": [45, 50],
       "clipsize": 1,
+      "rateoffire": [1,1],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "1152": {
+      "name": "SMAW Launcher",
+      "category": "Heavy Artillery",
+      "damage_range": [76, 81],
+      "accuracy_range": [42, 47],
+      "clipsize": 1,
+      "rateoffire": [1,1],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "1153": {
+      "name": "China Lake",
+      "category": "Heavy Artillery",
+      "damage_range": [79, 87],
+      "accuracy_range": [47, 53],
+      "clipsize": 3,
+      "rateoffire": [1,1],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "1154": {
+      "name": "Milkor MGL",
+      "category": "Heavy Artillery",
+      "damage_range": [73, 79],
+      "accuracy_range": [40, 45],
+      "clipsize": 6,
       "rateoffire": [1,1],
       "bonus": {
           "name": "n/a",
@@ -1746,6 +1818,66 @@
           "name": "n/a",
           "procrange": "n/a"
       }
+    },
+    "1173": {
+      "name": "Crystalline Falcata",
+      "category": "Slashing",
+      "damage_range": [37, 37],
+      "accuracy_range": [67, 67],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "1231": {
+      "name": "Golf Club",
+      "category": "Clubbing",
+      "damage_range": [29, 34],
+      "accuracy_range": [59, 64],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "1255": {
+      "name": "Bone Saw",
+      "category": "Slashing",
+      "damage_range": [54, 58],
+      "accuracy_range": [52, 56],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "1257": {
+      "name": "Cattle Prod",
+      "category": "Mechanical",
+      "damage_range": [1, 4.15],
+      "accuracy_range": [59, 62.8],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "1296": {
+      "name": "Ban Hammer",
+      "category": "Clubbing",
+      "damage_range": [27, 32],
+      "accuracy_range": [58, 63],
+      "clipsize": "n/a",
+      "rateoffire": "n/a",
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
     }
   },
   "fists" : {
@@ -2021,6 +2153,46 @@
       "category": "Non-Damaging",
       "damage_range": [0, 0],
       "accuracy_range": [0,0],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "1175": {
+      "name": "Stygian Darkness",
+      "category": "Temporary",
+      "damage_range": [0, 0],
+      "accuracy_range": [200, 200],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "1178": {
+      "name": "Party Popper",
+      "category": "Temporary",
+      "damage_range": [0, 0],
+      "accuracy_range": [200, 200],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "1205": {
+      "name": "Wrench",
+      "category": "Temporary",
+      "damage_range": [14, 14],
+      "accuracy_range": [53, 53],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "1294": {
+      "name": "Glitter Bomb",
+      "category": "Temporary",
+      "damage_range": [0, 0],
+      "accuracy_range": [200, 200],
       "bonus": {
           "name": "n/a",
           "procrange": "n/a"
