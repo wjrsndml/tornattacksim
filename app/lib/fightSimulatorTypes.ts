@@ -524,19 +524,19 @@ export interface WeaponBonusEffects {
 // 护甲特效处理器接口
 export interface ArmourEffectProcessor {
 	name: string;
-	applyToDamage?: (
-		damage: number,
-		effectValue: number,
-		context: DamageContext,
-		targetCurrentLife?: number,
-		targetMaxLife?: number,
-	) => number;
-	description: string;
+	description?: string;
 	triggerCondition?: (
 		context: DamageContext,
 		targetCurrentLife?: number,
 		targetMaxLife?: number,
 	) => boolean;
+	applyToDamageBonus?: (
+		baseDamageBonus: number,
+		effectValue: number,
+		context: DamageContext,
+		targetCurrentLife?: number,
+		targetMaxLife?: number,
+	) => number;
 }
 
 // 战斗统计收集器接口
