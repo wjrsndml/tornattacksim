@@ -594,6 +594,13 @@ export interface BattleStatsCollector {
 				legs: number;
 				feet: number;
 			};
+			bodyPartDamage: {
+				head: number;
+				body: number;
+				hands: number;
+				legs: number;
+				feet: number;
+			};
 		};
 	};
 	// 武器使用统计

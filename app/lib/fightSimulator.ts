@@ -1326,9 +1326,8 @@ function action(
 	const xCW = chooseWeapon(x, x_set);
 	const yCW = chooseWeapon(y, y_set);
 
-	// 记录武器选择统计
+	// 记录武器选择统计 - 只记录当前行动玩家的武器选择
 	recordWeaponChoice(x.name, x.position, xCW);
-	recordWeaponChoice(y.name, y.position, yCW);
 
 	// 应用技能、改装、临时效果
 	// 应用技能、改装、临时效�?
@@ -1630,6 +1629,9 @@ function action(
 
 			xHOM = hitOrMiss(xFHC);
 
+			// 记录攻击统计（无论命中与否）
+			recordAttack(x.name, xHOM, false); // 先记录基础攻击，暴击状态稍后更新
+
 			if (xHOM) {
 				if (
 					xCW === "temporary" &&
@@ -1923,8 +1925,20 @@ function action(
 								});
 								xHOM = hitOrMiss(xFHC);
 
+								// 记录Blindfire额外攻击统计
+								recordAttack(x.name, xHOM, false);
+
 								if (xHOM) {
 									xBP = selectBodyPart(x, x_crit_chance);
+
+									// 更新Blindfire暴击统计
+									if (xBP[1] >= 1) {
+										const stats = battleStatsCollector?.damageStats[x.name];
+										if (stats) {
+											stats.hitStats.criticals++;
+										}
+									}
+
 									yAM = (100 - armourMitigation(xBP[0], yA) / x_pen) / 100;
 									xDV = variance();
 									xDMG = Math.round(
@@ -1940,6 +1954,10 @@ function action(
 									if (Number.isNaN(xDMG)) {
 										xDMG = 0;
 									}
+
+									// 记录Blindfire伤害统计
+									recordDamage(x.name, xCW, xDMG, xBP[1] >= 1);
+									recordBodyPartHit(y.name, xBP[0], xDMG);
 								}
 
 								// if (totalDMG + xDMG > yCL) {
@@ -2702,16 +2720,20 @@ function action(
 		yCL -= xDMG;
 
 		// 记录攻击和伤害统计
-		if (logInfo !== null) {
-			// 记录攻击统计（命中、暴击）
-			recordAttack(x.name, xHOM, xBP[1] >= 1);
-
-			if (xHOM) {
-				// 记录伤害统计
-				recordDamage(x.name, xCW, xDMG, xBP[1] >= 1);
-				// 记录身体部位命中统计
-				recordBodyPartHit(y.name, xBP[0]);
+		// 更新暴击统计（如果命中且为暴击）
+		if (xHOM && xBP[1] >= 1) {
+			// 更新暴击统计，需要从已记录的命中中转换为暴击
+			const stats = battleStatsCollector?.damageStats[x.name];
+			if (stats) {
+				stats.hitStats.criticals++;
 			}
+		}
+
+		if (xHOM) {
+			// 记录伤害统计
+			recordDamage(x.name, xCW, xDMG, xBP[1] >= 1);
+			// 记录身体部位命中统计
+			recordBodyPartHit(y.name, xBP[0], xDMG);
 		}
 
 		// 生成攻击日志（在应用防御特效后）
@@ -2891,8 +2913,21 @@ function action(
 					);
 
 					const extraHit = hitOrMiss(extraHitChance);
+
+					// 记录额外攻击统计
+					recordAttack(x.name, extraHit, false);
+
 					if (extraHit) {
 						const extraBodyPart = selectBodyPart(x, x_crit_chance);
+
+						// 更新额外攻击暴击统计
+						if (extraBodyPart[1] >= 1) {
+							const stats = battleStatsCollector?.damageStats[x.name];
+							if (stats) {
+								stats.hitStats.criticals++;
+							}
+						}
+
 						const extraMaxDamage = maxDamage(xSTR);
 						const extraDefenseMitigation =
 							(100 - damageMitigation(yDEF, xSTR)) / 100;
@@ -2970,6 +3005,10 @@ function action(
 						log.push(
 							`${x.name} extra attack hits ${y.name} in the ${extraBodyPart[0]} for ${extraDamage}`,
 						);
+
+						// 记录额外攻击伤害和身体部位统计
+						recordDamage(x.name, xCW, extraDamage, extraBodyPart[1] >= 1);
+						recordBodyPartHit(y.name, extraBodyPart[0], extraDamage);
 
 						yCL -= extraDamage;
 					} else {
@@ -3704,7 +3743,8 @@ function initializeStatsCollector(
 	player1Name: string,
 	player2Name: string,
 ): BattleStatsCollector {
-	const emptyPlayerStats = {
+	// 创建工厂函数，确保每个玩家都有独立的对象实例
+	const createEmptyPlayerStats = () => ({
 		weaponDamage: {
 			primary: 0,
 			secondary: 0,
@@ -3725,10 +3765,11 @@ function initializeStatsCollector(
 			hits: 0,
 			criticals: 0,
 		},
-	};
+	});
 
-	const emptyWeaponEffects = {};
-	const emptyArmourEffects = {
+	const createEmptyWeaponEffects = () => ({});
+
+	const createEmptyArmourEffects = () => ({
 		effects: {},
 		bodyPartHits: {
 			head: 0,
@@ -3737,43 +3778,50 @@ function initializeStatsCollector(
 			legs: 0,
 			feet: 0,
 		},
-	};
+		bodyPartDamage: {
+			head: 0,
+			body: 0,
+			hands: 0,
+			legs: 0,
+			feet: 0,
+		},
+	});
 
-	const emptyWeaponUsage = {
+	const createEmptyWeaponUsage = () => ({
 		ammoConsumption: {},
 		reloadCount: {},
 		weaponChoices: {
 			attack: {},
 			defend: {},
 		},
-	};
+	});
 
-	const emptyStatusEffects = {
+	const createEmptyStatusEffects = () => ({
 		appliedEffects: {},
 		receivedEffects: {},
 		controlTurnsLost: 0,
-	};
+	});
 
 	return {
 		damageStats: {
-			[player1Name]: emptyPlayerStats,
-			[player2Name]: emptyPlayerStats,
+			[player1Name]: createEmptyPlayerStats(),
+			[player2Name]: createEmptyPlayerStats(),
 		},
 		weaponEffects: {
-			[player1Name]: emptyWeaponEffects,
-			[player2Name]: emptyWeaponEffects,
+			[player1Name]: createEmptyWeaponEffects(),
+			[player2Name]: createEmptyWeaponEffects(),
 		},
 		armourEffects: {
-			[player1Name]: emptyArmourEffects,
-			[player2Name]: emptyArmourEffects,
+			[player1Name]: createEmptyArmourEffects(),
+			[player2Name]: createEmptyArmourEffects(),
 		},
 		weaponUsage: {
-			[player1Name]: emptyWeaponUsage,
-			[player2Name]: emptyWeaponUsage,
+			[player1Name]: createEmptyWeaponUsage(),
+			[player2Name]: createEmptyWeaponUsage(),
 		},
 		statusEffects: {
-			[player1Name]: emptyStatusEffects,
-			[player2Name]: emptyStatusEffects,
+			[player1Name]: createEmptyStatusEffects(),
+			[player2Name]: createEmptyStatusEffects(),
 		},
 	};
 }
@@ -3825,16 +3873,44 @@ function recordAttack(attacker: string, hit: boolean, critical: boolean): void {
 	}
 }
 
-function recordBodyPartHit(defender: string, bodyPart: string): void {
+function recordBodyPartHit(
+	defender: string,
+	bodyPart: string,
+	damage?: number,
+): void {
 	if (!battleStatsCollector) return;
 
 	const armourStats = battleStatsCollector.armourEffects[defender];
 	if (!armourStats) return;
 
-	const partKey =
-		bodyPart.toLowerCase() as keyof typeof armourStats.bodyPartHits;
-	if (partKey in armourStats.bodyPartHits) {
-		armourStats.bodyPartHits[partKey]++;
+	// 将具体部位映射到统计分类
+	let mappedPart: keyof typeof armourStats.bodyPartHits;
+
+	const lowerPart = bodyPart.toLowerCase();
+	if (lowerPart === "head" || lowerPart === "heart" || lowerPart === "throat") {
+		mappedPart = "head";
+	} else if (
+		lowerPart === "chest" ||
+		lowerPart === "stomach" ||
+		lowerPart === "groin"
+	) {
+		mappedPart = "body";
+	} else if (lowerPart.includes("arm") || lowerPart.includes("hand")) {
+		mappedPart = "hands";
+	} else if (lowerPart.includes("leg")) {
+		mappedPart = "legs";
+	} else if (lowerPart.includes("foot")) {
+		mappedPart = "feet";
+	} else {
+		// 默认归类到身体
+		mappedPart = "body";
+	}
+
+	armourStats.bodyPartHits[mappedPart]++;
+
+	// 记录部位伤害（如果提供了伤害值）
+	if (damage !== undefined && armourStats.bodyPartDamage) {
+		armourStats.bodyPartDamage[mappedPart] += damage;
 	}
 }
 
