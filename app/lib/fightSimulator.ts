@@ -1941,7 +1941,6 @@ function action(
 									}
 
 									// TODO: yAM在Blindfire中的计算
-									yAM = armourMitigation(xBP[0], yA) / x_pen; // 护甲减伤百分数，50代表护甲减伤50%
 									xDV = variance();
 									xDMG = Math.round(
 										xBP[1] *
@@ -2678,42 +2677,47 @@ function action(
 
 			// 如果击中了护甲且找到了对应的护甲部件，应用护甲特效
 			if (hitArmour && targetArmourPiece?.effects) {
-				// 收集触发的护甲特效信息（在应用前）
-				const triggeredArmourEffects = getTriggeredArmourEffects(
-					targetArmourPiece,
-					{
-						attacker: x,
-						target: y,
-						weapon: currentWeapon,
-						bodyPart: xBP[0],
-						isCritical: xBP[1] >= 1,
-						turn: turn,
-						currentWeaponSlot: xCW,
-					},
-					yCL, // 目标当前生命值
-					y.maxLife, // 目标最大生命值
-				);
+				if (targetArmourPiece?.effects) {
+					// 收集触发的护甲特效信息（在应用前）
+					const triggeredArmourEffects = getTriggeredArmourEffects(
+						targetArmourPiece,
+						{
+							attacker: x,
+							target: y,
+							weapon: currentWeapon,
+							bodyPart: xBP[0],
+							isCritical: xBP[1] >= 1,
+							turn: turn,
+							currentWeaponSlot: xCW,
+						},
+						yCL, // 目标当前生命值
+						y.maxLife, // 目标最大生命值
+					);
 
-				xDMG = applyArmourEffectsToDamage(
-					xDMG,
-					yAM,
-					targetArmourPiece,
-					{
-						attacker: x,
-						target: y,
-						weapon: currentWeapon,
-						bodyPart: xBP[0],
-						isCritical: xBP[1] >= 1,
-						turn: turn,
-						currentWeaponSlot: xCW,
-					},
-					yCL, // 目标当前生命值
-					y.maxLife, // 目标最大生命值
-				);
+					xDMG = applyArmourEffectsToDamage(
+						xDMG,
+						yAM,
+						targetArmourPiece,
+						{
+							attacker: x,
+							target: y,
+							weapon: currentWeapon,
+							bodyPart: xBP[0],
+							isCritical: xBP[1] >= 1,
+							turn: turn,
+							currentWeaponSlot: xCW,
+						},
+						yCL, // 目标当前生命值
+						y.maxLife, // 目标最大生命值
+					);
 
-				// 更新日志信息中的护甲特效文本
-				if (logInfo && triggeredArmourEffects.length > 0) {
-					logInfo.armourEffectsText = ` [Armour: ${triggeredArmourEffects.join(", ")}]`;
+					// 更新日志信息中的护甲特效文本
+					if (logInfo && triggeredArmourEffects.length > 0) {
+						logInfo.armourEffectsText = ` [Armour: ${triggeredArmourEffects.join(", ")}]`;
+					}
+				} else {
+					// 普通护甲，直接计算减伤
+					xDMG = xDMG * (1 - yAM / 100);
 				}
 			}
 		}
