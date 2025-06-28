@@ -298,13 +298,13 @@ export interface FightPlayer {
 		legs: ArmourData;
 		feet: ArmourData;
 	};
-	attacksettings: {
+	attackSettings: {
 		primary: { setting: number; reload: boolean };
 		secondary: { setting: number; reload: boolean };
 		melee: { setting: number; reload: boolean };
 		temporary: { setting: number; reload: boolean };
 	};
-	defendsettings: {
+	defendSettings: {
 		primary: { setting: number; reload: boolean };
 		secondary: { setting: number; reload: boolean };
 		melee: { setting: number; reload: boolean };
@@ -526,6 +526,7 @@ export interface ArmourEffectProcessor {
 	name: string;
 	applyToDamage?: (
 		damage: number,
+		damageMitigation: number,
 		effectValue: number,
 		context: DamageContext,
 		targetCurrentLife?: number,

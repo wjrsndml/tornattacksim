@@ -203,6 +203,7 @@ export function applyEviscerateToIncomingDamage(
 	player: FightPlayer,
 	baseDamage: number,
 ): number {
+	// TODO: Eviscerate 计算公式错误
 	const eviscerateStacks = getStacks(player, "eviscerate");
 	if (eviscerateStacks > 0) {
 		// 每层增加额外伤害，假设基础值为 25%

@@ -31,13 +31,13 @@ interface Player {
 		legs: ArmourData;
 		feet: ArmourData;
 	};
-	attacksettings: {
+	attackSettings: {
 		primary: { setting: number; reload: boolean };
 		secondary: { setting: number; reload: boolean };
 		melee: { setting: number; reload: boolean };
 		temporary: { setting: number; reload: boolean };
 	};
-	defendsettings: {
+	defendSettings: {
 		primary: { setting: number; reload: boolean };
 		secondary: { setting: number; reload: boolean };
 		melee: { setting: number; reload: boolean };
@@ -195,8 +195,8 @@ function convertToFightPlayer(
 				? convertToFightArmour(playerData.armour.feet)
 				: getDefaultArmour("feet"),
 		},
-		attacksettings: playerData.attacksettings,
-		defendsettings: playerData.defendsettings,
+		attackSettings: playerData.attackSettings,
+		defendSettings: playerData.defendSettings,
 		perks: {
 			education: { ...defaultPerks.education, ...playerData.perks?.education },
 			faction: { ...defaultPerks.faction, ...playerData.perks?.faction },

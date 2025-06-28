@@ -55,13 +55,13 @@ interface Player {
 		legs: ArmourData;
 		feet: ArmourData;
 	};
-	attacksettings: {
+	attackSettings: {
 		primary: { setting: number; reload: boolean };
 		secondary: { setting: number; reload: boolean };
 		melee: { setting: number; reload: boolean };
 		temporary: { setting: number; reload: boolean };
 	};
-	defendsettings: {
+	defendSettings: {
 		primary: { setting: number; reload: boolean };
 		secondary: { setting: number; reload: boolean };
 		melee: { setting: number; reload: boolean };
@@ -83,8 +83,8 @@ interface PlayerConfigProps {
 	isAttacker: boolean;
 	onCopyFromOther: () => void;
 	// 新增：用于导出时获取双方的攻击设置
-	attackerSettings?: Player["attacksettings"];
-	defenderSettings?: Player["attacksettings"];
+	attackerSettings?: Player["attackSettings"];
+	defenderSettings?: Player["attackSettings"];
 }
 
 export default function PlayerConfig({
@@ -219,27 +219,27 @@ export default function PlayerConfig({
 	};
 
 	const updateAttackSettings = (
-		weaponType: keyof Player["attacksettings"],
+		weaponType: keyof Player["attackSettings"],
 		field: "setting" | "reload",
 		value: number | boolean,
 	) => {
 		updatePlayer({
-			attacksettings: {
-				...player.attacksettings,
-				[weaponType]: { ...player.attacksettings[weaponType], [field]: value },
+			attackSettings: {
+				...player.attackSettings,
+				[weaponType]: { ...player.attackSettings[weaponType], [field]: value },
 			},
 		});
 	};
 
 	const updateDefendSettings = (
-		weaponType: keyof Player["defendsettings"],
+		weaponType: keyof Player["defendSettings"],
 		field: "setting" | "reload",
 		value: number | boolean,
 	) => {
 		updatePlayer({
-			defendsettings: {
-				...player.defendsettings,
-				[weaponType]: { ...player.defendsettings[weaponType], [field]: value },
+			defendSettings: {
+				...player.defendSettings,
+				[weaponType]: { ...player.defendSettings[weaponType], [field]: value },
 			},
 		});
 	};
@@ -300,8 +300,8 @@ export default function PlayerConfig({
 				},
 			}, // 6: weapons
 			player.armour, // 7: armour
-			attackerSettings || player.attacksettings, // 8: 攻击方的攻击设置
-			defenderSettings || player.defendsettings, // 9: 防守方的攻击设置
+			attackerSettings || player.attackSettings, // 8: 攻击方的攻击设置
+			defenderSettings || player.defendSettings, // 9: 防守方的攻击设置
 			player.perks.education, // 10: educationPerks
 			player.perks.faction, // 11: factionPerks
 			player.perks.company, // 12: companyPerks
@@ -328,8 +328,8 @@ export default function PlayerConfig({
 				const passives = importData[5] || player.passives;
 				const weapons = importData[6] || player.weapons;
 				const armour = importData[7] || player.armour;
-				const attacksettings = importData[8] || player.attacksettings;
-				const defendsettings = importData[9] || player.defendsettings;
+				const attackSettings = importData[8] || player.attackSettings;
+				const defendSettings = importData[9] || player.defendSettings;
 				const education = importData[10] || player.perks.education;
 				const faction = importData[11] || player.perks.faction;
 				const company = importData[12] || player.perks.company;
@@ -353,14 +353,14 @@ export default function PlayerConfig({
 				};
 
 				// 根据当前位置选择合适的攻击设置
-				let finalAttackSettings = player.attacksettings;
-				let finalDefendSettings = player.defendsettings;
+				let finalAttackSettings = player.attackSettings;
+				let finalDefendSettings = player.defendSettings;
 				if (isAttacker) {
-					// 导入到攻击方 -> 更新 attacksettings
-					finalAttackSettings = attacksettings || player.attacksettings;
+					// 导入到攻击方 -> 更新 attackSettings
+					finalAttackSettings = attackSettings || player.attackSettings;
 				} else {
-					// 导入到防守方 -> 更新 defendsettings
-					finalDefendSettings = defendsettings || player.defendsettings;
+					// 导入到防守方 -> 更新 defendSettings
+					finalDefendSettings = defendSettings || player.defendSettings;
 				}
 
 				updatePlayer({
@@ -381,8 +381,8 @@ export default function PlayerConfig({
 						temporary: weapons.temporary || player.weapons.temporary,
 					},
 					armour,
-					attacksettings: finalAttackSettings,
-					defendsettings: finalDefendSettings,
+					attackSettings: finalAttackSettings,
+					defendSettings: finalDefendSettings,
 					perks: {
 						education,
 						faction,
@@ -394,19 +394,19 @@ export default function PlayerConfig({
 			} else if (typeof importData === "object" && !Array.isArray(importData)) {
 				// 处理对象格式（新格式兼容）
 				// 根据当前位置选择合适的攻击设置
-				// attacksettings = 攻击方的攻击设置
-				// defendsettings = 防守方的攻击设置
+				// attackSettings = 攻击方的攻击设置
+				// defendSettings = 防守方的攻击设置
 				const objAttackerSettings =
-					importData.attacksettings || player.attacksettings;
+					importData.attackSettings || player.attackSettings;
 				const objDefenderSettings =
-					importData.defendsettings || player.defendsettings;
+					importData.defendSettings || player.defendSettings;
 
 				const finalObjAttackSettings = isAttacker
 					? objAttackerSettings // 导入到攻击方：使用攻击方的攻击设置
 					: objDefenderSettings; // 导入到防守方：使用防守方的攻击设置
 
 				// 防守设置保持当前角色的设置不变
-				const finalObjDefendSettings = player.defendsettings;
+				const finalObjDefendSettings = player.defendSettings;
 
 				updatePlayer({
 					name: importData.name || player.name,
@@ -415,8 +415,8 @@ export default function PlayerConfig({
 					passives: importData.passives || player.passives,
 					weapons: importData.weapons || player.weapons,
 					armour: importData.armour || player.armour,
-					attacksettings: finalObjAttackSettings,
-					defendsettings: finalObjDefendSettings,
+					attackSettings: finalObjAttackSettings,
+					defendSettings: finalObjDefendSettings,
 					perks: importData.perks || player.perks,
 				});
 			} else {
@@ -789,24 +789,24 @@ export default function PlayerConfig({
 														type="number"
 														value={
 															isAttacker
-																? player.attacksettings[
-																		weaponType as keyof Player["attacksettings"]
+																? player.attackSettings[
+																		weaponType as keyof Player["attackSettings"]
 																	].setting
-																: player.defendsettings[
-																		weaponType as keyof Player["defendsettings"]
+																: player.defendSettings[
+																		weaponType as keyof Player["defendSettings"]
 																	].setting
 														}
 														onChange={(e) => {
 															const value = parseInt(e.target.value) || 0;
 															if (isAttacker) {
 																updateAttackSettings(
-																	weaponType as keyof Player["attacksettings"],
+																	weaponType as keyof Player["attackSettings"],
 																	"setting",
 																	value,
 																);
 															} else {
 																updateDefendSettings(
-																	weaponType as keyof Player["defendsettings"],
+																	weaponType as keyof Player["defendSettings"],
 																	"setting",
 																	value,
 																);
@@ -832,23 +832,23 @@ export default function PlayerConfig({
 																type="checkbox"
 																checked={
 																	isAttacker
-																		? player.attacksettings[
-																				weaponType as keyof Player["attacksettings"]
+																		? player.attackSettings[
+																				weaponType as keyof Player["attackSettings"]
 																			].reload
-																		: player.defendsettings[
-																				weaponType as keyof Player["defendsettings"]
+																		: player.defendSettings[
+																				weaponType as keyof Player["defendSettings"]
 																			].reload
 																}
 																onChange={(e) => {
 																	if (isAttacker) {
 																		updateAttackSettings(
-																			weaponType as keyof Player["attacksettings"],
+																			weaponType as keyof Player["attackSettings"],
 																			"reload",
 																			e.target.checked,
 																		);
 																	} else {
 																		updateDefendSettings(
-																			weaponType as keyof Player["defendsettings"],
+																			weaponType as keyof Player["defendSettings"],
 																			"reload",
 																			e.target.checked,
 																		);
