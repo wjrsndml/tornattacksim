@@ -172,8 +172,8 @@ export function fight(
 		[0, 0],
 	];
 
-	let h_set = JSON.parse(JSON.stringify(hero.attacksettings));
-	let v_set = JSON.parse(JSON.stringify(villain.defendsettings));
+	let h_set = JSON.parse(JSON.stringify(hero.attackSettings));
+	let v_set = JSON.parse(JSON.stringify(villain.defendSettings));
 	let h_temps: TempEffects = [];
 	let v_temps: TempEffects = [];
 
@@ -818,6 +818,7 @@ export function armourMitigation(bodyPart: string, armour: ArmourSet): number {
 	}
 
 	if (coverage.length === 0) {
+		// 没打中护甲，返回0
 		return 0;
 	}
 
@@ -1330,7 +1331,6 @@ function action(
 	recordWeaponChoice(x.name, x.position, xCW);
 
 	// 应用技能、改装、临时效果
-	// 应用技能、改装、临时效�?
 	const pmt = applyPMT(
 		x,
 		y,
@@ -1549,17 +1549,18 @@ function action(
 		let xBHC: number = 0,
 			xFHC: number = 0,
 			xBP: [string, number] = ["", 0],
-			xMD: number = 0,
-			yDM: number = 0,
-			xWDM: number = 0,
-			yAM: number = 0,
-			xHOM: boolean = false,
-			xDV: number = 0,
-			xDMG = 0;
-		let x_pen = 1,
-			x_ammo_dmg = 1;
+			xMD: number = 0, // maxDamage
+			yDM: number = 0, // damageMitigation
+			xWDM: number = 0, // weaponDamageMulti
+			yAM: number = 0, // armourMitigation
+			xHOM: boolean = false, // hitOrMiss
+			xDV: number = 0, // variance
+			xDMG = 0; // damage
+		let x_pen = 1, // penetration
+			x_ammo_dmg = 1; // ammoDamageMulti
+		let hitArmour = false;
 
-		// 非伤害性临时武器不产生命中率和伤害�?
+		// 非伤害性临时武器不产生命中率和伤害
 		const currentWeapon = xW[xCW as keyof typeof xW];
 
 		// 应用回合前钩子（如Wind-up特效）
@@ -1692,12 +1693,9 @@ function action(
 					}
 				}
 
-				xMD = maxDamage(xSTR);
-				yDM = (100 - damageMitigation(yDEF, xSTR)) / 100;
-				xWDM = xW[xCW as keyof typeof xW].damage / 10;
-
 				// 应用武器特效到护甲减免
 				const baseArmourMitigation = armourMitigation(xBP[0], yA);
+				hitArmour = baseArmourMitigation > 0;
 				const modifiedArmourMitigation = applyWeaponBonusesToArmour(
 					baseArmourMitigation,
 					currentWeapon,
@@ -1711,7 +1709,11 @@ function action(
 						currentWeaponSlot: xCW,
 					},
 				);
-				yAM = (100 - modifiedArmourMitigation / x_pen) / 100;
+				yAM = modifiedArmourMitigation / x_pen; // 护甲减伤百分数，50代表护甲减伤50%
+
+				xMD = maxDamage(xSTR);
+				yDM = damageMitigation(yDEF, xSTR); // 防御减伤百分数，50代表def减伤50%
+				xWDM = xW[xCW as keyof typeof xW].damage / 10;
 				xDV = variance();
 
 				// 应用武器特效到伤害加成（如Powerful、Deadeye等）
@@ -1734,9 +1736,8 @@ function action(
 				xDMG = Math.round(
 					xBP[1] *
 						xMD *
-						yDM *
+						(1 - yDM / 100) *
 						xWDM *
-						yAM *
 						xDV *
 						(1 + modifiedDamageBonus / 100) *
 						x_ammo_dmg,
@@ -1939,14 +1940,14 @@ function action(
 										}
 									}
 
-									yAM = (100 - armourMitigation(xBP[0], yA) / x_pen) / 100;
+									// TODO: yAM在Blindfire中的计算
+									yAM = armourMitigation(xBP[0], yA) / x_pen; // 护甲减伤百分数，50代表护甲减伤50%
 									xDV = variance();
 									xDMG = Math.round(
 										xBP[1] *
 											xMD *
-											yDM *
 											xWDM *
-											yAM *
+											(1 - yDM / 100) *
 											xDV *
 											(1 + x_dmg_bonus / 100) *
 											x_ammo_dmg,
@@ -2675,8 +2676,8 @@ function action(
 				targetArmourPiece = yA[armourSlot];
 			}
 
-			// 如果找到了对应的护甲部件，应用护甲特效
-			if (targetArmourPiece?.effects) {
+			// 如果击中了护甲且找到了对应的护甲部件，应用护甲特效
+			if (hitArmour && targetArmourPiece?.effects) {
 				// 收集触发的护甲特效信息（在应用前）
 				const triggeredArmourEffects = getTriggeredArmourEffects(
 					targetArmourPiece,
@@ -2695,6 +2696,7 @@ function action(
 
 				xDMG = applyArmourEffectsToDamage(
 					xDMG,
+					yAM,
 					targetArmourPiece,
 					{
 						attacker: x,
@@ -2963,6 +2965,7 @@ function action(
 						);
 
 						// 应用Eviscerate效果
+						// TODO: Eviscerate效果计算公式错误
 						if (extraDamage > 0) {
 							extraDamage = applyEviscerateToIncomingDamage(y, extraDamage);
 						}

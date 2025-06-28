@@ -9,7 +9,11 @@ import {
 	Zap,
 } from "lucide-react";
 import { useEffect, useId, useState } from "react";
-import { getCompanyList, loadGameData } from "../lib/dataLoader";
+import {
+	getCompanyList,
+	getCompanyType,
+	loadGameData,
+} from "../lib/dataLoader";
 import type {
 	ArmourData,
 	BattleStats,
@@ -20,6 +24,7 @@ import type {
 	PropertyPerks,
 	WeaponData,
 } from "../lib/fightSimulatorTypes";
+import type { TornApiResponse } from "../lib/tornApiResponse";
 import ArmourCoverage from "./ArmourCoverage";
 import ArmourSelector from "./ArmourSelector";
 import { Button } from "./ui/button";
@@ -55,13 +60,13 @@ interface Player {
 		legs: ArmourData;
 		feet: ArmourData;
 	};
-	attacksettings: {
+	attackSettings: {
 		primary: { setting: number; reload: boolean };
 		secondary: { setting: number; reload: boolean };
 		melee: { setting: number; reload: boolean };
 		temporary: { setting: number; reload: boolean };
 	};
-	defendsettings: {
+	defendSettings: {
 		primary: { setting: number; reload: boolean };
 		secondary: { setting: number; reload: boolean };
 		melee: { setting: number; reload: boolean };
@@ -83,8 +88,8 @@ interface PlayerConfigProps {
 	isAttacker: boolean;
 	onCopyFromOther: () => void;
 	// 新增：用于导出时获取双方的攻击设置
-	attackerSettings?: Player["attacksettings"];
-	defenderSettings?: Player["attacksettings"];
+	attackerSettings?: Player["attackSettings"];
+	defenderSettings?: Player["attackSettings"];
 }
 
 export default function PlayerConfig({
@@ -103,6 +108,10 @@ export default function PlayerConfig({
 	const [activeTab, setActiveTab] = useState<
 		"stats" | "weapons" | "armour" | "combat" | "advanced"
 	>("stats");
+
+	// 新增：导入相关的状态
+	const [importKey, setImportKey] = useState("");
+	const [isImporting, setIsImporting] = useState(false);
 
 	const playerId = isAttacker ? "attacker" : "defender";
 
@@ -219,27 +228,27 @@ export default function PlayerConfig({
 	};
 
 	const updateAttackSettings = (
-		weaponType: keyof Player["attacksettings"],
+		weaponType: keyof Player["attackSettings"],
 		field: "setting" | "reload",
 		value: number | boolean,
 	) => {
 		updatePlayer({
-			attacksettings: {
-				...player.attacksettings,
-				[weaponType]: { ...player.attacksettings[weaponType], [field]: value },
+			attackSettings: {
+				...player.attackSettings,
+				[weaponType]: { ...player.attackSettings[weaponType], [field]: value },
 			},
 		});
 	};
 
 	const updateDefendSettings = (
-		weaponType: keyof Player["defendsettings"],
+		weaponType: keyof Player["defendSettings"],
 		field: "setting" | "reload",
 		value: number | boolean,
 	) => {
 		updatePlayer({
-			defendsettings: {
-				...player.defendsettings,
-				[weaponType]: { ...player.defendsettings[weaponType], [field]: value },
+			defendSettings: {
+				...player.defendSettings,
+				[weaponType]: { ...player.defendSettings[weaponType], [field]: value },
 			},
 		});
 	};
@@ -300,8 +309,8 @@ export default function PlayerConfig({
 				},
 			}, // 6: weapons
 			player.armour, // 7: armour
-			attackerSettings || player.attacksettings, // 8: 攻击方的攻击设置
-			defenderSettings || player.defendsettings, // 9: 防守方的攻击设置
+			attackerSettings || player.attackSettings, // 8: 攻击方的攻击设置
+			defenderSettings || player.defendSettings, // 9: 防守方的攻击设置
 			player.perks.education, // 10: educationPerks
 			player.perks.faction, // 11: factionPerks
 			player.perks.company, // 12: companyPerks
@@ -328,8 +337,8 @@ export default function PlayerConfig({
 				const passives = importData[5] || player.passives;
 				const weapons = importData[6] || player.weapons;
 				const armour = importData[7] || player.armour;
-				const attacksettings = importData[8] || player.attacksettings;
-				const defendsettings = importData[9] || player.defendsettings;
+				const attackSettings = importData[8] || player.attackSettings;
+				const defendSettings = importData[9] || player.defendSettings;
 				const education = importData[10] || player.perks.education;
 				const faction = importData[11] || player.perks.faction;
 				const company = importData[12] || player.perks.company;
@@ -353,14 +362,14 @@ export default function PlayerConfig({
 				};
 
 				// 根据当前位置选择合适的攻击设置
-				let finalAttackSettings = player.attacksettings;
-				let finalDefendSettings = player.defendsettings;
+				let finalAttackSettings = player.attackSettings;
+				let finalDefendSettings = player.defendSettings;
 				if (isAttacker) {
-					// 导入到攻击方 -> 更新 attacksettings
-					finalAttackSettings = attacksettings || player.attacksettings;
+					// 导入到攻击方 -> 更新 attackSettings
+					finalAttackSettings = attackSettings || player.attackSettings;
 				} else {
-					// 导入到防守方 -> 更新 defendsettings
-					finalDefendSettings = defendsettings || player.defendsettings;
+					// 导入到防守方 -> 更新 defendSettings
+					finalDefendSettings = defendSettings || player.defendSettings;
 				}
 
 				updatePlayer({
@@ -381,8 +390,8 @@ export default function PlayerConfig({
 						temporary: weapons.temporary || player.weapons.temporary,
 					},
 					armour,
-					attacksettings: finalAttackSettings,
-					defendsettings: finalDefendSettings,
+					attackSettings: finalAttackSettings,
+					defendSettings: finalDefendSettings,
 					perks: {
 						education,
 						faction,
@@ -394,19 +403,19 @@ export default function PlayerConfig({
 			} else if (typeof importData === "object" && !Array.isArray(importData)) {
 				// 处理对象格式（新格式兼容）
 				// 根据当前位置选择合适的攻击设置
-				// attacksettings = 攻击方的攻击设置
-				// defendsettings = 防守方的攻击设置
+				// attackSettings = 攻击方的攻击设置
+				// defendSettings = 防守方的攻击设置
 				const objAttackerSettings =
-					importData.attacksettings || player.attacksettings;
+					importData.attackSettings || player.attackSettings;
 				const objDefenderSettings =
-					importData.defendsettings || player.defendsettings;
+					importData.defendSettings || player.defendSettings;
 
 				const finalObjAttackSettings = isAttacker
 					? objAttackerSettings // 导入到攻击方：使用攻击方的攻击设置
 					: objDefenderSettings; // 导入到防守方：使用防守方的攻击设置
 
 				// 防守设置保持当前角色的设置不变
-				const finalObjDefendSettings = player.defendsettings;
+				const finalObjDefendSettings = player.defendSettings;
 
 				updatePlayer({
 					name: importData.name || player.name,
@@ -415,8 +424,8 @@ export default function PlayerConfig({
 					passives: importData.passives || player.passives,
 					weapons: importData.weapons || player.weapons,
 					armour: importData.armour || player.armour,
-					attacksettings: finalObjAttackSettings,
-					defendsettings: finalObjDefendSettings,
+					attackSettings: finalObjAttackSettings,
+					defendSettings: finalObjDefendSettings,
 					perks: importData.perks || player.perks,
 				});
 			} else {
@@ -428,6 +437,362 @@ export default function PlayerConfig({
 		} catch (error) {
 			console.error("Import error:", error);
 			alert("导入失败：无效的JSON格式或数据结构");
+		}
+	};
+
+	const handleTornImport = async () => {
+		if (!importKey.trim()) {
+			alert("请输入API Key");
+			return;
+		}
+
+		await loadGameData();
+
+		setIsImporting(true);
+		try {
+			const response = await fetch(
+				`https://api.torn.com/user/?selections=profile,basic,equipment,perks,battlestats&key=${importKey.trim()}`,
+			);
+
+			if (response.status !== 200) {
+				throw new Error(`API请求失败，状态码: ${response.status}`);
+			}
+
+			const data = await response.json();
+
+			if (data.error) {
+				throw new Error(`API返回错误: ${data.error}`);
+			}
+
+			// 提取公司ID并获取公司信息
+			if (data.job?.company_id) {
+				try {
+					const companyResponse = await fetch(
+						`https://api.torn.com/company/${data.job.company_id}?selections=&key=${importKey.trim()}`,
+					);
+
+					if (companyResponse.status === 200) {
+						const companyData = await companyResponse.json();
+						if (!companyData.error) {
+							Object.assign(data, companyData);
+						}
+					}
+				} catch (companyError) {
+					console.warn("获取公司信息失败:", companyError);
+				}
+			}
+			console.log(data);
+
+			if (isAttacker) {
+				updatePlayerFromTornData(data);
+				console.log("Torn Attacker API数据获取成功:", data);
+			} else {
+				updatePlayerFromTornData(data);
+				console.log("Torn Defender API数据获取成功:", data);
+			}
+		} catch (error) {
+			console.error("Torn API导入错误:", error);
+			alert(`导入失败: ${error instanceof Error ? error.message : "未知错误"}`);
+		} finally {
+			setIsImporting(false);
+		}
+	};
+
+	const updatePlayerFromTornData = (tornData: TornApiResponse) => {
+		try {
+			console.log("开始更新玩家属性，Torn数据:", tornData);
+
+			const updates: Partial<Player> = {};
+
+			// 更新基础信息
+			if (tornData.name) {
+				updates.name = tornData.name;
+			}
+
+			// 更新生命值
+			if (tornData.life) {
+				updates.life = tornData.life.maximum;
+			}
+
+			// 更新基础属性
+			if (tornData.strength) {
+				updates.stats = {
+					strength: tornData.strength,
+					speed: tornData.speed,
+					defense: tornData.defense,
+					dexterity: tornData.dexterity,
+				};
+			}
+
+			// 更新被动属性
+			updates.passives = {
+				strength: tornData.strength_modifier,
+				speed: tornData.speed_modifier,
+				defense: tornData.defense_modifier,
+				dexterity: tornData.dexterity_modifier,
+			};
+
+			// 初始化perks更新对象
+			const perksUpdates: Partial<Player["perks"]> = {};
+
+			// 更新教育技能
+			if (tornData.education_perks) {
+				const educationPerks: EducationPerks = {
+					damage: tornData.education_perks.some((perk: string) =>
+						perk.includes("+ 1% damage"),
+					),
+					meleedamage: tornData.education_perks.some((perk: string) =>
+						perk.includes("+ 2% melee damage"),
+					),
+					japanesedamage: tornData.education_perks.some((perk: string) =>
+						perk.includes("+ 10% Japanese blade damage"),
+					),
+					tempdamage: tornData.education_perks.some((perk: string) =>
+						perk.includes("+ 5% temporary weapon damage"),
+					),
+					needleeffect: tornData.education_perks.some((perk: string) =>
+						perk.includes("+ 10% steroid effectiveness"),
+					),
+					fistdamage: tornData.education_perks.some((perk: string) =>
+						perk.includes("+ 100% fist damage"),
+					),
+					neckdamage: tornData.education_perks.some((perk: string) =>
+						perk.includes("+ 10% throat damage"),
+					),
+					critchance: tornData.education_perks.some((perk: string) =>
+						perk.includes("+ 3% critical hit rate"),
+					),
+					ammocontrol1: tornData.education_perks.some(
+						(perk: string) =>
+							perk.includes("+ 5% ammo management") ||
+							perk.includes("+ 25% ammo management"),
+					),
+					ammocontrol2: tornData.education_perks.some(
+						(perk: string) =>
+							perk.includes("+ 20% ammo management") ||
+							perk.includes("+ 25% ammo management"),
+					),
+					machinegunaccuracy: tornData.education_perks.some((perk: string) =>
+						perk.includes("+ 1.0 machine gun accuracy"),
+					),
+					smgaccuracy: tornData.education_perks.some((perk: string) =>
+						perk.includes("+ 1.0 submachine accuracy"),
+					),
+					pistolaccuracy: tornData.education_perks.some((perk: string) =>
+						perk.includes("+ 1.0 pistol accuracy"),
+					),
+					rifleaccuracy: tornData.education_perks.some((perk: string) =>
+						perk.includes("+ 1.0 rifle accuracy"),
+					),
+					heavyartilleryaccuracy: tornData.education_perks.some(
+						(perk: string) => perk.includes("+ 1.0 heavy artillery accuracy"),
+					),
+					shotgunaccuracy: tornData.education_perks.some((perk: string) =>
+						perk.includes("+ 1.0 shotgun accuracy"),
+					),
+					temporaryaccuracy: tornData.education_perks.some((perk: string) =>
+						perk.includes("+ 1.0 temporary weapon accuracy"),
+					),
+					preferKick: tornData.education_perks.some((perk: string) =>
+						perk.includes("Kick attack unlocked"),
+					),
+				};
+				perksUpdates.education = educationPerks;
+			}
+
+			// 更新派系技能
+			if (tornData.faction_perks) {
+				const factionPerks: FactionPerks = {
+					accuracy: tornData.faction_perks.some((perk: string) =>
+						perk.includes("+ 2% accuracy"),
+					)
+						? 2
+						: 0,
+					damage: tornData.faction_perks.some((perk: string) =>
+						perk.includes("+ 2% damage"),
+					)
+						? 2
+						: 0,
+				};
+				perksUpdates.faction = factionPerks;
+			}
+
+			// 更新公司技能
+			if (tornData.job_perks) {
+				const companyPerks: CompanyPerks = {
+					name: getCompanyType(tornData.job.company_type),
+					star: tornData.company.rating,
+				};
+				perksUpdates.company = companyPerks;
+			}
+
+			// 更新房产技能
+			if (tornData.property_perks) {
+				const propertyPerks: PropertyPerks = {
+					damage: tornData.property_perks.some((perk: string) =>
+						perk.includes("+ 2% damage"),
+					),
+				};
+				perksUpdates.property = propertyPerks;
+				console.log("propertyPerks", propertyPerks);
+			}
+
+			// 更新成就技能
+			if (tornData.merit_perks) {
+				console.log("tornData.merit_perks", tornData.merit_perks);
+				const meritPerks: MeritPerks = {
+					critrate: tornData.merit_perks.some((perk: string) =>
+						perk.includes("critical hit rate"),
+					)
+						? parseInt(
+								tornData.merit_perks
+									.find((perk: string) => perk.includes("critical hit rate"))
+									?.match(/\d+/)?.[0] || "0",
+							)
+						: 0,
+					primarymastery: tornData.merit_perks.some((perk: string) =>
+						perk.includes("primary"),
+					)
+						? parseInt(
+								tornData.merit_perks
+									.find((perk: string) => perk.includes("primary"))
+									?.match(/\d+/)?.[0] || "0",
+							)
+						: 0,
+					secondarymastery: tornData.merit_perks.some((perk: string) =>
+						perk.includes("secondary"),
+					)
+						? parseInt(
+								tornData.merit_perks
+									.find((perk: string) => perk.includes("secondary"))
+									?.match(/\d+/)?.[0] || "0",
+							)
+						: 0,
+					meleemastery: tornData.merit_perks.some((perk: string) =>
+						perk.includes("melee"),
+					)
+						? parseInt(
+								tornData.merit_perks
+									.find((perk: string) => perk.includes("melee"))
+									?.match(/\d+/)?.[0] || "0",
+							)
+						: 0,
+					temporarymastery: tornData.merit_perks.some((perk: string) =>
+						perk.includes("temporary"),
+					)
+						? parseInt(
+								tornData.merit_perks
+									.find((perk: string) => perk.includes("temporary"))
+									?.match(/\d+/)?.[0] || "0",
+							)
+						: 0,
+					clubbingmastery: tornData.merit_perks.some((perk: string) =>
+						perk.includes("clubbing"),
+					)
+						? parseInt(
+								tornData.merit_perks
+									.find((perk: string) => perk.includes("clubbing"))
+									?.match(/\d+/)?.[0] || "0",
+							)
+						: 0,
+					heavyartillerymastery: tornData.merit_perks.some((perk: string) =>
+						perk.includes("heavy artillery"),
+					)
+						? parseInt(
+								tornData.merit_perks
+									.find((perk: string) => perk.includes("heavy artillery"))
+									?.match(/\d+/)?.[0] || "0",
+							)
+						: 0,
+					machinegunmastery: tornData.merit_perks.some((perk: string) =>
+						perk.includes("machine gun"),
+					)
+						? parseInt(
+								tornData.merit_perks
+									.find((perk: string) => perk.includes("machine gun"))
+									?.match(/\d+/)?.[0] || "0",
+							)
+						: 0,
+					mechanicalmastery: tornData.merit_perks.some((perk: string) =>
+						perk.includes("mechanical"),
+					)
+						? parseInt(
+								tornData.merit_perks
+									.find((perk: string) => perk.includes("mechanical"))
+									?.match(/\d+/)?.[0] || "0",
+							)
+						: 0,
+					piercingmastery: tornData.merit_perks.some((perk: string) =>
+						perk.includes("piercing"),
+					)
+						? parseInt(
+								tornData.merit_perks
+									.find((perk: string) => perk.includes("piercing"))
+									?.match(/\d+/)?.[0] || "0",
+							)
+						: 0,
+					pistolmastery: tornData.merit_perks.some((perk: string) =>
+						perk.includes("pistol"),
+					)
+						? parseInt(
+								tornData.merit_perks
+									.find((perk: string) => perk.includes("pistol"))
+									?.match(/\d+/)?.[0] || "0",
+							)
+						: 0,
+					riflemastery: tornData.merit_perks.some((perk: string) =>
+						perk.includes("rifle"),
+					)
+						? parseInt(
+								tornData.merit_perks
+									.find((perk: string) => perk.includes("rifle"))
+									?.match(/\d+/)?.[0] || "0",
+							)
+						: 0,
+					shotgunmastery: tornData.merit_perks.some((perk: string) =>
+						perk.includes("shotgun"),
+					)
+						? parseInt(
+								tornData.merit_perks
+									.find((perk: string) => perk.includes("shotgun"))
+									?.match(/\d+/)?.[0] || "0",
+							)
+						: 0,
+					slashingmastery: tornData.merit_perks.some((perk: string) =>
+						perk.includes("slashing"),
+					)
+						? parseInt(
+								tornData.merit_perks
+									.find((perk: string) => perk.includes("slashing"))
+									?.match(/\d+/)?.[0] || "0",
+							)
+						: 0,
+					smgmastery: tornData.merit_perks.some((perk: string) =>
+						perk.includes("smg"),
+					)
+						? parseInt(
+								tornData.merit_perks
+									.find((perk: string) => perk.includes("smg"))
+									?.match(/\d+/)?.[0] || "0",
+							)
+						: 0,
+				};
+				perksUpdates.merit = meritPerks;
+			}
+
+			const finalUpdates = {
+				...updates,
+				perks: {
+					...player.perks,
+					...perksUpdates,
+				},
+			};
+
+			// 一次性更新所有数据
+			updatePlayer(finalUpdates);
+		} catch (error) {
+			console.error("更新玩家属性时出错:", error);
+			alert("更新玩家属性失败，请检查数据格式");
 		}
 	};
 
@@ -487,6 +852,40 @@ export default function PlayerConfig({
 						/>
 						<div className="text-xs text-slate-500 mt-1">
 							此名称将在战斗日志中显示
+						</div>
+					</div>
+
+					{/* 新增：导入配置行 */}
+					<div className="space-y-2 mt-4">
+						<Label htmlFor={`${playerId}-import`}>导入配置</Label>
+						<div className="flex space-x-2">
+							<Input
+								id={`${playerId}-import`}
+								type="text"
+								value={importKey}
+								onChange={(e) => setImportKey(e.target.value)}
+								placeholder="输入Torn API Key..."
+								className="flex-1"
+								aria-label={`${playerName}导入配置`}
+							/>
+							<Button
+								variant="secondary"
+								className="transition-colors duration-200"
+								onClick={handleTornImport}
+								disabled={isImporting || !importKey.trim()}
+							>
+								{isImporting ? (
+									<span className="flex items-center gap-2">
+										<div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+										导入中...
+									</span>
+								) : (
+									"导入"
+								)}
+							</Button>
+						</div>
+						<div className="text-xs text-slate-500">
+							输入Torn API Key获取玩家装备和技能数据
 						</div>
 					</div>
 				</CardContent>
@@ -789,24 +1188,24 @@ export default function PlayerConfig({
 														type="number"
 														value={
 															isAttacker
-																? player.attacksettings[
-																		weaponType as keyof Player["attacksettings"]
+																? player.attackSettings[
+																		weaponType as keyof Player["attackSettings"]
 																	].setting
-																: player.defendsettings[
-																		weaponType as keyof Player["defendsettings"]
+																: player.defendSettings[
+																		weaponType as keyof Player["defendSettings"]
 																	].setting
 														}
 														onChange={(e) => {
 															const value = parseInt(e.target.value) || 0;
 															if (isAttacker) {
 																updateAttackSettings(
-																	weaponType as keyof Player["attacksettings"],
+																	weaponType as keyof Player["attackSettings"],
 																	"setting",
 																	value,
 																);
 															} else {
 																updateDefendSettings(
-																	weaponType as keyof Player["defendsettings"],
+																	weaponType as keyof Player["defendSettings"],
 																	"setting",
 																	value,
 																);
@@ -832,23 +1231,23 @@ export default function PlayerConfig({
 																type="checkbox"
 																checked={
 																	isAttacker
-																		? player.attacksettings[
-																				weaponType as keyof Player["attacksettings"]
+																		? player.attackSettings[
+																				weaponType as keyof Player["attackSettings"]
 																			].reload
-																		: player.defendsettings[
-																				weaponType as keyof Player["defendsettings"]
+																		: player.defendSettings[
+																				weaponType as keyof Player["defendSettings"]
 																			].reload
 																}
 																onChange={(e) => {
 																	if (isAttacker) {
 																		updateAttackSettings(
-																			weaponType as keyof Player["attacksettings"],
+																			weaponType as keyof Player["attackSettings"],
 																			"reload",
 																			e.target.checked,
 																		);
 																	} else {
 																		updateDefendSettings(
-																			weaponType as keyof Player["defendsettings"],
+																			weaponType as keyof Player["defendSettings"],
 																			"reload",
 																			e.target.checked,
 																		);

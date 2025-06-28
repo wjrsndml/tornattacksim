@@ -110,13 +110,13 @@ export function createTestPlayer(
 			legs: { armour: 12, set: "Test Set" },
 			feet: { armour: 6, set: "Test Set" },
 		},
-		attacksettings: {
+		attackSettings: {
 			primary: { setting: 1, reload: false },
 			secondary: { setting: 1, reload: false },
 			melee: { setting: 1, reload: false },
 			temporary: { setting: 1, reload: false },
 		},
-		defendsettings: {
+		defendSettings: {
 			primary: { setting: 1, reload: false },
 			secondary: { setting: 1, reload: false },
 			melee: { setting: 1, reload: false },

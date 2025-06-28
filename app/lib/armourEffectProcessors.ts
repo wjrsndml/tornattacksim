@@ -45,11 +45,12 @@ const ImpenetrableProcessor: ArmourEffectProcessor = {
 	},
 	applyToDamage: (
 		damage: number,
+		damageMitigation: number,
 		effectValue: number,
 		_context: DamageContext,
 	) => {
 		const reduction = effectValue / 100;
-		const reducedDamage = damage * (1 - reduction);
+		const reducedDamage = damage * (1 - reduction - damageMitigation / 100);
 		addTriggeredArmourEffect("Impenetrable");
 		return Math.round(reducedDamage);
 	},
@@ -64,11 +65,12 @@ const ImpregnableProcessor: ArmourEffectProcessor = {
 	},
 	applyToDamage: (
 		damage: number,
+		damageMitigation: number,
 		effectValue: number,
 		_context: DamageContext,
 	) => {
 		const reduction = effectValue / 100;
-		const reducedDamage = damage * (1 - reduction);
+		const reducedDamage = damage * (1 - reduction - damageMitigation / 100);
 		addTriggeredArmourEffect("Impregnable");
 		return Math.round(reducedDamage);
 	},
@@ -90,13 +92,14 @@ const InsurmountableProcessor: ArmourEffectProcessor = {
 	},
 	applyToDamage: (
 		damage: number,
+		damageMitigation: number,
 		effectValue: number,
 		_context: DamageContext,
 		_targetCurrentLife?: number,
 		_targetMaxLife?: number,
 	) => {
 		const reduction = effectValue / 100;
-		const reducedDamage = damage * (1 - reduction);
+		const reducedDamage = damage * (1 - reduction - damageMitigation / 100);
 		addTriggeredArmourEffect("Insurmountable");
 		return Math.round(reducedDamage);
 	},
@@ -109,6 +112,7 @@ const ImpassableProcessor: ArmourEffectProcessor = {
 	triggerCondition: () => true, // 总是可能触发
 	applyToDamage: (
 		damage: number,
+		damageMitigation: number,
 		effectValue: number,
 		_context: DamageContext,
 	) => {
@@ -118,7 +122,7 @@ const ImpassableProcessor: ArmourEffectProcessor = {
 			addTriggeredArmourEffect("Impassable");
 			return 0;
 		}
-		return damage;
+		return damage * (1 - damageMitigation / 100);
 	},
 };
 
@@ -144,6 +148,7 @@ export function getArmourEffectProcessor(
  */
 export function applyArmourEffectsToDamage(
 	damage: number,
+	damageMitigation: number,
 	armourPiece: { effects?: Array<{ name: string; value: number }> },
 	context: DamageContext,
 	targetCurrentLife?: number,
@@ -176,6 +181,7 @@ export function applyArmourEffectsToDamage(
 			) {
 				modifiedDamage = processor.applyToDamage(
 					modifiedDamage,
+					damageMitigation,
 					effect.value,
 					context,
 					targetCurrentLife,
