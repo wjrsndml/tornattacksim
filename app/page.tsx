@@ -48,13 +48,13 @@ interface Player {
 		legs: ArmourData;
 		feet: ArmourData;
 	};
-	attacksettings: {
+	attackSettings: {
 		primary: { setting: number; reload: boolean };
 		secondary: { setting: number; reload: boolean };
 		melee: { setting: number; reload: boolean };
 		temporary: { setting: number; reload: boolean };
 	};
-	defendsettings: {
+	defendSettings: {
 		primary: { setting: number; reload: boolean };
 		secondary: { setting: number; reload: boolean };
 		melee: { setting: number; reload: boolean };
@@ -287,13 +287,13 @@ const createDefaultPlayer = (name: string, isAttacker: boolean): Player => {
 			temporary: defaultTemporary,
 		},
 		armour: defaultArmour,
-		attacksettings: {
+		attackSettings: {
 			primary: { setting: isAttacker ? 1 : 0, reload: true },
 			secondary: { setting: isAttacker ? 0 : 0, reload: true },
 			melee: { setting: isAttacker ? 2 : 0, reload: false },
 			temporary: { setting: isAttacker ? 0 : 0, reload: false },
 		},
-		defendsettings: {
+		defendSettings: {
 			primary: { setting: isAttacker ? 0 : 5, reload: true },
 			secondary: { setting: isAttacker ? 0 : 3, reload: true },
 			melee: { setting: isAttacker ? 0 : 2, reload: false },
@@ -603,8 +603,8 @@ export default function Home() {
 						playerName="Attacker"
 						isAttacker={true}
 						onCopyFromOther={() => copyPlayer(player2, 1)}
-						attackerSettings={player1.attacksettings}
-						defenderSettings={player2.defendsettings}
+						attackerSettings={player1.attackSettings}
+						defenderSettings={player2.defendSettings}
 					/>
 				</div>
 
@@ -616,8 +616,8 @@ export default function Home() {
 						playerName="Defender"
 						isAttacker={false}
 						onCopyFromOther={() => copyPlayer(player1, 2)}
-						attackerSettings={player1.attacksettings}
-						defenderSettings={player2.defendsettings}
+						attackerSettings={player1.attackSettings}
+						defenderSettings={player2.defendSettings}
 					/>
 				</div>
 

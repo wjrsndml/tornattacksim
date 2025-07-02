@@ -298,13 +298,13 @@ export interface FightPlayer {
 		legs: ArmourData;
 		feet: ArmourData;
 	};
-	attacksettings: {
+	attackSettings: {
 		primary: { setting: number; reload: boolean };
 		secondary: { setting: number; reload: boolean };
 		melee: { setting: number; reload: boolean };
 		temporary: { setting: number; reload: boolean };
 	};
-	defendsettings: {
+	defendSettings: {
 		primary: { setting: number; reload: boolean };
 		secondary: { setting: number; reload: boolean };
 		melee: { setting: number; reload: boolean };
@@ -524,19 +524,20 @@ export interface WeaponBonusEffects {
 // 护甲特效处理器接口
 export interface ArmourEffectProcessor {
 	name: string;
-	description?: string;
-	triggerCondition?: (
-		context: DamageContext,
-		targetCurrentLife?: number,
-		targetMaxLife?: number,
-	) => boolean;
-	applyToDamageBonus?: (
-		baseDamageBonus: number,
+	applyToDamage?: (
+		damage: number,
+		damageMitigation: number,
 		effectValue: number,
 		context: DamageContext,
 		targetCurrentLife?: number,
 		targetMaxLife?: number,
 	) => number;
+	description: string;
+	triggerCondition?: (
+		context: DamageContext,
+		targetCurrentLife?: number,
+		targetMaxLife?: number,
+	) => boolean;
 }
 
 // 战斗统计收集器接口

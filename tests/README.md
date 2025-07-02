@@ -51,6 +51,19 @@ runSpecificBonusTypeTests('status');     // 或 '状态'
 runSpecificBonusTypeTests('conditional'); // 或 '条件'
 ```
 
+### 运行单个特效测试 ✨ 新功能
+```typescript
+import { runSingleBonusTest, listAvailableBonuses } from './tests/weaponBonusTests';
+
+// 测试单个特效
+runSingleBonusTest('Powerful');    // 测试强力特效
+runSingleBonusTest('Deadly');      // 测试致命特效
+runSingleBonusTest('Berserk');     // 测试狂暴特效
+
+// 查看所有可用特效
+listAvailableBonuses();            // 列出所有支持的特效
+```
+
 ### 生成测试报告
 ```typescript
 import { generateTestReport } from './tests/weaponBonusTests';
@@ -64,6 +77,9 @@ DEMO_TYPE=all npx ts-node tests/demo.ts      # 完整测试套件
 DEMO_TYPE=quick npx ts-node tests/demo.ts    # 快速测试
 DEMO_TYPE=basic npx ts-node tests/demo.ts    # 基础特效测试
 DEMO_TYPE=report npx ts-node tests/demo.ts   # 生成测试报告
+
+# 单项武器特效测试
+npm run tests:single {Type}
 ```
 
 ## 🧪 测试类型与覆盖率

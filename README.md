@@ -16,6 +16,8 @@
 ### 环境要求
 
 - Node.js 18+
+> For Next.js, Node.js version "^18.18.0 || ^19.8.0 || >= 20.0.0" is required.
+
 - npm 或 yarn
 
 ### 安装依赖

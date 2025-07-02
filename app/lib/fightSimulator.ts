@@ -1,6 +1,7 @@
 import {
-	applyArmourEffectsToDamageBonusWithCoverage,
+	applyArmourEffectsToDamage,
 	clearTriggeredArmourEffects,
+	// getCurrentTurnTriggeredArmourEffects,
 	getTriggeredArmourEffects,
 } from "./armourEffectProcessors";
 import { canArmourBlock, getArmourCoverage } from "./dataLoader";
@@ -171,8 +172,8 @@ export function fight(
 		[0, 0],
 	];
 
-	let h_set = JSON.parse(JSON.stringify(hero.attacksettings));
-	let v_set = JSON.parse(JSON.stringify(villain.defendsettings));
+	let h_set = JSON.parse(JSON.stringify(hero.attackSettings));
+	let v_set = JSON.parse(JSON.stringify(villain.defendSettings));
 	let h_temps: TempEffects = [];
 	let v_temps: TempEffects = [];
 
@@ -817,6 +818,7 @@ export function armourMitigation(bodyPart: string, armour: ArmourSet): number {
 	}
 
 	if (coverage.length === 0) {
+		// 没打中护甲，返回0
 		return 0;
 	}
 
@@ -1329,7 +1331,6 @@ function action(
 	recordWeaponChoice(x.name, x.position, xCW);
 
 	// 应用技能、改装、临时效果
-	// 应用技能、改装、临时效�?
 	const pmt = applyPMT(
 		x,
 		y,
@@ -1548,17 +1549,18 @@ function action(
 		let xBHC: number = 0,
 			xFHC: number = 0,
 			xBP: [string, number] = ["", 0],
-			xMD: number = 0,
-			yDM: number = 0,
-			xWDM: number = 0,
-			yAM: number = 0,
-			xHOM: boolean = false,
-			xDV: number = 0,
-			xDMG = 0;
-		let x_pen = 1,
-			x_ammo_dmg = 1;
+			xMD: number = 0, // maxDamage
+			yDM: number = 0, // damageMitigation
+			xWDM: number = 0, // weaponDamageMulti
+			yAM: number = 0, // armourMitigation
+			xHOM: boolean = false, // hitOrMiss
+			xDV: number = 0, // variance
+			xDMG = 0; // damage
+		let x_pen = 1, // penetration
+			x_ammo_dmg = 1; // ammoDamageMulti
+		let hitArmour = false;
 
-		// 非伤害性临时武器不产生命中率和伤害�?
+		// 非伤害性临时武器不产生命中率和伤害
 		const currentWeapon = xW[xCW as keyof typeof xW];
 
 		// 应用回合前钩子（如Wind-up特效）
@@ -1691,12 +1693,9 @@ function action(
 					}
 				}
 
-				xMD = maxDamage(xSTR);
-				yDM = (100 - damageMitigation(yDEF, xSTR)) / 100;
-				xWDM = xW[xCW as keyof typeof xW].damage / 10;
-
 				// 应用武器特效到护甲减免
 				const baseArmourMitigation = armourMitigation(xBP[0], yA);
+				hitArmour = baseArmourMitigation > 0;
 				const modifiedArmourMitigation = applyWeaponBonusesToArmour(
 					baseArmourMitigation,
 					currentWeapon,
@@ -1710,11 +1709,15 @@ function action(
 						currentWeaponSlot: xCW,
 					},
 				);
-				yAM = (100 - modifiedArmourMitigation / x_pen) / 100;
+				yAM = modifiedArmourMitigation / x_pen; // 护甲减伤百分数，50代表护甲减伤50%
+
+				xMD = maxDamage(xSTR);
+				yDM = damageMitigation(yDEF, xSTR); // 防御减伤百分数，50代表def减伤50%
+				xWDM = xW[xCW as keyof typeof xW].damage / 10;
 				xDV = variance();
 
 				// 应用武器特效到伤害加成（如Powerful、Deadeye等）
-				let modifiedDamageBonus = applyWeaponBonusesToDamageBonus(
+				const modifiedDamageBonus = applyWeaponBonusesToDamageBonus(
 					x_dmg_bonus,
 					currentWeapon,
 					{
@@ -1730,63 +1733,15 @@ function action(
 					},
 				);
 
-				// 应用护甲特效到伤害加成（如Impenetrable、Impregnable、Insurmountable等）
-				// 根据攻击的身体部位，找到对应的护甲部件
-				const bodyPartToArmour: { [key: string]: keyof ArmourSet } = {
-					head: "head",
-					neck: "head", // 颈部攻击算头部护甲
-					heart: "body", // 心脏攻击算身体护甲
-					chest: "body",
-					stomach: "body",
-					groin: "body",
-					"left arm": "hands",
-					"right arm": "hands",
-					"left hand": "hands",
-					"right hand": "hands",
-					"left leg": "legs",
-					"right leg": "legs",
-					"left foot": "feet",
-					"right foot": "feet",
-				};
-
-				const armourSlot = bodyPartToArmour[xBP[0]];
-				if (armourSlot) {
-					const targetArmourPiece = yA[armourSlot];
-					if (targetArmourPiece?.effects) {
-						modifiedDamageBonus = applyArmourEffectsToDamageBonusWithCoverage(
-							modifiedDamageBonus,
-							targetArmourPiece,
-							{
-								attacker: x,
-								target: y,
-								weapon: currentWeapon,
-								bodyPart: xBP[0],
-								isCritical: xBP[1] >= 1,
-								turn: turn,
-								currentWeaponSlot: xCW,
-							},
-							yA, // 目标的护甲套装
-							yCL, // 目标当前生命值
-							y.maxLife, // 目标最大生命值
-						);
-					}
-				}
-
 				xDMG = Math.round(
 					xBP[1] *
 						xMD *
-						yDM *
+						(1 - yDM / 100) *
 						xWDM *
-						yAM *
 						xDV *
 						(1 + modifiedDamageBonus / 100) *
 						x_ammo_dmg,
 				);
-
-				// 确保伤害不为负数（可能由于护甲特效如Impassable导致）
-				if (xDMG < 0) {
-					xDMG = 0;
-				}
 
 				// 应用武器特效到伤害
 				xDMG = applyWeaponBonusesToDamage(xDMG, currentWeapon, {
@@ -1985,14 +1940,13 @@ function action(
 										}
 									}
 
-									yAM = (100 - armourMitigation(xBP[0], yA) / x_pen) / 100;
+									// TODO: yAM在Blindfire中的计算
 									xDV = variance();
 									xDMG = Math.round(
 										xBP[1] *
 											xMD *
-											yDM *
 											xWDM *
-											yAM *
+											(1 - yDM / 100) *
 											xDV *
 											(1 + x_dmg_bonus / 100) *
 											x_ammo_dmg,
@@ -2696,13 +2650,13 @@ function action(
 			}
 		}
 
-		// 收集触发的护甲特效信息用于日志显示
-		if (xHOM && logInfo) {
+		// 应用护甲特效（如Impenetrable, Impregnable, Insurmountable, Impassable）
+		if (xDMG > 0) {
 			// 根据攻击的身体部位，找到对应的护甲部件
+			let targetArmourPiece = null;
 			const bodyPartToArmour: { [key: string]: keyof ArmourSet } = {
 				head: "head",
 				neck: "head", // 颈部攻击算头部护甲
-				heart: "body", // 心脏攻击算身体护甲
 				chest: "body",
 				stomach: "body",
 				groin: "body",
@@ -2718,9 +2672,13 @@ function action(
 
 			const armourSlot = bodyPartToArmour[xBP[0]];
 			if (armourSlot) {
-				const targetArmourPiece = yA[armourSlot];
+				targetArmourPiece = yA[armourSlot];
+			}
+
+			// 如果击中了护甲且找到了对应的护甲部件，应用护甲特效
+			if (hitArmour && targetArmourPiece?.effects) {
 				if (targetArmourPiece?.effects) {
-					// 收集触发的护甲特效信息用于日志
+					// 收集触发的护甲特效信息（在应用前）
 					const triggeredArmourEffects = getTriggeredArmourEffects(
 						targetArmourPiece,
 						{
@@ -2736,10 +2694,30 @@ function action(
 						y.maxLife, // 目标最大生命值
 					);
 
+					xDMG = applyArmourEffectsToDamage(
+						xDMG,
+						yAM,
+						targetArmourPiece,
+						{
+							attacker: x,
+							target: y,
+							weapon: currentWeapon,
+							bodyPart: xBP[0],
+							isCritical: xBP[1] >= 1,
+							turn: turn,
+							currentWeaponSlot: xCW,
+						},
+						yCL, // 目标当前生命值
+						y.maxLife, // 目标最大生命值
+					);
+
 					// 更新日志信息中的护甲特效文本
-					if (triggeredArmourEffects.length > 0) {
+					if (logInfo && triggeredArmourEffects.length > 0) {
 						logInfo.armourEffectsText = ` [Armour: ${triggeredArmourEffects.join(", ")}]`;
 					}
+				} else {
+					// 普通护甲，直接计算减伤
+					xDMG = xDMG * (1 - yAM / 100);
 				}
 			}
 		}
@@ -2991,6 +2969,7 @@ function action(
 						);
 
 						// 应用Eviscerate效果
+						// TODO: Eviscerate效果计算公式错误
 						if (extraDamage > 0) {
 							extraDamage = applyEviscerateToIncomingDamage(y, extraDamage);
 						}
