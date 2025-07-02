@@ -140,4 +140,51 @@ export interface TornApiResponse {
 	};
 }
 
+// 新增：V2 API装备响应接口
+export interface TornEquipmentResponse {
+	equipment: Array<{
+		ID: number;
+		UID: number;
+		name: string;
+		type:
+			| "Primary"
+			| "Secondary"
+			| "Melee"
+			| "Temporary"
+			| "Defensive"
+			| "Clothing";
+		equipped: number;
+		market_price: number;
+		quantity: number;
+	}>;
+}
+
+// 新增：V2 API装备详情响应接口
+export interface TornItemDetailsResponse {
+	itemdetails: {
+		ID: number;
+		UID: number;
+		name: string;
+		type:
+			| "Primary"
+			| "Secondary"
+			| "Melee"
+			| "Temporary"
+			| "Defensive"
+			| "Clothing";
+		rarity: string;
+		damage?: number;
+		accuracy?: number;
+		quality?: number;
+		armor?: number;
+		bonuses?: {
+			[key: string]: {
+				bonus: string;
+				description: string;
+				value: number;
+			};
+		};
+	};
+}
+
 export default TornApiResponse;

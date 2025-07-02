@@ -47,7 +47,7 @@ const availableArmourEffects = [
 	{
 		name: "Impassable",
 		description: "有概率完全免疫伤害",
-		defaultValue: 15,
+		defaultValue: 20,
 		minValue: 5,
 		maxValue: 30,
 	},
