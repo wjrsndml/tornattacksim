@@ -36,6 +36,7 @@ import type {
 	TornApiResponse,
 	TornEquipmentResponse,
 	TornItemDetailsResponse,
+	TornWeaponExpResponse,
 } from "../lib/tornApiResponse";
 import ArmourCoverage from "./ArmourCoverage";
 import ArmourSelector from "./ArmourSelector";
@@ -520,7 +521,25 @@ export default function PlayerConfig({
 				console.warn("获取装备信息失败:", equipmentError);
 			}
 
-			// 3. 提取公司ID并获取公司信息
+			// 3. 获取武器经验信息（使用v2 API）
+			let weaponExpData: TornWeaponExpResponse | null = null;
+			try {
+				const weaponExpResponse = await fetch(
+					`https://api.torn.com/v2/user?selections=weaponexp&key=${importKey.trim()}`,
+				);
+
+				if (weaponExpResponse.status === 200) {
+					const expData = await weaponExpResponse.json();
+					if (!expData.error && expData.weaponexp) {
+						weaponExpData = expData as TornWeaponExpResponse;
+						console.log("武器经验数据:", weaponExpData);
+					}
+				}
+			} catch (weaponExpError) {
+				console.warn("获取武器经验失败:", weaponExpError);
+			}
+
+			// 4. 提取公司ID并获取公司信息
 			if (data.job?.company_id) {
 				try {
 					const companyResponse = await fetch(
@@ -541,8 +560,8 @@ export default function PlayerConfig({
 			console.log("Torn API数据:", data);
 			console.log("装备详情:", equipmentDetails);
 
-			// 4. 更新玩家数据
-			updatePlayerFromTornData(data, equipmentDetails);
+			// 5. 更新玩家数据
+			updatePlayerFromTornData(data, equipmentDetails, weaponExpData);
 
 			console.log(
 				`Torn ${isAttacker ? "Attacker" : "Defender"} API数据获取成功`,
@@ -558,6 +577,7 @@ export default function PlayerConfig({
 	const updatePlayerFromTornData = (
 		tornData: TornApiResponse,
 		equipmentDetails?: TornItemDetailsResponse[],
+		weaponExpData?: TornWeaponExpResponse | null,
 	) => {
 		try {
 			console.log("开始更新玩家属性，Torn数据:", tornData);
@@ -876,6 +896,7 @@ export default function PlayerConfig({
 							weaponType,
 							item.ID,
 							item,
+							weaponExpData,
 						);
 
 						if (weaponData) {
@@ -1004,27 +1025,37 @@ export default function PlayerConfig({
 		weaponType: "primary" | "secondary" | "melee" | "temporary",
 		weaponId: number,
 		weaponData: TornItemDetailsResponse["itemdetails"],
+		weaponExpData?: TornWeaponExpResponse | null,
 	): WeaponData | null => {
 		try {
 			// 先通过ID查找基础武器数据
 			const baseWeapon = getWeaponById(weaponType, weaponId.toString());
 
 			if (baseWeapon) {
+				// 查找对应的武器经验
+				let weaponExperience = 0;
+				if (weaponExpData?.weaponexp) {
+					const expEntry = weaponExpData.weaponexp.find(
+						(exp) => exp.itemID === weaponId,
+					);
+					weaponExperience = expEntry?.exp || 0;
+				}
+
 				// 使用API返回的实际数值覆盖基础数据
 				const updatedWeapon: WeaponData = {
 					...baseWeapon,
 					// 使用API返回的实际伤害和精准度
 					damage: weaponData.damage || baseWeapon.damage,
 					accuracy: weaponData.accuracy || baseWeapon.accuracy,
-					// 如果有quality字段，可以作为品质参考
-					experience: baseWeapon.experience || 0,
+					// 使用从武器经验API获取的经验值
+					experience: weaponExperience,
 				};
 
 				console.log(
 					`成功匹配武器: ID=${weaponId}, ${weaponData.name} -> ${baseWeapon.name} (${weaponType})`,
 				);
 				console.log(
-					`数值: 伤害=${updatedWeapon.damage}, 精准=${updatedWeapon.accuracy}`,
+					`数值: 伤害=${updatedWeapon.damage}, 精准=${updatedWeapon.accuracy}, 经验=${updatedWeapon.experience}`,
 				);
 				return updatedWeapon;
 			} else {

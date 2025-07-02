@@ -52,7 +52,7 @@ const ImpenetrableProcessor: ArmourEffectProcessor = {
 		const reduction = effectValue / 100;
 		const reducedDamage = damage * (1 - reduction - damageMitigation / 100);
 		addTriggeredArmourEffect("Impenetrable");
-		return Math.round(reducedDamage);
+		return Math.max(0, Math.round(reducedDamage));
 	},
 };
 
@@ -72,7 +72,7 @@ const ImpregnableProcessor: ArmourEffectProcessor = {
 		const reduction = effectValue / 100;
 		const reducedDamage = damage * (1 - reduction - damageMitigation / 100);
 		addTriggeredArmourEffect("Impregnable");
-		return Math.round(reducedDamage);
+		return Math.max(0, Math.round(reducedDamage));
 	},
 };
 
@@ -101,7 +101,7 @@ const InsurmountableProcessor: ArmourEffectProcessor = {
 		const reduction = effectValue / 100;
 		const reducedDamage = damage * (1 - reduction - damageMitigation / 100);
 		addTriggeredArmourEffect("Insurmountable");
-		return Math.round(reducedDamage);
+		return Math.max(0, Math.round(reducedDamage));
 	},
 };
 
