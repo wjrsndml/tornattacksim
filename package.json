@@ -16,7 +16,8 @@
 		"test:weapons:probability": "tsx tests/weaponBonusTests.ts --probability",
 		"test:weapons:quick": "tsx tests/weaponBonusTests.ts --quick",
 		"test:weapons:demo": "tsx tests/demo.ts",
-		"test:logger:demo": "tsx tests/loggerDemo.ts"
+		"test:logger:demo": "tsx tests/loggerDemo.ts",
+		"test:single": "tsx tests/single.ts"
 	},
 	"dependencies": {
 		"@headlessui/react": "^2.2.4",

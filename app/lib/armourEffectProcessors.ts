@@ -1,7 +1,5 @@
-import { getArmourCoverage } from "./dataLoader";
 import type {
 	ArmourEffectProcessor,
-	ArmourSet,
 	DamageContext,
 } from "./fightSimulatorTypes";
 
@@ -45,14 +43,16 @@ const ImpenetrableProcessor: ArmourEffectProcessor = {
 			context.currentWeaponSlot === "secondary"
 		);
 	},
-	applyToDamageBonus: (
-		baseDamageBonus: number,
+	applyToDamage: (
+		damage: number,
+		damageMitigation: number,
 		effectValue: number,
 		_context: DamageContext,
 	) => {
-		// 使用负数伤害加成来实现减伤效果，与 Powerful 使用相同的数学模型
+		const reduction = effectValue / 100;
+		const reducedDamage = damage * (1 - reduction - damageMitigation / 100);
 		addTriggeredArmourEffect("Impenetrable");
-		return baseDamageBonus - effectValue;
+		return Math.round(reducedDamage);
 	},
 };
 
@@ -63,14 +63,16 @@ const ImpregnableProcessor: ArmourEffectProcessor = {
 	triggerCondition: (context: DamageContext) => {
 		return context.currentWeaponSlot === "melee";
 	},
-	applyToDamageBonus: (
-		baseDamageBonus: number,
+	applyToDamage: (
+		damage: number,
+		damageMitigation: number,
 		effectValue: number,
 		_context: DamageContext,
 	) => {
-		// 使用负数伤害加成来实现减伤效果，与 Powerful 使用相同的数学模型
+		const reduction = effectValue / 100;
+		const reducedDamage = damage * (1 - reduction - damageMitigation / 100);
 		addTriggeredArmourEffect("Impregnable");
-		return baseDamageBonus - effectValue;
+		return Math.round(reducedDamage);
 	},
 };
 
@@ -88,16 +90,18 @@ const InsurmountableProcessor: ArmourEffectProcessor = {
 		}
 		return targetCurrentLife <= targetMaxLife * 0.25;
 	},
-	applyToDamageBonus: (
-		baseDamageBonus: number,
+	applyToDamage: (
+		damage: number,
+		damageMitigation: number,
 		effectValue: number,
 		_context: DamageContext,
 		_targetCurrentLife?: number,
 		_targetMaxLife?: number,
 	) => {
-		// 使用负数伤害加成来实现减伤效果，与 Powerful 使用相同的数学模型
+		const reduction = effectValue / 100;
+		const reducedDamage = damage * (1 - reduction - damageMitigation / 100);
 		addTriggeredArmourEffect("Insurmountable");
-		return baseDamageBonus - effectValue;
+		return Math.round(reducedDamage);
 	},
 };
 
@@ -106,8 +110,9 @@ const ImpassableProcessor: ArmourEffectProcessor = {
 	name: "Impassable",
 	description: "有概率完全免疫伤害",
 	triggerCondition: () => true, // 总是可能触发
-	applyToDamageBonus: (
-		baseDamageBonus: number,
+	applyToDamage: (
+		damage: number,
+		damageMitigation: number,
 		effectValue: number,
 		_context: DamageContext,
 	) => {
@@ -115,11 +120,9 @@ const ImpassableProcessor: ArmourEffectProcessor = {
 		const random = Math.random();
 		if (random < blockChance) {
 			addTriggeredArmourEffect("Impassable");
-			// 完全免疫：返回一个非常大的负数来确保最终伤害为0或负数
-			// 这样 (1 + damageBonus / 100) 会变为0或负数，最终伤害将被Math.max限制为0
-			return baseDamageBonus - 10000000;
+			return 0;
 		}
-		return baseDamageBonus;
+		return damage * (1 - damageMitigation / 100);
 	},
 };
 
@@ -141,18 +144,19 @@ export function getArmourEffectProcessor(
 }
 
 /**
- * 应用护甲特效到伤害加成
+ * 应用护甲特效到伤害
  */
-export function applyArmourEffectsToDamageBonus(
-	baseDamageBonus: number,
+export function applyArmourEffectsToDamage(
+	damage: number,
+	damageMitigation: number,
 	armourPiece: { effects?: Array<{ name: string; value: number }> },
 	context: DamageContext,
 	targetCurrentLife?: number,
 	targetMaxLife?: number,
 ): number {
-	if (!armourPiece.effects) return baseDamageBonus;
+	if (!armourPiece.effects) return damage;
 
-	let modifiedDamageBonus = baseDamageBonus;
+	let modifiedDamage = damage;
 
 	// 按优先级应用特效：Impenetrable/Impregnable -> Insurmountable -> Impassable
 	const sortedEffects = [...armourPiece.effects].sort((a, b) => {
@@ -170,13 +174,14 @@ export function applyArmourEffectsToDamageBonus(
 
 	for (const effect of sortedEffects) {
 		const processor = getArmourEffectProcessor(effect.name);
-		if (processor?.applyToDamageBonus && processor.triggerCondition) {
+		if (processor?.applyToDamage && processor.triggerCondition) {
 			// 检查触发条件
 			if (
 				processor.triggerCondition(context, targetCurrentLife, targetMaxLife)
 			) {
-				modifiedDamageBonus = processor.applyToDamageBonus(
-					modifiedDamageBonus,
+				modifiedDamage = processor.applyToDamage(
+					modifiedDamage,
+					damageMitigation,
 					effect.value,
 					context,
 					targetCurrentLife,
@@ -186,7 +191,7 @@ export function applyArmourEffectsToDamageBonus(
 		}
 	}
 
-	return modifiedDamageBonus;
+	return modifiedDamage;
 }
 
 /**
@@ -215,78 +220,20 @@ export function getTriggeredArmourEffects(
 
 	const triggeredEffects: string[] = [];
 
-	// 获取当前回合实际触发的护甲特效
-	const actuallyTriggered = getCurrentTurnTriggeredArmourEffects();
-
 	for (const effect of armourPiece.effects) {
 		const processor = getArmourEffectProcessor(effect.name);
 		if (processor?.triggerCondition) {
-			// 检查触发条件AND实际是否触发
 			if (
-				processor.triggerCondition(context, targetCurrentLife, targetMaxLife) &&
-				actuallyTriggered.includes(effect.name)
+				processor.triggerCondition(context, targetCurrentLife, targetMaxLife)
 			) {
-				// 只显示真正触发的特效，与武器特效保持一致的简洁格式
-				const effectText = `${effect.name}(${effect.value}%)`;
+				let effectText = `${effect.name}(${effect.value}%)`;
+				if (currentTriggeredArmourEffects.includes(effect.name)) {
+					effectText += ` - ${getArmourEffectText(effect.name, effect.value)}`;
+				}
 				triggeredEffects.push(effectText);
 			}
 		}
 	}
 
 	return triggeredEffects;
-}
-
-/**
- * 检查护甲是否覆盖特定身体部位
- */
-export function hasArmourCoverage(
-	bodyPart: string,
-	armour: ArmourSet,
-): boolean {
-	const armourCoverage = getArmourCoverage();
-
-	// 遍历所有护甲槽位，检查是否有任何护甲覆盖该身体部位
-	for (const slot in armour) {
-		const armourPiece = armour[slot as keyof ArmourSet];
-		if (
-			armourPiece &&
-			armourCoverage[bodyPart] &&
-			armourCoverage[bodyPart][armourPiece.type || ""]
-		) {
-			const coveragePercent = armourCoverage[bodyPart][armourPiece.type || ""];
-			if (coveragePercent !== undefined && coveragePercent > 0) {
-				return true; // 找到至少一个有覆盖的护甲
-			}
-		}
-	}
-
-	return false; // 没有护甲覆盖该身体部位
-}
-
-/**
- * 应用护甲特效到伤害加成（带护甲覆盖率检查）
- */
-export function applyArmourEffectsToDamageBonusWithCoverage(
-	baseDamageBonus: number,
-	armourPiece: { effects?: Array<{ name: string; value: number }> },
-	context: DamageContext,
-	targetArmour: ArmourSet,
-	targetCurrentLife?: number,
-	targetMaxLife?: number,
-): number {
-	if (!armourPiece.effects) return baseDamageBonus;
-
-	// 检查护甲是否覆盖被攻击的身体部位
-	if (!hasArmourCoverage(context.bodyPart, targetArmour)) {
-		return baseDamageBonus; // 没有护甲覆盖，护甲特效不生效
-	}
-
-	// 有护甲覆盖，应用护甲特效
-	return applyArmourEffectsToDamageBonus(
-		baseDamageBonus,
-		armourPiece,
-		context,
-		targetCurrentLife,
-		targetMaxLife,
-	);
 }

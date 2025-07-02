@@ -10,6 +10,7 @@ import type {
 // 全局数据缓存
 let gameData: FightData | null = null;
 let tempBlockData: { [weaponName: string]: string[] } = {};
+let gameTornCompanyData: { [companyTypeID: number]: { name: string } } = {};
 
 /**
  * 获取基础URL
@@ -46,6 +47,7 @@ export async function loadGameData(): Promise<FightData> {
 			`${baseUrl}/mods.json`,
 			`${baseUrl}/armourCoverage.json`,
 			`${baseUrl}/companies.json`,
+			`${baseUrl}/torn_company.json`,
 		];
 
 		console.log("Base URL:", baseUrl);
@@ -72,6 +74,10 @@ export async function loadGameData(): Promise<FightData> {
 				console.error("Failed to fetch companies.json:", err);
 				throw err;
 			}),
+			fetch(`${baseUrl}/torn_company.json`).catch((err) => {
+				console.error("Failed to fetch torn_company.json:", err);
+				throw err;
+			}),
 		]);
 
 		const [
@@ -80,6 +86,7 @@ export async function loadGameData(): Promise<FightData> {
 			modsResponse,
 			armourCoverageResponse,
 			companiesResponse,
+			tornCompanyResponse,
 		] = responses;
 
 		// 检查响应状态
@@ -108,6 +115,11 @@ export async function loadGameData(): Promise<FightData> {
 				`Failed to load companies.json: ${companiesResponse.status} ${companiesResponse.statusText}`,
 			);
 		}
+		if (!tornCompanyResponse.ok) {
+			throw new Error(
+				`Failed to load torn_company.json: ${tornCompanyResponse.status} ${tornCompanyResponse.statusText}`,
+			);
+		}
 
 		console.log("All responses OK, parsing JSON...");
 
@@ -117,18 +129,21 @@ export async function loadGameData(): Promise<FightData> {
 			modsData,
 			armourCoverageData,
 			companiesData,
+			tornCompanyData,
 		] = await Promise.all([
 			weaponsResponse.json(),
 			armoursResponse.json(),
 			modsResponse.json(),
 			armourCoverageResponse.json(),
 			companiesResponse.json(),
+			tornCompanyResponse.json(),
 		]);
 
 		console.log("JSON parsed successfully");
 
 		// 提取临时武器阻挡数据
 		tempBlockData = weaponsData.tempBlock || {};
+		gameTornCompanyData = tornCompanyData.companies;
 
 		gameData = {
 			weapons: weaponsData,
@@ -424,4 +439,11 @@ export function getAllArmourSets(): string[] {
  */
 export function getTempBlockData(): TempBlockData {
 	return tempBlockData;
+}
+
+/**
+ * 获取公司类型名称
+ */
+export function getCompanyType(companyTypeID: number): string {
+	return gameTornCompanyData[companyTypeID]?.name || "Unknown";
 }
