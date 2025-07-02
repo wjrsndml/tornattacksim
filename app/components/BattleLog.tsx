@@ -46,7 +46,7 @@ export default function BattleLog({
 
 	const formatAction = (entry: BattleLogEntry) => {
 		const damageText =
-			entry.damage > 0 ? `造成 ${entry.damage} 伤害` : "未命中";
+			entry.damage > 0 ? `造成 ${Math.round(entry.damage)} 伤害` : "未命中";
 		const bodyPartText = entry.bodyPart ? ` (${entry.bodyPart})` : "";
 		const effectText = entry.effect ? ` [${entry.effect}]` : "";
 

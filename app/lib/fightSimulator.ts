@@ -1491,7 +1491,7 @@ function action(
 					if (dotDMG > yCL - 1) {
 						dotDMG = yCL - 1;
 					}
-					log.push(`Burning damaged ${y.name} for ${dotDMG}`);
+					log.push(`Burning damaged ${y.name} for ${Math.round(dotDMG)}`);
 
 					if (dotEffect[1] === 5) {
 						xDOT[dot] = [0, 0];
@@ -1504,7 +1504,7 @@ function action(
 					if (dotDMG > yCL - 1) {
 						dotDMG = yCL - 1;
 					}
-					log.push(`Poison damaged ${y.name} for ${dotDMG}`);
+					log.push(`Poison damaged ${y.name} for ${Math.round(dotDMG)}`);
 
 					if (dotEffect[1] === 15) {
 						xDOT[dot] = [0, 0];
@@ -1517,7 +1517,7 @@ function action(
 					if (dotDMG > yCL - 1) {
 						dotDMG = yCL - 1;
 					}
-					log.push(`Laceration damaged ${y.name} for ${dotDMG}`);
+					log.push(`Laceration damaged ${y.name} for ${Math.round(dotDMG)}`);
 
 					if (dotEffect[1] === 9) {
 						xDOT[dot] = [0, 0];
@@ -1530,7 +1530,9 @@ function action(
 					if (dotDMG > yCL - 1) {
 						dotDMG = yCL - 1;
 					}
-					log.push(`Severe burning damaged ${y.name} for ${dotDMG}`);
+					log.push(
+						`Severe burning damaged ${y.name} for ${Math.round(dotDMG)}`,
+					);
 
 					if (dotEffect[1] === 9) {
 						xDOT[dot] = [0, 0];
@@ -2676,7 +2678,7 @@ function action(
 			}
 
 			// 如果击中了护甲且找到了对应的护甲部件，应用护甲特效
-			if (hitArmour && targetArmourPiece?.effects) {
+			if (hitArmour) {
 				if (targetArmourPiece?.effects) {
 					// 收集触发的护甲特效信息（在应用前）
 					const triggeredArmourEffects = getTriggeredArmourEffects(
@@ -2771,19 +2773,19 @@ function action(
 				const armourEffectsText = logInfo.armourEffectsText || "";
 				if (logInfo.weapon === "fists") {
 					log.push(
-						`${logInfo.attacker} used fists hitting ${logInfo.target} in the ${logInfo.bodyPart} for ${xDMG}${logInfo.bonusText}${armourEffectsText}`,
+						`${logInfo.attacker} used fists hitting ${logInfo.target} in the ${logInfo.bodyPart} for ${Math.round(xDMG)}${logInfo.bonusText}${armourEffectsText}`,
 					);
 				} else if (logInfo.weapon === "kick") {
 					log.push(
-						`${logInfo.attacker} kicked ${logInfo.target} in the ${logInfo.bodyPart} for ${xDMG}${logInfo.bonusText}${armourEffectsText}`,
+						`${logInfo.attacker} kicked ${logInfo.target} in the ${logInfo.bodyPart} for ${Math.round(xDMG)}${logInfo.bonusText}${armourEffectsText}`,
 					);
 				} else if (logInfo.attackType === "melee") {
 					log.push(
-						`${logInfo.attacker} hit ${logInfo.target} with their ${logInfo.weapon} in the ${logInfo.bodyPart} for ${xDMG}${logInfo.bonusText}${armourEffectsText}`,
+						`${logInfo.attacker} hit ${logInfo.target} with their ${logInfo.weapon} in the ${logInfo.bodyPart} for ${Math.round(xDMG)}${logInfo.bonusText}${armourEffectsText}`,
 					);
 				} else {
 					log.push(
-						`${logInfo.attacker} fired ${logInfo.rounds} ${logInfo.ammo} rounds of their ${logInfo.weapon} hitting ${logInfo.target} in the ${logInfo.bodyPart} for ${xDMG}${logInfo.bonusText}${armourEffectsText}`,
+						`${logInfo.attacker} fired ${logInfo.rounds} ${logInfo.ammo} rounds of their ${logInfo.weapon} hitting ${logInfo.target} in the ${logInfo.bodyPart} for ${Math.round(xDMG)}${logInfo.bonusText}${armourEffectsText}`,
 					);
 				}
 			}
@@ -2862,7 +2864,9 @@ function action(
 					const actualHeal = Math.min(postDamageResult.healing, maxLife - xCL);
 					if (actualHeal > 0) {
 						xCL += actualHeal;
-						log.push(`${x.name} recovered ${actualHeal} life from Bloodlust`);
+						log.push(
+							`${x.name} recovered ${Math.round(actualHeal)} life from Bloodlust`,
+						);
 					}
 				} else {
 					// 负值：自伤（如Double-edged）
@@ -2872,12 +2876,12 @@ function action(
 						const actualSelfDamage = xCL - 1;
 						xCL = 1;
 						log.push(
-							`${x.name} took ${actualSelfDamage} self-damage from Double-edged`,
+							`${x.name} took ${Math.round(actualSelfDamage)} self-damage from Double-edged`,
 						);
 					} else {
 						xCL -= selfDamage;
 						log.push(
-							`${x.name} took ${selfDamage} self-damage from Double-edged`,
+							`${x.name} took ${Math.round(selfDamage)} self-damage from Double-edged`,
 						);
 					}
 				}
@@ -3010,7 +3014,7 @@ function action(
 						// }
 
 						log.push(
-							`${x.name} extra attack hits ${y.name} in the ${extraBodyPart[0]} for ${extraDamage}`,
+							`${x.name} extra attack hits ${y.name} in the ${extraBodyPart[0]} for ${Math.round(extraDamage)}`,
 						);
 
 						// 记录额外攻击伤害和身体部位统计
@@ -3082,7 +3086,7 @@ function action(
 					if (dotDMG > yCL - 1) {
 						dotDMG = yCL - 1;
 					}
-					log.push(`Burning damaged ${y.name} for ${dotDMG}`);
+					log.push(`Burning damaged ${y.name} for ${Math.round(dotDMG)}`);
 
 					if (dotEffect[1] === 5) {
 						xDOT[dot] = [0, 0];
@@ -3095,7 +3099,7 @@ function action(
 					if (dotDMG > yCL - 1) {
 						dotDMG = yCL - 1;
 					}
-					log.push(`Poison damaged ${y.name} for ${dotDMG}`);
+					log.push(`Poison damaged ${y.name} for ${Math.round(dotDMG)}`);
 
 					if (dotEffect[1] === 15) {
 						xDOT[dot] = [0, 0];
@@ -3108,7 +3112,7 @@ function action(
 					if (dotDMG > yCL - 1) {
 						dotDMG = yCL - 1;
 					}
-					log.push(`Laceration damaged ${y.name} for ${dotDMG}`);
+					log.push(`Laceration damaged ${y.name} for ${Math.round(dotDMG)}`);
 
 					if (dotEffect[1] === 9) {
 						xDOT[dot] = [0, 0];
@@ -3121,7 +3125,9 @@ function action(
 					if (dotDMG > yCL - 1) {
 						dotDMG = yCL - 1;
 					}
-					log.push(`Severe burning damaged ${y.name} for ${dotDMG}`);
+					log.push(
+						`Severe burning damaged ${y.name} for ${Math.round(dotDMG)}`,
+					);
 
 					if (dotEffect[1] === 9) {
 						xDOT[dot] = [0, 0];
