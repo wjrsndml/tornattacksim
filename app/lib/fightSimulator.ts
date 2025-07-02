@@ -2676,7 +2676,7 @@ function action(
 			}
 
 			// 如果击中了护甲且找到了对应的护甲部件，应用护甲特效
-			if (hitArmour && targetArmourPiece?.effects) {
+			if (hitArmour) {
 				if (targetArmourPiece?.effects) {
 					// 收集触发的护甲特效信息（在应用前）
 					const triggeredArmourEffects = getTriggeredArmourEffects(
