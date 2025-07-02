@@ -187,4 +187,13 @@ export interface TornItemDetailsResponse {
 	};
 }
 
+// 新增：V2 API武器经验响应接口
+export interface TornWeaponExpResponse {
+	weaponexp: Array<{
+		itemID: number;
+		name: string;
+		exp: number;
+	}>;
+}
+
 export default TornApiResponse;
