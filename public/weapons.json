@@ -336,18 +336,7 @@
           "procrange": [20,23]
       }
     },
-    "388": {
-      "name": "Pink Mac-10",
-      "category": "SMG",
-      "damage_range": [74, 79],
-      "accuracy_range": [45, 50],
-      "clipsize": 120,
-      "rateoffire": [10,15],
-      "bonus": {
-          "name": "Emasculate",
-          "procrange": [15,16]
-      }
-    },
+
     "398": {
       "name": "SIG 552",
       "category": "Rifle",
@@ -373,18 +362,7 @@
       },
       "default":true
     },
-    "483": {
-      "name": "MP5k",
-      "category": "SMG",
-      "damage_range": [42, 47],
-      "accuracy_range": [52, 57],
-      "clipsize": 15,
-      "rateoffire": [5,7],
-      "bonus": {
-          "name": "n/a",
-          "procrange": "n/a"
-      }
-    },
+
     "484": {
       "name": "AK74u",
       "category": "SMG",
@@ -397,30 +375,8 @@
           "procrange": "n/a"
       }
     },
-    "485": {
-      "name": "Skorpion",
-      "category": "SMG",
-      "damage_range": [40, 45],
-      "accuracy_range": [54, 59],
-      "clipsize": 20,
-      "rateoffire": [3,5],
-      "bonus": {
-          "name": "n/a",
-          "procrange": "n/a"
-      }
-    },
-    "486": {
-      "name": "TMP",
-      "category": "SMG",
-      "damage_range": [38, 43],
-      "accuracy_range": [45, 50],
-      "clipsize": 15,
-      "rateoffire": [3,6],
-      "bonus": {
-          "name": "n/a",
-          "procrange": "n/a"
-      }
-    },
+
+
     "487": {
       "name": "Thompson",
       "category": "SMG",
@@ -880,6 +836,18 @@
           "procrange": [30, 50]
       }
     },
+    "388": {
+      "name": "Pink Mac-10",
+      "category": "SMG",
+      "damage_range": [74, 79],
+      "accuracy_range": [45, 50],
+      "clipsize": 120,
+      "rateoffire": [10,15],
+      "bonus": {
+          "name": "Emasculate",
+          "procrange": [15,16]
+      }
+    },
     "393": {
       "name": "Slingshot",
       "category": "Clubbing",
@@ -887,6 +855,42 @@
       "accuracy_range": [54, 59],
       "clipsize": 1,
       "rateoffire": [1,1],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "483": {
+      "name": "MP5k",
+      "category": "SMG",
+      "damage_range": [42, 47],
+      "accuracy_range": [52, 57],
+      "clipsize": 15,
+      "rateoffire": [5,7],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "485": {
+      "name": "Skorpion",
+      "category": "SMG",
+      "damage_range": [40, 45],
+      "accuracy_range": [54, 59],
+      "clipsize": 20,
+      "rateoffire": [3,5],
+      "bonus": {
+          "name": "n/a",
+          "procrange": "n/a"
+      }
+    },
+    "486": {
+      "name": "TMP",
+      "category": "SMG",
+      "damage_range": [38, 43],
+      "accuracy_range": [45, 50],
+      "clipsize": 15,
+      "rateoffire": [3,6],
       "bonus": {
           "name": "n/a",
           "procrange": "n/a"

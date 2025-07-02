@@ -3,6 +3,8 @@
 import {
 	BarChart3,
 	Download,
+	Eye,
+	EyeOff,
 	Settings,
 	Shield,
 	Swords,
@@ -10,21 +12,31 @@ import {
 } from "lucide-react";
 import { useEffect, useId, useState } from "react";
 import {
+	getArmourById,
+	//getArmourList,
 	getCompanyList,
 	getCompanyType,
+	getWeaponById,
+	//getWeaponList,
 	loadGameData,
 } from "../lib/dataLoader";
 import type {
 	ArmourData,
+	ArmourEffect,
 	BattleStats,
 	CompanyPerks,
 	EducationPerks,
 	FactionPerks,
 	MeritPerks,
 	PropertyPerks,
+	SelectedWeaponBonus,
 	WeaponData,
 } from "../lib/fightSimulatorTypes";
-import type { TornApiResponse } from "../lib/tornApiResponse";
+import type {
+	TornApiResponse,
+	TornEquipmentResponse,
+	TornItemDetailsResponse,
+} from "../lib/tornApiResponse";
 import ArmourCoverage from "./ArmourCoverage";
 import ArmourSelector from "./ArmourSelector";
 import { Button } from "./ui/button";
@@ -112,6 +124,7 @@ export default function PlayerConfig({
 	// 新增：导入相关的状态
 	const [importKey, setImportKey] = useState("");
 	const [isImporting, setIsImporting] = useState(false);
+	const [showApiKey, setShowApiKey] = useState(false);
 
 	const playerId = isAttacker ? "attacker" : "defender";
 
@@ -450,6 +463,7 @@ export default function PlayerConfig({
 
 		setIsImporting(true);
 		try {
+			// 1. 获取用户基本信息、技能等
 			const response = await fetch(
 				`https://api.torn.com/user/?selections=profile,basic,equipment,perks,battlestats&key=${importKey.trim()}`,
 			);
@@ -461,10 +475,52 @@ export default function PlayerConfig({
 			const data = await response.json();
 
 			if (data.error) {
-				throw new Error(`API返回错误: ${data.error}`);
+				throw new Error(`API返回错误: ${data.error.error || data.error}`);
 			}
 
-			// 提取公司ID并获取公司信息
+			// 2. 获取详细装备信息（使用v2 API）
+			let equipmentDetails: TornItemDetailsResponse[] = [];
+			try {
+				const equipmentResponse = await fetch(
+					`https://api.torn.com/v2/user?selections=equipment&key=${importKey.trim()}`,
+				);
+
+				if (equipmentResponse.status === 200) {
+					const equipmentData: TornEquipmentResponse =
+						await equipmentResponse.json();
+
+					if (equipmentData.equipment) {
+						// 获取每个装备的详细信息
+						const detailPromises = equipmentData.equipment
+							.filter((item) => item.type !== "Clothing") // 过滤掉衣服
+							.map(async (item) => {
+								try {
+									const detailResponse = await fetch(
+										`https://api.torn.com/v2/torn?selections=itemdetails&id=${item.UID}&key=${importKey.trim()}`,
+									);
+									if (detailResponse.status === 200) {
+										const detail = await detailResponse.json();
+										if (!detail.error) {
+											return detail as TornItemDetailsResponse;
+										}
+									}
+								} catch (error) {
+									console.warn(`获取装备详情失败 (UID: ${item.UID}):`, error);
+								}
+								return null;
+							});
+
+						const details = await Promise.all(detailPromises);
+						equipmentDetails = details.filter(
+							(detail) => detail !== null,
+						) as TornItemDetailsResponse[];
+					}
+				}
+			} catch (equipmentError) {
+				console.warn("获取装备信息失败:", equipmentError);
+			}
+
+			// 3. 提取公司ID并获取公司信息
 			if (data.job?.company_id) {
 				try {
 					const companyResponse = await fetch(
@@ -481,15 +537,16 @@ export default function PlayerConfig({
 					console.warn("获取公司信息失败:", companyError);
 				}
 			}
-			console.log(data);
 
-			if (isAttacker) {
-				updatePlayerFromTornData(data);
-				console.log("Torn Attacker API数据获取成功:", data);
-			} else {
-				updatePlayerFromTornData(data);
-				console.log("Torn Defender API数据获取成功:", data);
-			}
+			console.log("Torn API数据:", data);
+			console.log("装备详情:", equipmentDetails);
+
+			// 4. 更新玩家数据
+			updatePlayerFromTornData(data, equipmentDetails);
+
+			console.log(
+				`Torn ${isAttacker ? "Attacker" : "Defender"} API数据获取成功`,
+			);
 		} catch (error) {
 			console.error("Torn API导入错误:", error);
 			alert(`导入失败: ${error instanceof Error ? error.message : "未知错误"}`);
@@ -498,11 +555,17 @@ export default function PlayerConfig({
 		}
 	};
 
-	const updatePlayerFromTornData = (tornData: TornApiResponse) => {
+	const updatePlayerFromTornData = (
+		tornData: TornApiResponse,
+		equipmentDetails?: TornItemDetailsResponse[],
+	) => {
 		try {
 			console.log("开始更新玩家属性，Torn数据:", tornData);
 
 			const updates: Partial<Player> = {};
+			const weaponsUpdates: Partial<Player["weapons"]> = {};
+			const armourUpdates: Partial<Player["armour"]> = {};
+			const failedImports: string[] = []; // 记录导入失败的装备
 
 			// 更新基础信息
 			if (tornData.name) {
@@ -788,12 +851,340 @@ export default function PlayerConfig({
 				},
 			};
 
+			// 处理装备数据
+			if (equipmentDetails && equipmentDetails.length > 0) {
+				console.log("开始处理装备数据:", equipmentDetails);
+
+				for (const equipment of equipmentDetails) {
+					const item = equipment.itemdetails;
+					console.log(
+						`处理装备: ${item.name} (类型: ${item.type}, ID: ${item.ID})`,
+					);
+
+					// 处理武器
+					if (
+						["Primary", "Secondary", "Melee", "Temporary"].includes(item.type)
+					) {
+						const weaponType = item.type.toLowerCase() as
+							| "primary"
+							| "secondary"
+							| "melee"
+							| "temporary";
+
+						// 使用ID查找对应的武器数据
+						const weaponData = findWeaponByIdAndUpdateStats(
+							weaponType,
+							item.ID,
+							item,
+						);
+
+						if (weaponData) {
+							// 提取武器特效
+							const weaponBonuses: SelectedWeaponBonus[] = [];
+							if (item.bonuses) {
+								for (const bonusKey in item.bonuses) {
+									const bonus = item.bonuses[bonusKey];
+									if (bonus?.bonus && typeof bonus.value === "number") {
+										weaponBonuses.push({
+											name: bonus.bonus,
+											value: bonus.value,
+										});
+									}
+								}
+							}
+
+							weaponsUpdates[weaponType] = {
+								...weaponData,
+								...(weaponBonuses.length > 0 && { weaponBonuses }),
+							};
+						} else {
+							failedImports.push(`武器: ${item.name} (ID: ${item.ID})`);
+						}
+					}
+
+					// 处理护甲
+					else if (item.type === "Defensive") {
+						const armourType = getArmourTypeFromName(item.name);
+						if (armourType) {
+							// 使用ID查找对应的护甲数据
+							const armourData = findArmourByIdAndUpdateStats(
+								armourType,
+								item.ID,
+								item,
+							);
+
+							if (armourData) {
+								// 提取护甲特效（不在这里应用套装加成）
+								const armourEffects: ArmourEffect[] = [];
+								if (item.bonuses) {
+									for (const bonusKey in item.bonuses) {
+										const bonus = item.bonuses[bonusKey];
+										// 护甲特效通常是 Impenetrable, Impregnable, Insurmountable, Impassable
+										if (
+											bonus?.bonus &&
+											typeof bonus.value === "number" &&
+											[
+												"Impenetrable",
+												"Impregnable",
+												"Insurmountable",
+												"Impassable",
+											].includes(bonus.bonus)
+										) {
+											armourEffects.push({
+												name: bonus.bonus,
+												value: bonus.value, // 保持原始数值，套装加成在后面统一处理
+											});
+										}
+									}
+								}
+
+								armourUpdates[armourType] = {
+									...armourData,
+									...(armourEffects.length > 0 && { effects: armourEffects }),
+								};
+							} else {
+								failedImports.push(`护甲: ${item.name} (ID: ${item.ID})`);
+							}
+						} else {
+							failedImports.push(
+								`护甲: ${item.name} (无法确定类型, ID: ${item.ID})`,
+							);
+						}
+					}
+				}
+
+				// 合并装备更新
+				if (Object.keys(weaponsUpdates).length > 0) {
+					finalUpdates.weapons = {
+						...player.weapons,
+						...weaponsUpdates,
+					};
+				}
+
+				if (Object.keys(armourUpdates).length > 0) {
+					// 先应用护甲更新，然后检查套装加成
+					const updatedArmour = {
+						...player.armour,
+						...armourUpdates,
+					};
+
+					// 检查是否穿着完整套装并应用套装加成
+					finalUpdates.armour = applyArmourSetBonus(updatedArmour);
+				} else {
+					// 即使没有导入新护甲，也要检查现有护甲的套装加成
+					finalUpdates.armour = applyArmourSetBonus(player.armour);
+				}
+			}
+
 			// 一次性更新所有数据
 			updatePlayer(finalUpdates);
+
+			// 显示导入结果 - 只有在装备导入失败时才弹窗提示
+			if (equipmentDetails && equipmentDetails.length > 0) {
+				const weaponCount = Object.keys(weaponsUpdates).length;
+				const armourCount = Object.keys(armourUpdates).length;
+
+				if (failedImports.length > 0) {
+					// 只有在任意武器或护甲导入失败时才弹窗提示
+					let message = `导入完成！\n\n成功导入: ${weaponCount} 件武器, ${armourCount} 件护甲`;
+					message += `\n\n以下装备导入失败（可能是数据库中尚未录入）:\n${failedImports.join("\n")}`;
+					alert(message);
+				}
+				// 如果全部成功，不弹窗提示
+			}
+			// 如果没有装备数据也不弹窗
 		} catch (error) {
 			console.error("更新玩家属性时出错:", error);
 			alert("更新玩家属性失败，请检查数据格式");
 		}
+	};
+
+	// 辅助函数：根据ID查找武器数据并使用API返回的实际数值
+	const findWeaponByIdAndUpdateStats = (
+		weaponType: "primary" | "secondary" | "melee" | "temporary",
+		weaponId: number,
+		weaponData: TornItemDetailsResponse["itemdetails"],
+	): WeaponData | null => {
+		try {
+			// 先通过ID查找基础武器数据
+			const baseWeapon = getWeaponById(weaponType, weaponId.toString());
+
+			if (baseWeapon) {
+				// 使用API返回的实际数值覆盖基础数据
+				const updatedWeapon: WeaponData = {
+					...baseWeapon,
+					// 使用API返回的实际伤害和精准度
+					damage: weaponData.damage || baseWeapon.damage,
+					accuracy: weaponData.accuracy || baseWeapon.accuracy,
+					// 如果有quality字段，可以作为品质参考
+					experience: baseWeapon.experience || 0,
+				};
+
+				console.log(
+					`成功匹配武器: ID=${weaponId}, ${weaponData.name} -> ${baseWeapon.name} (${weaponType})`,
+				);
+				console.log(
+					`数值: 伤害=${updatedWeapon.damage}, 精准=${updatedWeapon.accuracy}`,
+				);
+				return updatedWeapon;
+			} else {
+				console.warn(
+					`未找到匹配的武器: ID=${weaponId}, ${weaponData.name} (${weaponType})`,
+				);
+				return null;
+			}
+		} catch (error) {
+			console.warn(`查找武器失败: ID=${weaponId}, ${weaponData.name}`, error);
+			return null;
+		}
+	};
+
+	// 辅助函数：根据ID查找护甲数据并使用API返回的实际数值
+	const findArmourByIdAndUpdateStats = (
+		armourType: "head" | "body" | "hands" | "legs" | "feet",
+		armourId: number,
+		armourData: TornItemDetailsResponse["itemdetails"],
+	): ArmourData | null => {
+		try {
+			// 先通过ID查找基础护甲数据
+			const baseArmour = getArmourById(armourType, armourId.toString());
+
+			if (baseArmour) {
+				// 使用API返回的实际数值覆盖基础数据
+				const updatedArmour: ArmourData = {
+					...baseArmour,
+					// 使用API返回的实际护甲值，如果没有则使用基础值
+					armour:
+						typeof armourData.armor === "number"
+							? armourData.armor
+							: baseArmour.armour,
+				};
+
+				console.log(
+					`成功匹配护甲: ID=${armourId}, ${armourData.name} -> ${baseArmour.type || baseArmour.set} (${armourType})`,
+				);
+				console.log(`护甲值: ${updatedArmour.armour}`);
+				return updatedArmour;
+			} else {
+				console.warn(
+					`未找到匹配的护甲: ID=${armourId}, ${armourData.name} (${armourType})`,
+				);
+				return null;
+			}
+		} catch (error) {
+			console.warn(`查找护甲失败: ID=${armourId}, ${armourData.name}`, error);
+			return null;
+		}
+	};
+
+	// 辅助函数：根据护甲名称确定护甲类型
+	const getArmourTypeFromName = (
+		armourName: string,
+	): "head" | "body" | "hands" | "legs" | "feet" | null => {
+		const name = armourName.toLowerCase();
+
+		// 头部护甲
+		if (
+			name.includes("helmet") ||
+			name.includes("hat") ||
+			name.includes("mask") ||
+			name.includes("head") ||
+			name.includes("visage") ||
+			name.includes("respirator") ||
+			name.includes("gas mask")
+		) {
+			return "head";
+		}
+
+		// 身体护甲
+		if (
+			name.includes("vest") ||
+			name.includes("jacket") ||
+			name.includes("shirt") ||
+			name.includes("body") ||
+			name.includes("chest") ||
+			name.includes("armor") ||
+			name.includes("apron") ||
+			name.includes("coat") ||
+			name.includes("breastplate") ||
+			name.includes("spathe")
+		) {
+			return "body";
+		}
+
+		// 手部护甲
+		if (
+			name.includes("gloves") ||
+			name.includes("hands") ||
+			name.includes("gauntlets") ||
+			name.includes("clawshields")
+		) {
+			return "hands";
+		}
+
+		// 腿部护甲
+		if (
+			name.includes("pants") ||
+			name.includes("legs") ||
+			name.includes("trousers") ||
+			name.includes("britches")
+		) {
+			return "legs";
+		}
+
+		// 脚部护甲
+		if (
+			name.includes("boots") ||
+			name.includes("shoes") ||
+			name.includes("feet") ||
+			name.includes("hooves")
+		) {
+			return "feet";
+		}
+
+		return null;
+	};
+
+	// 辅助函数：检查是否穿着完整套装并应用套装加成
+	const applyArmourSetBonus = (
+		armourSet: Player["armour"],
+	): Player["armour"] => {
+		// 获取所有护甲部位的套装名称
+		const sets = {
+			head: armourSet.head.set,
+			body: armourSet.body.set,
+			hands: armourSet.hands.set,
+			legs: armourSet.legs.set,
+			feet: armourSet.feet.set,
+		};
+
+		// 检查是否所有部位都属于同一套装（且不是"n/a"）
+		const setNames = Object.values(sets);
+		const firstSet = setNames[0];
+
+		// 如果第一个套装名是"n/a"或者不是所有部位都是同一套装，则不应用加成
+		if (firstSet === "n/a" || !setNames.every((set) => set === firstSet)) {
+			return armourSet; // 返回原始护甲数据，不应用套装加成
+		}
+
+		// 穿着完整套装，应用+10套装加成到所有护甲特效
+		const result = { ...armourSet };
+
+		(Object.keys(result) as Array<keyof Player["armour"]>).forEach((slot) => {
+			const armour = result[slot];
+			if (armour.effects && armour.effects.length > 0) {
+				result[slot] = {
+					...armour,
+					effects: armour.effects.map((effect) => ({
+						...effect,
+						value: effect.value + 10, // 套装加成+10
+					})),
+				};
+			}
+		});
+
+		console.log(`应用套装加成: ${firstSet} 套装，所有护甲特效+10`);
+		return result;
 	};
 
 	return (
@@ -859,15 +1250,30 @@ export default function PlayerConfig({
 					<div className="space-y-2 mt-4">
 						<Label htmlFor={`${playerId}-import`}>导入配置</Label>
 						<div className="flex space-x-2">
-							<Input
-								id={`${playerId}-import`}
-								type="text"
-								value={importKey}
-								onChange={(e) => setImportKey(e.target.value)}
-								placeholder="输入Torn API Key..."
-								className="flex-1"
-								aria-label={`${playerName}导入配置`}
-							/>
+							<div className="relative flex-1">
+								<Input
+									id={`${playerId}-import`}
+									type={showApiKey ? "text" : "password"}
+									value={importKey}
+									onChange={(e) => setImportKey(e.target.value)}
+									placeholder="输入Torn API Key..."
+									className="pr-10"
+									aria-label={`${playerName}导入配置`}
+								/>
+								<Button
+									type="button"
+									variant="ghost"
+									size="sm"
+									className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+									onClick={() => setShowApiKey(!showApiKey)}
+								>
+									{showApiKey ? (
+										<EyeOff className="h-4 w-4 text-slate-500" />
+									) : (
+										<Eye className="h-4 w-4 text-slate-500" />
+									)}
+								</Button>
+							</div>
 							<Button
 								variant="secondary"
 								className="transition-colors duration-200"
