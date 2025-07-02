@@ -127,6 +127,27 @@ export default function PlayerConfig({
 	const [isImporting, setIsImporting] = useState(false);
 	const [showApiKey, setShowApiKey] = useState(false);
 
+	// 新增：锻炼模拟器相关状态
+	const [inputMode, setInputMode] = useState<"manual" | "gym">("manual");
+	const [gymParams, setGymParams] = useState({
+		happiness: 5025,
+		gymRatio: 7.3,
+		energyPerSession: 10,
+		bonusMultiplier: 1.2,
+		totalEnergy: {
+			strength: 0,
+			speed: 0,
+			defense: 0,
+			dexterity: 0,
+		},
+		initialStats: {
+			strength: 10,
+			speed: 10,
+			defense: 10,
+			dexterity: 10,
+		},
+	});
+
 	const playerId = isAttacker ? "attacker" : "defender";
 
 	// 生成唯一的 ID
@@ -330,6 +351,8 @@ export default function PlayerConfig({
 			player.perks.company, // 12: companyPerks
 			player.perks.property, // 13: propertyPerks
 			player.perks.merit, // 14: meritPerks
+			inputMode, // 15: inputMode
+			gymParams, // 16: gymParams (锻炼参数和能量设置)
 		];
 
 		const exportString = JSON.stringify(exportData);
@@ -346,7 +369,7 @@ export default function PlayerConfig({
 				// 原版数组格式
 				// const _position = importData[0]; // 位置信息暂时不使用
 				const name = importData[1] || player.name;
-				const stats = importData[3] || player.stats;
+				let stats = importData[3] || player.stats;
 				const life = importData[4] || player.life;
 				const passives = importData[5] || player.passives;
 				const weapons = importData[6] || player.weapons;
@@ -358,6 +381,10 @@ export default function PlayerConfig({
 				const company = importData[12] || player.perks.company;
 				const property = importData[13] || player.perks.property;
 				const merit = importData[14] || player.perks.merit;
+
+				// 新增：导入锻炼参数
+				const importedInputMode = importData[15];
+				const importedGymParams = importData[16];
 
 				// 转换武器mods格式：从 {one: string, two: string} 到 string[]
 				const convertMods = (weaponMods: unknown): string[] => {
@@ -384,6 +411,114 @@ export default function PlayerConfig({
 				} else {
 					// 导入到防守方 -> 更新 defendSettings
 					finalDefendSettings = defendSettings || player.defendSettings;
+				}
+
+				// 处理锻炼参数导入和BS计算优先级
+				if (importedInputMode && importedGymParams) {
+					// 验证并合并锻炼参数，使用默认值填充缺失的属性
+					const validatedGymParams = {
+						happiness:
+							typeof importedGymParams.happiness === "number"
+								? importedGymParams.happiness
+								: gymParams.happiness,
+						gymRatio:
+							typeof importedGymParams.gymRatio === "number"
+								? importedGymParams.gymRatio
+								: gymParams.gymRatio,
+						energyPerSession:
+							typeof importedGymParams.energyPerSession === "number"
+								? importedGymParams.energyPerSession
+								: gymParams.energyPerSession,
+						bonusMultiplier:
+							typeof importedGymParams.bonusMultiplier === "number"
+								? importedGymParams.bonusMultiplier
+								: gymParams.bonusMultiplier,
+						totalEnergy: {
+							strength:
+								importedGymParams.totalEnergy &&
+								typeof importedGymParams.totalEnergy.strength === "number"
+									? importedGymParams.totalEnergy.strength
+									: gymParams.totalEnergy.strength,
+							speed:
+								importedGymParams.totalEnergy &&
+								typeof importedGymParams.totalEnergy.speed === "number"
+									? importedGymParams.totalEnergy.speed
+									: gymParams.totalEnergy.speed,
+							defense:
+								importedGymParams.totalEnergy &&
+								typeof importedGymParams.totalEnergy.defense === "number"
+									? importedGymParams.totalEnergy.defense
+									: gymParams.totalEnergy.defense,
+							dexterity:
+								importedGymParams.totalEnergy &&
+								typeof importedGymParams.totalEnergy.dexterity === "number"
+									? importedGymParams.totalEnergy.dexterity
+									: gymParams.totalEnergy.dexterity,
+						},
+						initialStats: {
+							strength:
+								importedGymParams.initialStats &&
+								typeof importedGymParams.initialStats.strength === "number"
+									? importedGymParams.initialStats.strength
+									: gymParams.initialStats.strength,
+							speed:
+								importedGymParams.initialStats &&
+								typeof importedGymParams.initialStats.speed === "number"
+									? importedGymParams.initialStats.speed
+									: gymParams.initialStats.speed,
+							defense:
+								importedGymParams.initialStats &&
+								typeof importedGymParams.initialStats.defense === "number"
+									? importedGymParams.initialStats.defense
+									: gymParams.initialStats.defense,
+							dexterity:
+								importedGymParams.initialStats &&
+								typeof importedGymParams.initialStats.dexterity === "number"
+									? importedGymParams.initialStats.dexterity
+									: gymParams.initialStats.dexterity,
+						},
+					};
+
+					// 导入锻炼参数
+					setInputMode(importedInputMode);
+					setGymParams(validatedGymParams);
+
+					// 如果导入的是锻炼模式，且有能量设置，则重新计算BS值
+					if (importedInputMode === "gym" && validatedGymParams.totalEnergy) {
+						const hasAnyEnergy = Object.values(
+							validatedGymParams.totalEnergy,
+						).some((energy) => typeof energy === "number" && energy > 0);
+						if (hasAnyEnergy) {
+							// 使用导入的锻炼参数计算新的BS值，优先于导入数据中的stats
+							const calculatedStats = {
+								strength: simulateTrainingWithParams(
+									"Strength",
+									validatedGymParams.initialStats.strength,
+									validatedGymParams.totalEnergy.strength,
+									validatedGymParams,
+								),
+								speed: simulateTrainingWithParams(
+									"Speed",
+									validatedGymParams.initialStats.speed,
+									validatedGymParams.totalEnergy.speed,
+									validatedGymParams,
+								),
+								defense: simulateTrainingWithParams(
+									"Defense",
+									validatedGymParams.initialStats.defense,
+									validatedGymParams.totalEnergy.defense,
+									validatedGymParams,
+								),
+								dexterity: simulateTrainingWithParams(
+									"Dexterity",
+									validatedGymParams.initialStats.dexterity,
+									validatedGymParams.totalEnergy.dexterity,
+									validatedGymParams,
+								),
+							};
+							stats = calculatedStats; // 覆盖导入的stats
+						}
+					}
 				}
 
 				updatePlayer({
@@ -1218,6 +1353,195 @@ export default function PlayerConfig({
 		return result;
 	};
 
+	// 新增：锻炼模拟器算法
+	const gymConstants = {
+		Strength: { A: 1600, B: 1700, C: 700 },
+		Speed: { A: 1600, B: 2000, C: 1350 },
+		Dexterity: { A: 1800, B: 1500, C: 1000 },
+		Defense: { A: 2100, B: -600, C: 1500 },
+	};
+
+	const calculateSValue = (currentStat: number): number => {
+		if (currentStat <= 50_000_000) {
+			return currentStat;
+		} else {
+			return (
+				50_000_000 +
+				(currentStat - 50_000_000) / (8.77635 * Math.log10(currentStat))
+			);
+		}
+	};
+
+	const calculateSingleWorkout = (
+		statType: "Strength" | "Speed" | "Dexterity" | "Defense",
+		currentStat: number,
+	): number => {
+		const constants = gymConstants[statType];
+		const { A, B } = constants;
+
+		const S = calculateSValue(currentStat);
+		const H = gymParams.happiness;
+
+		// 第一部分: S * ROUND(1 + 0.07 * ROUND(LN(1+H/250),4),4)
+		const lnPart = Math.round(Math.log(1 + H / 250) * 10000) / 10000;
+		const multiplier = Math.round((1 + 0.07 * lnPart) * 10000) / 10000;
+		const firstPart = S * multiplier;
+
+		// 第二部分: 8 * H^1.05
+		const secondPart = 8 * H ** 1.05;
+
+		// 第三部分: (1-(H/99999)^2) * A
+		const thirdPart = (1 - (H / 99999) ** 2) * A;
+
+		// 第四部分: B
+		const fourthPart = B;
+
+		// 组合所有部分
+		const baseGain = firstPart + secondPart + thirdPart + fourthPart;
+
+		// 最终公式
+		const dS =
+			baseGain *
+			(1 / 200000) *
+			gymParams.gymRatio *
+			gymParams.energyPerSession *
+			gymParams.bonusMultiplier;
+
+		return Math.max(0, dS);
+	};
+
+	const simulateTraining = (
+		statType: "Strength" | "Speed" | "Dexterity" | "Defense",
+		initialStat: number,
+		totalEnergy: number,
+	): number => {
+		let currentStat = initialStat;
+		const totalSessions = Math.floor(totalEnergy / gymParams.energyPerSession);
+
+		for (let session = 0; session < totalSessions; session++) {
+			const gain = calculateSingleWorkout(statType, currentStat);
+			currentStat += gain;
+		}
+
+		return Math.round(currentStat);
+	};
+
+	// 新增：使用指定参数计算单次锻炼收益
+	const calculateSingleWorkoutWithParams = (
+		statType: "Strength" | "Speed" | "Dexterity" | "Defense",
+		currentStat: number,
+		params: typeof gymParams,
+	): number => {
+		const constants = gymConstants[statType];
+		const { A, B } = constants;
+
+		const S = calculateSValue(currentStat);
+		const H = params.happiness;
+
+		// 第一部分: S * ROUND(1 + 0.07 * ROUND(LN(1+H/250),4),4)
+		const lnPart = Math.round(Math.log(1 + H / 250) * 10000) / 10000;
+		const multiplier = Math.round((1 + 0.07 * lnPart) * 10000) / 10000;
+		const firstPart = S * multiplier;
+
+		// 第二部分: 8 * H^1.05
+		const secondPart = 8 * H ** 1.05;
+
+		// 第三部分: (1-(H/99999)^2) * A
+		const thirdPart = (1 - (H / 99999) ** 2) * A;
+
+		// 第四部分: B
+		const fourthPart = B;
+
+		// 组合所有部分
+		const baseGain = firstPart + secondPart + thirdPart + fourthPart;
+
+		// 最终公式
+		const dS =
+			baseGain *
+			(1 / 200000) *
+			params.gymRatio *
+			params.energyPerSession *
+			params.bonusMultiplier;
+
+		return Math.max(0, dS);
+	};
+
+	// 新增：使用指定参数进行锻炼模拟（用于导入时的计算）
+	const simulateTrainingWithParams = (
+		statType: "Strength" | "Speed" | "Dexterity" | "Defense",
+		initialStat: number,
+		totalEnergy: number,
+		params: typeof gymParams,
+	): number => {
+		let currentStat = initialStat;
+		const totalSessions = Math.floor(totalEnergy / params.energyPerSession);
+
+		for (let session = 0; session < totalSessions; session++) {
+			const gain = calculateSingleWorkoutWithParams(
+				statType,
+				currentStat,
+				params,
+			);
+			currentStat += gain;
+		}
+
+		return Math.round(currentStat);
+	};
+
+	const calculateStatsFromGym = () => {
+		const newStats = {
+			strength: simulateTraining(
+				"Strength",
+				gymParams.initialStats.strength,
+				gymParams.totalEnergy.strength,
+			),
+			speed: simulateTraining(
+				"Speed",
+				gymParams.initialStats.speed,
+				gymParams.totalEnergy.speed,
+			),
+			defense: simulateTraining(
+				"Defense",
+				gymParams.initialStats.defense,
+				gymParams.totalEnergy.defense,
+			),
+			dexterity: simulateTraining(
+				"Dexterity",
+				gymParams.initialStats.dexterity,
+				gymParams.totalEnergy.dexterity,
+			),
+		};
+
+		updatePlayer({ stats: newStats });
+	};
+
+	const updateGymParam = (field: string, value: number) => {
+		setGymParams((prev) => ({
+			...prev,
+			[field]: value,
+		}));
+	};
+
+	const updateTotalEnergy = (stat: string, value: number) => {
+		setGymParams((prev) => ({
+			...prev,
+			totalEnergy: {
+				...prev.totalEnergy,
+				[stat]: value,
+			},
+		}));
+	};
+
+	const updateInitialStat = (stat: string, value: number) => {
+		setGymParams((prev) => ({
+			...prev,
+			initialStats: {
+				...prev.initialStats,
+				[stat]: value,
+			},
+		}));
+	};
+
 	return (
 		<div className="space-y-6">
 			{/* 玩家基本信息 */}
@@ -1347,6 +1671,39 @@ export default function PlayerConfig({
 						{/* 属性与被动 Tab */}
 						<TabsContent value="stats">
 							<div className="space-y-6">
+								{/* 输入模式切换 */}
+								<div className="space-y-3">
+									<h4 className="text-md font-semibold">输入模式</h4>
+									<div className="flex space-x-4">
+										<label className="flex items-center space-x-2">
+											<input
+												type="radio"
+												name={`${playerId}-input-mode`}
+												value="manual"
+												checked={inputMode === "manual"}
+												onChange={(e) =>
+													setInputMode(e.target.value as "manual" | "gym")
+												}
+												className="rounded border-slate-300 accent-slate-600 focus:ring-slate-500"
+											/>
+											<span className="text-sm">手动输入</span>
+										</label>
+										<label className="flex items-center space-x-2">
+											<input
+												type="radio"
+												name={`${playerId}-input-mode`}
+												value="gym"
+												checked={inputMode === "gym"}
+												onChange={(e) =>
+													setInputMode(e.target.value as "manual" | "gym")
+												}
+												className="rounded border-slate-300 accent-slate-600 focus:ring-slate-500"
+											/>
+											<span className="text-sm">锻炼能量计算</span>
+										</label>
+									</div>
+								</div>
+
 								{/* 生命值 */}
 								<div className="space-y-2">
 									<Label htmlFor={`${playerId}-life`}>生命值</Label>
@@ -1366,56 +1723,338 @@ export default function PlayerConfig({
 									</p>
 								</div>
 
-								{/* 基础属性 */}
-								<div className="space-y-3">
-									<h4 className="text-md font-semibold">基础属性</h4>
-									<div className="grid grid-cols-2 gap-4">
-										<div className="space-y-2">
-											<Label htmlFor={`${playerId}-strength`}>力量(STR)</Label>
-											<FormattedInput
-												id={`${playerId}-strength`}
-												value={player.stats.strength}
-												onChange={(value) => updateStats("strength", value)}
-												min={100}
-												max={10000000}
-												aria-label={`${playerName}力量`}
-											/>
+								{inputMode === "manual" ? (
+									<>
+										{/* 手动输入模式 - 基础属性 */}
+										<div className="space-y-3">
+											<h4 className="text-md font-semibold">基础属性</h4>
+											<div className="grid grid-cols-2 gap-4">
+												<div className="space-y-2">
+													<Label htmlFor={`${playerId}-strength`}>
+														力量(STR)
+													</Label>
+													<FormattedInput
+														id={`${playerId}-strength`}
+														value={player.stats.strength}
+														onChange={(value) => updateStats("strength", value)}
+														min={100}
+														max={10000000}
+														aria-label={`${playerName}力量`}
+													/>
+												</div>
+												<div className="space-y-2">
+													<Label htmlFor={`${playerId}-speed`}>速度(SPD)</Label>
+													<FormattedInput
+														id={`${playerId}-speed`}
+														value={player.stats.speed}
+														onChange={(value) => updateStats("speed", value)}
+														min={100}
+														max={10000000}
+														aria-label={`${playerName}速度`}
+													/>
+												</div>
+												<div className="space-y-2">
+													<Label htmlFor={`${playerId}-defense`}>
+														防御(DEF)
+													</Label>
+													<FormattedInput
+														id={`${playerId}-defense`}
+														value={player.stats.defense}
+														onChange={(value) => updateStats("defense", value)}
+														min={100}
+														max={10000000}
+														aria-label={`${playerName}防御`}
+													/>
+												</div>
+												<div className="space-y-2">
+													<Label htmlFor={`${playerId}-dexterity`}>
+														敏捷(DEX)
+													</Label>
+													<FormattedInput
+														id={`${playerId}-dexterity`}
+														value={player.stats.dexterity}
+														onChange={(value) =>
+															updateStats("dexterity", value)
+														}
+														min={100}
+														max={10000000}
+														aria-label={`${playerName}敏捷`}
+													/>
+												</div>
+											</div>
 										</div>
-										<div className="space-y-2">
-											<Label htmlFor={`${playerId}-speed`}>速度(SPD)</Label>
-											<FormattedInput
-												id={`${playerId}-speed`}
-												value={player.stats.speed}
-												onChange={(value) => updateStats("speed", value)}
-												min={100}
-												max={10000000}
-												aria-label={`${playerName}速度`}
-											/>
+									</>
+								) : (
+									<>
+										{/* 锻炼能量计算模式 */}
+										<div className="space-y-4">
+											<h4 className="text-md font-semibold">锻炼参数设置</h4>
+
+											{/* 基础参数 */}
+											<div className="grid grid-cols-2 gap-4">
+												<div className="space-y-2">
+													<Label htmlFor={`${playerId}-happiness`}>
+														快乐值
+													</Label>
+													<Input
+														id={`${playerId}-happiness`}
+														type="number"
+														value={gymParams.happiness}
+														onChange={(e) =>
+															updateGymParam(
+																"happiness",
+																parseFloat(e.target.value) || 5025,
+															)
+														}
+														min="0"
+														max="99999"
+														step="0.1"
+													/>
+												</div>
+												<div className="space-y-2">
+													<Label htmlFor={`${playerId}-gym-ratio`}>G系数</Label>
+													<Input
+														id={`${playerId}-gym-ratio`}
+														type="number"
+														value={gymParams.gymRatio}
+														onChange={(e) =>
+															updateGymParam(
+																"gymRatio",
+																parseFloat(e.target.value) || 7.3,
+															)
+														}
+														min="0"
+														max="20"
+														step="0.1"
+													/>
+												</div>
+												<div className="space-y-2">
+													<Label htmlFor={`${playerId}-energy-per-session`}>
+														每次锻炼能量
+													</Label>
+													<Input
+														id={`${playerId}-energy-per-session`}
+														type="number"
+														value={gymParams.energyPerSession}
+														onChange={(e) =>
+															updateGymParam(
+																"energyPerSession",
+																parseInt(e.target.value) || 10,
+															)
+														}
+														min="1"
+														max="50"
+													/>
+												</div>
+												<div className="space-y-2">
+													<Label htmlFor={`${playerId}-bonus-multiplier`}>
+														加成乘数
+													</Label>
+													<Input
+														id={`${playerId}-bonus-multiplier`}
+														type="number"
+														value={gymParams.bonusMultiplier}
+														onChange={(e) =>
+															updateGymParam(
+																"bonusMultiplier",
+																parseFloat(e.target.value) || 1.2,
+															)
+														}
+														min="0.1"
+														max="10"
+														step="0.1"
+													/>
+												</div>
+											</div>
+
+											{/* 初始属性设置 */}
+											<div className="space-y-3">
+												<h5 className="text-sm font-semibold">
+													初始属性 (S值)
+												</h5>
+												<div className="grid grid-cols-2 gap-4">
+													<div className="space-y-2">
+														<Label htmlFor={`${playerId}-initial-strength`}>
+															初始力量
+														</Label>
+														<Input
+															id={`${playerId}-initial-strength`}
+															type="number"
+															value={gymParams.initialStats.strength}
+															onChange={(e) =>
+																updateInitialStat(
+																	"strength",
+																	parseInt(e.target.value) || 10,
+																)
+															}
+															min="1"
+															max="100000000"
+														/>
+													</div>
+													<div className="space-y-2">
+														<Label htmlFor={`${playerId}-initial-speed`}>
+															初始速度
+														</Label>
+														<Input
+															id={`${playerId}-initial-speed`}
+															type="number"
+															value={gymParams.initialStats.speed}
+															onChange={(e) =>
+																updateInitialStat(
+																	"speed",
+																	parseInt(e.target.value) || 10,
+																)
+															}
+															min="1"
+															max="100000000"
+														/>
+													</div>
+													<div className="space-y-2">
+														<Label htmlFor={`${playerId}-initial-defense`}>
+															初始防御
+														</Label>
+														<Input
+															id={`${playerId}-initial-defense`}
+															type="number"
+															value={gymParams.initialStats.defense}
+															onChange={(e) =>
+																updateInitialStat(
+																	"defense",
+																	parseInt(e.target.value) || 10,
+																)
+															}
+															min="1"
+															max="100000000"
+														/>
+													</div>
+													<div className="space-y-2">
+														<Label htmlFor={`${playerId}-initial-dexterity`}>
+															初始敏捷
+														</Label>
+														<Input
+															id={`${playerId}-initial-dexterity`}
+															type="number"
+															value={gymParams.initialStats.dexterity}
+															onChange={(e) =>
+																updateInitialStat(
+																	"dexterity",
+																	parseInt(e.target.value) || 10,
+																)
+															}
+															min="1"
+															max="100000000"
+														/>
+													</div>
+												</div>
+											</div>
+
+											{/* 锻炼能量输入 */}
+											<div className="space-y-3">
+												<h5 className="text-sm font-semibold">锻炼总能量</h5>
+												<div className="grid grid-cols-2 gap-4">
+													<div className="space-y-2">
+														<Label htmlFor={`${playerId}-energy-strength`}>
+															力量锻炼能量
+														</Label>
+														<FormattedInput
+															id={`${playerId}-energy-strength`}
+															value={gymParams.totalEnergy.strength}
+															onChange={(value) =>
+																updateTotalEnergy("strength", value)
+															}
+															min={0}
+															max={100000000}
+														/>
+													</div>
+													<div className="space-y-2">
+														<Label htmlFor={`${playerId}-energy-speed`}>
+															速度锻炼能量
+														</Label>
+														<FormattedInput
+															id={`${playerId}-energy-speed`}
+															value={gymParams.totalEnergy.speed}
+															onChange={(value) =>
+																updateTotalEnergy("speed", value)
+															}
+															min={0}
+															max={100000000}
+														/>
+													</div>
+													<div className="space-y-2">
+														<Label htmlFor={`${playerId}-energy-defense`}>
+															防御锻炼能量
+														</Label>
+														<FormattedInput
+															id={`${playerId}-energy-defense`}
+															value={gymParams.totalEnergy.defense}
+															onChange={(value) =>
+																updateTotalEnergy("defense", value)
+															}
+															min={0}
+															max={100000000}
+														/>
+													</div>
+													<div className="space-y-2">
+														<Label htmlFor={`${playerId}-energy-dexterity`}>
+															敏捷锻炼能量
+														</Label>
+														<FormattedInput
+															id={`${playerId}-energy-dexterity`}
+															value={gymParams.totalEnergy.dexterity}
+															onChange={(value) =>
+																updateTotalEnergy("dexterity", value)
+															}
+															min={0}
+															max={100000000}
+														/>
+													</div>
+												</div>
+											</div>
+
+											{/* 计算按钮 */}
+											<div className="flex justify-center">
+												<Button
+													onClick={calculateStatsFromGym}
+													variant="outline"
+													className="w-full max-w-md bg-slate-50 hover:bg-slate-100 border-slate-300 text-slate-700 font-medium transition-colors duration-200"
+												>
+													计算基础属性
+												</Button>
+											</div>
+
+											{/* 显示当前计算结果 */}
+											<div className="space-y-3">
+												<h5 className="text-sm font-semibold">计算结果</h5>
+												<div className="grid grid-cols-2 gap-4">
+													<div className="space-y-2">
+														<Label>力量 (STR)</Label>
+														<div className="p-2 bg-slate-50 rounded border text-sm">
+															{player.stats.strength.toLocaleString()}
+														</div>
+													</div>
+													<div className="space-y-2">
+														<Label>速度 (SPD)</Label>
+														<div className="p-2 bg-slate-50 rounded border text-sm">
+															{player.stats.speed.toLocaleString()}
+														</div>
+													</div>
+													<div className="space-y-2">
+														<Label>防御 (DEF)</Label>
+														<div className="p-2 bg-slate-50 rounded border text-sm">
+															{player.stats.defense.toLocaleString()}
+														</div>
+													</div>
+													<div className="space-y-2">
+														<Label>敏捷 (DEX)</Label>
+														<div className="p-2 bg-slate-50 rounded border text-sm">
+															{player.stats.dexterity.toLocaleString()}
+														</div>
+													</div>
+												</div>
+											</div>
 										</div>
-										<div className="space-y-2">
-											<Label htmlFor={`${playerId}-defense`}>防御(DEF)</Label>
-											<FormattedInput
-												id={`${playerId}-defense`}
-												value={player.stats.defense}
-												onChange={(value) => updateStats("defense", value)}
-												min={100}
-												max={10000000}
-												aria-label={`${playerName}防御`}
-											/>
-										</div>
-										<div className="space-y-2">
-											<Label htmlFor={`${playerId}-dexterity`}>敏捷(DEX)</Label>
-											<FormattedInput
-												id={`${playerId}-dexterity`}
-												value={player.stats.dexterity}
-												onChange={(value) => updateStats("dexterity", value)}
-												min={100}
-												max={10000000}
-												aria-label={`${playerName}敏捷`}
-											/>
-										</div>
-									</div>
-								</div>
+									</>
+								)}
 
 								{/* 属性被动加成 */}
 								<div className="space-y-3">
