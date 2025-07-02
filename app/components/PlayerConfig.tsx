@@ -415,42 +415,105 @@ export default function PlayerConfig({
 
 				// 处理锻炼参数导入和BS计算优先级
 				if (importedInputMode && importedGymParams) {
+					// 验证并合并锻炼参数，使用默认值填充缺失的属性
+					const validatedGymParams = {
+						happiness:
+							typeof importedGymParams.happiness === "number"
+								? importedGymParams.happiness
+								: gymParams.happiness,
+						gymRatio:
+							typeof importedGymParams.gymRatio === "number"
+								? importedGymParams.gymRatio
+								: gymParams.gymRatio,
+						energyPerSession:
+							typeof importedGymParams.energyPerSession === "number"
+								? importedGymParams.energyPerSession
+								: gymParams.energyPerSession,
+						bonusMultiplier:
+							typeof importedGymParams.bonusMultiplier === "number"
+								? importedGymParams.bonusMultiplier
+								: gymParams.bonusMultiplier,
+						totalEnergy: {
+							strength:
+								importedGymParams.totalEnergy &&
+								typeof importedGymParams.totalEnergy.strength === "number"
+									? importedGymParams.totalEnergy.strength
+									: gymParams.totalEnergy.strength,
+							speed:
+								importedGymParams.totalEnergy &&
+								typeof importedGymParams.totalEnergy.speed === "number"
+									? importedGymParams.totalEnergy.speed
+									: gymParams.totalEnergy.speed,
+							defense:
+								importedGymParams.totalEnergy &&
+								typeof importedGymParams.totalEnergy.defense === "number"
+									? importedGymParams.totalEnergy.defense
+									: gymParams.totalEnergy.defense,
+							dexterity:
+								importedGymParams.totalEnergy &&
+								typeof importedGymParams.totalEnergy.dexterity === "number"
+									? importedGymParams.totalEnergy.dexterity
+									: gymParams.totalEnergy.dexterity,
+						},
+						initialStats: {
+							strength:
+								importedGymParams.initialStats &&
+								typeof importedGymParams.initialStats.strength === "number"
+									? importedGymParams.initialStats.strength
+									: gymParams.initialStats.strength,
+							speed:
+								importedGymParams.initialStats &&
+								typeof importedGymParams.initialStats.speed === "number"
+									? importedGymParams.initialStats.speed
+									: gymParams.initialStats.speed,
+							defense:
+								importedGymParams.initialStats &&
+								typeof importedGymParams.initialStats.defense === "number"
+									? importedGymParams.initialStats.defense
+									: gymParams.initialStats.defense,
+							dexterity:
+								importedGymParams.initialStats &&
+								typeof importedGymParams.initialStats.dexterity === "number"
+									? importedGymParams.initialStats.dexterity
+									: gymParams.initialStats.dexterity,
+						},
+					};
+
 					// 导入锻炼参数
 					setInputMode(importedInputMode);
-					setGymParams(importedGymParams);
+					setGymParams(validatedGymParams);
 
 					// 如果导入的是锻炼模式，且有能量设置，则重新计算BS值
-					if (importedInputMode === "gym" && importedGymParams.totalEnergy) {
+					if (importedInputMode === "gym" && validatedGymParams.totalEnergy) {
 						const hasAnyEnergy = Object.values(
-							importedGymParams.totalEnergy,
+							validatedGymParams.totalEnergy,
 						).some((energy) => typeof energy === "number" && energy > 0);
 						if (hasAnyEnergy) {
 							// 使用导入的锻炼参数计算新的BS值，优先于导入数据中的stats
-							const tempGymParams = importedGymParams;
 							const calculatedStats = {
 								strength: simulateTrainingWithParams(
 									"Strength",
-									tempGymParams.initialStats.strength,
-									tempGymParams.totalEnergy.strength,
-									tempGymParams,
+									validatedGymParams.initialStats.strength,
+									validatedGymParams.totalEnergy.strength,
+									validatedGymParams,
 								),
 								speed: simulateTrainingWithParams(
 									"Speed",
-									tempGymParams.initialStats.speed,
-									tempGymParams.totalEnergy.speed,
-									tempGymParams,
+									validatedGymParams.initialStats.speed,
+									validatedGymParams.totalEnergy.speed,
+									validatedGymParams,
 								),
 								defense: simulateTrainingWithParams(
 									"Defense",
-									tempGymParams.initialStats.defense,
-									tempGymParams.totalEnergy.defense,
-									tempGymParams,
+									validatedGymParams.initialStats.defense,
+									validatedGymParams.totalEnergy.defense,
+									validatedGymParams,
 								),
 								dexterity: simulateTrainingWithParams(
 									"Dexterity",
-									tempGymParams.initialStats.dexterity,
-									tempGymParams.totalEnergy.dexterity,
-									tempGymParams,
+									validatedGymParams.initialStats.dexterity,
+									validatedGymParams.totalEnergy.dexterity,
+									validatedGymParams,
 								),
 							};
 							stats = calculatedStats; // 覆盖导入的stats
