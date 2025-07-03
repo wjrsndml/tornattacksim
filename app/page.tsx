@@ -4,6 +4,7 @@ import {
 	BarChart3,
 	FileText,
 	Lightbulb,
+	RefreshCw,
 	Swords,
 	TrendingUp,
 } from "lucide-react";
@@ -288,16 +289,16 @@ const createDefaultPlayer = (name: string, isAttacker: boolean): Player => {
 		},
 		armour: defaultArmour,
 		attackSettings: {
-			primary: { setting: isAttacker ? 1 : 0, reload: true },
+			primary: { setting: isAttacker ? 2 : 0, reload: true },
 			secondary: { setting: isAttacker ? 0 : 0, reload: true },
-			melee: { setting: isAttacker ? 2 : 0, reload: false },
-			temporary: { setting: isAttacker ? 0 : 0, reload: false },
+			melee: { setting: isAttacker ? 3 : 0, reload: false },
+			temporary: { setting: isAttacker ? 1 : 0, reload: false },
 		},
 		defendSettings: {
-			primary: { setting: isAttacker ? 0 : 5, reload: true },
-			secondary: { setting: isAttacker ? 0 : 3, reload: true },
-			melee: { setting: isAttacker ? 0 : 2, reload: false },
-			temporary: { setting: isAttacker ? 0 : 0, reload: false },
+			primary: { setting: isAttacker ? 0 : 10, reload: true },
+			secondary: { setting: isAttacker ? 0 : 0, reload: true },
+			melee: { setting: isAttacker ? 0 : 1, reload: false },
+			temporary: { setting: isAttacker ? 0 : 100, reload: false },
 		},
 		perks: {
 			education: defaultEducation,
@@ -474,6 +475,36 @@ export default function Home() {
 		}
 	};
 
+	// 交换攻击方和防守方设置（除了战斗设置）
+	const swapPlayers = () => {
+		// 保存原来的战斗设置
+		const originalPlayer1AttackSettings = player1.attackSettings;
+		const originalPlayer1DefendSettings = player1.defendSettings;
+		const originalPlayer2AttackSettings = player2.attackSettings;
+		const originalPlayer2DefendSettings = player2.defendSettings;
+
+		// 创建交换后的玩家1（原player2的数据，但保持攻击方的战斗设置）
+		const newPlayer1 = {
+			...player2,
+			// 名字采用原 player2 的名字
+			name: player2.name,
+			attackSettings: originalPlayer1AttackSettings, // 保持攻击方的攻击设置
+			defendSettings: originalPlayer1DefendSettings, // 保持攻击方的防守设置
+		};
+
+		// 创建交换后的玩家2（原player1的数据，但保持防守方的战斗设置）
+		const newPlayer2 = {
+			...player1,
+			// 名字采用原 player1 的名字
+			name: player1.name,
+			attackSettings: originalPlayer2AttackSettings, // 保持防守方的攻击设置
+			defendSettings: originalPlayer2DefendSettings, // 保持防守方的防守设置
+		};
+
+		setPlayer1(newPlayer1);
+		setPlayer2(newPlayer2);
+	};
+
 	if (!dataLoaded) {
 		return (
 			<div className="min-h-screen bg-white flex items-center justify-center">
@@ -573,7 +604,20 @@ export default function Home() {
 							</div>
 						</div>
 
-						<div className="flex justify-end">
+						<div className="flex items-center gap-3">
+							{/* 交换按钮 */}
+							<Button
+								onClick={swapPlayers}
+								disabled={isSimulating}
+								variant="outline"
+								size="lg"
+								className="px-3 border-slate-300 hover:bg-slate-50 transition-colors duration-200"
+								title="交换攻击方和防守方设置（保留各自的战斗设置）"
+							>
+								<RefreshCw className="w-4 h-4" />
+							</Button>
+
+							{/* 开始战斗按钮 */}
 							<Button
 								onClick={handleSimulate}
 								disabled={isSimulating}

@@ -35,8 +35,22 @@ const FormattedInput = forwardRef<HTMLInputElement, FormattedInputProps>(
 		const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
 			setIsFocused(false);
 			const newValue = parseFormattedNumber(internalValue);
-			// 确保值在合理范围内
-			const finalValue = Math.max(0, newValue || value);
+			// 应用min和max限制
+			const minValue =
+				typeof props.min === "number"
+					? props.min
+					: typeof props.min === "string"
+						? parseFloat(props.min)
+						: 0;
+			const maxValue =
+				typeof props.max === "number"
+					? props.max
+					: typeof props.max === "string"
+						? parseFloat(props.max)
+						: Number.MAX_SAFE_INTEGER;
+
+			// 确保值在指定范围内，允许0值
+			const finalValue = Math.max(minValue, Math.min(maxValue, newValue));
 			onChange(finalValue);
 			onBlur?.(e);
 		};

@@ -22,7 +22,8 @@ export function getNumberScale(num: number): string {
 
 // 解析带逗号的数字字符串
 export function parseFormattedNumber(str: string): number {
-	const cleanStr = str.replace(/,/g, "");
-	const parsed = Number.parseInt(cleanStr, 10);
+	const cleanStr = str.replace(/,/g, "").trim();
+	if (cleanStr === "" || cleanStr === "-") return 0;
+	const parsed = parseFloat(cleanStr);
 	return Number.isNaN(parsed) ? 0 : parsed;
 }
