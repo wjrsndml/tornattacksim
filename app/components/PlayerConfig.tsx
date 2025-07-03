@@ -2228,8 +2228,8 @@ export default function PlayerConfig({
 								</h4>
 								<div className="text-xs text-slate-600 mb-3">
 									{isAttacker
-										? "攻击方按优先级顺序使用武器（1最优先，0不使用）"
-										: "防守方按权重随机选择武器（数值越大越容易选中，0不使用）"}
+										? "攻击方按优先级顺序使用武器，数字越小越优先使用（1最优先，4最不优先，0不使用）"
+										: "防守方按权重随机选择武器（数值越大越容易选中，0不使用，与torn的防守设置逻辑相同）"}
 								</div>
 
 								<div className="space-y-3">
