@@ -1737,8 +1737,7 @@ export default function PlayerConfig({
 														id={`${playerId}-strength`}
 														value={player.stats.strength}
 														onChange={(value) => updateStats("strength", value)}
-														min={100}
-														max={10000000}
+														min={10}
 														aria-label={`${playerName}力量`}
 													/>
 												</div>
@@ -1748,8 +1747,7 @@ export default function PlayerConfig({
 														id={`${playerId}-speed`}
 														value={player.stats.speed}
 														onChange={(value) => updateStats("speed", value)}
-														min={100}
-														max={10000000}
+														min={10}
 														aria-label={`${playerName}速度`}
 													/>
 												</div>
@@ -1761,8 +1759,7 @@ export default function PlayerConfig({
 														id={`${playerId}-defense`}
 														value={player.stats.defense}
 														onChange={(value) => updateStats("defense", value)}
-														min={100}
-														max={10000000}
+														min={10}
 														aria-label={`${playerName}防御`}
 													/>
 												</div>
@@ -1776,8 +1773,7 @@ export default function PlayerConfig({
 														onChange={(value) =>
 															updateStats("dexterity", value)
 														}
-														min={100}
-														max={10000000}
+														min={10}
 														aria-label={`${playerName}敏捷`}
 													/>
 												</div>

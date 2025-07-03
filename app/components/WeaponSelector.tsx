@@ -1,11 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getWeaponList, loadGameData } from "../lib/dataLoader";
+import {
+	getRawWeaponsData,
+	getWeaponList,
+	loadGameData,
+} from "../lib/dataLoader";
 import type {
 	SelectedWeaponBonus,
 	WeaponData,
 } from "../lib/fightSimulatorTypes";
+import {
+	calculateWeaponQuality,
+	findWeaponRangeData,
+	getQualityTierText,
+	type WeaponQuality,
+} from "../lib/weaponQuality";
 import ModSelector from "./ModSelector";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -26,6 +36,14 @@ interface WeaponSelectorProps {
 	playerId: string;
 }
 
+const QUALITY_BADGE_CLASSES: Record<string, string> = {
+	white: "bg-gray-400/20 text-gray-400 border border-gray-400/40",
+	yellow: "bg-yellow-500/20 text-yellow-600 border border-yellow-600/40",
+	orange: "bg-orange-600/20 text-orange-600 border border-orange-600/40",
+	red: "bg-red-600/20 text-red-600 border border-red-600/40",
+	custom: "bg-gray-500/20 text-gray-500 border border-gray-500/40",
+};
+
 export default function WeaponSelector({
 	weaponType,
 	selectedWeapon,
@@ -37,6 +55,9 @@ export default function WeaponSelector({
 		Array<{ id: string; weapon: WeaponData }>
 	>([]);
 	const [loading, setLoading] = useState(true);
+	const [weaponQuality, setWeaponQuality] = useState<WeaponQuality | null>(
+		null,
+	);
 
 	useEffect(() => {
 		async function loadWeapons() {
@@ -53,6 +74,33 @@ export default function WeaponSelector({
 
 		loadWeapons();
 	}, [weaponType]);
+
+	// 计算武器品质
+	useEffect(() => {
+		if (!selectedWeapon || !selectedWeapon.name) {
+			setWeaponQuality(null);
+			return;
+		}
+
+		const rawWeaponsData = getRawWeaponsData();
+		if (!rawWeaponsData) {
+			setWeaponQuality(null);
+			return;
+		}
+
+		const weaponRangeData = findWeaponRangeData(
+			selectedWeapon.name,
+			rawWeaponsData,
+		);
+		const quality = calculateWeaponQuality(
+			selectedWeapon.name,
+			selectedWeapon.damage || 0,
+			selectedWeapon.accuracy || 0,
+			weaponRangeData || undefined,
+		);
+
+		setWeaponQuality(quality);
+	}, [selectedWeapon]);
 
 	const handleWeaponSelect = (weaponId: string) => {
 		const weaponData = weapons.find((w) => w.id === weaponId);
@@ -116,10 +164,24 @@ export default function WeaponSelector({
 					>
 						<SelectValue>
 							<div className="text-left w-full">
-								<div className="font-medium">{selectedWeapon.name}</div>
+								<div className="font-medium flex items-center gap-2">
+									{selectedWeapon.name}
+									{weaponQuality && (
+										<span
+											className={`text-xs px-1.5 py-0.5 rounded font-medium ${QUALITY_BADGE_CLASSES[weaponQuality.tier]}`}
+										>
+											{getQualityTierText(weaponQuality.tier)}
+										</span>
+									)}
+								</div>
 								<div className="text-xs text-muted-foreground">
 									{selectedWeapon.category} • 伤害: {selectedWeapon.damage} •
 									精准: {selectedWeapon.accuracy}%
+									{weaponQuality && weaponQuality.tier !== "custom" && (
+										<span className="ml-2">
+											• 品质: {weaponQuality.level.toFixed(1)}%
+										</span>
+									)}
 									{selectedWeapon.bonus && (
 										<span className="ml-2">• {selectedWeapon.bonus.name}</span>
 									)}
@@ -128,26 +190,53 @@ export default function WeaponSelector({
 						</SelectValue>
 					</SelectTrigger>
 					<SelectContent>
-						{weapons.map((weaponData) => (
-							<SelectItem key={weaponData.id} value={weaponData.id}>
-								<div>
-									<div className="font-medium">{weaponData.weapon.name}</div>
-									<div className="text-xs text-muted-foreground">
-										{weaponData.weapon.category} • 伤害:{" "}
-										{weaponData.weapon.damage} • 精准:{" "}
-										{weaponData.weapon.accuracy}%
-										{(weaponData.weapon.clipsize ?? 0) > 0 && (
-											<span> • 弹夹: {weaponData.weapon.clipsize}</span>
-										)}
-										{weaponData.weapon.bonus && (
-											<span className="ml-2">
-												• {weaponData.weapon.bonus.name}
-											</span>
-										)}
+						{weapons.map((weaponData) => {
+							const rawWeaponsData = getRawWeaponsData();
+							const weaponRangeData = rawWeaponsData
+								? findWeaponRangeData(weaponData.weapon.name, rawWeaponsData)
+								: null;
+							const quality = calculateWeaponQuality(
+								weaponData.weapon.name,
+								weaponData.weapon.damage || 0,
+								weaponData.weapon.accuracy || 0,
+								weaponRangeData || undefined,
+							);
+
+							return (
+								<SelectItem key={weaponData.id} value={weaponData.id}>
+									<div>
+										<div className="font-medium flex items-center gap-2">
+											{weaponData.weapon.name}
+											{quality && (
+												<span
+													className={`text-xs px-1.5 py-0.5 rounded font-medium ${QUALITY_BADGE_CLASSES[quality.tier]}`}
+												>
+													{getQualityTierText(quality.tier)}
+												</span>
+											)}
+										</div>
+										<div className="text-xs text-muted-foreground">
+											{weaponData.weapon.category} • 伤害:{" "}
+											{weaponData.weapon.damage} • 精准:{" "}
+											{weaponData.weapon.accuracy}%
+											{quality && quality.tier !== "custom" && (
+												<span className="ml-2">
+													• 品质: {quality.level.toFixed(1)}%
+												</span>
+											)}
+											{(weaponData.weapon.clipsize ?? 0) > 0 && (
+												<span> • 弹夹: {weaponData.weapon.clipsize}</span>
+											)}
+											{weaponData.weapon.bonus && (
+												<span className="ml-2">
+													• {weaponData.weapon.bonus.name}
+												</span>
+											)}
+										</div>
 									</div>
-								</div>
-							</SelectItem>
-						))}
+								</SelectItem>
+							);
+						})}
 					</SelectContent>
 				</Select>
 			</div>

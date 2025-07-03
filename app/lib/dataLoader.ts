@@ -5,6 +5,7 @@ import type {
 	RealWeaponData,
 	TempBlockData,
 	WeaponData,
+	WeaponDataSet,
 } from "./fightSimulatorTypes";
 
 // 全局数据缓存
@@ -446,4 +447,14 @@ export function getTempBlockData(): TempBlockData {
  */
 export function getCompanyType(companyTypeID: number): string {
 	return gameTornCompanyData[companyTypeID]?.name || "Unknown";
+}
+
+/**
+ * 获取原始武器数据（包含伤害和精准度区间）
+ */
+export function getRawWeaponsData(): WeaponDataSet | null {
+	if (!gameData) {
+		return null;
+	}
+	return gameData.weapons;
 }
