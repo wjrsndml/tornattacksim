@@ -575,7 +575,24 @@ const ParryProcessor: WeaponBonusProcessor = {
 	) => {
 		const attackerWeapon = context.weapon;
 		const isMeleeAttack = meleeCategories.includes(attackerWeapon.category);
-		if (isMeleeAttack && incomingDamage > 0) {
+
+		// 只有攻击方或防守方使用带有Parry特效的武器时才能格挡
+		// 检查攻击者的武器是否有Parry特效
+		const attackerHasParry = attackerWeapon.weaponBonuses?.some(
+			(bonus) => bonus.name === "Parry",
+		);
+		// 检查防守者当前使用的武器是否有Parry特效
+		const defenderHasParry =
+			context.targetWeaponSlot &&
+			context.target?.weapons[
+				context.targetWeaponSlot as keyof typeof context.target.weapons
+			]?.weaponBonuses?.some((bonus) => bonus.name === "Parry");
+
+		if (
+			isMeleeAttack &&
+			incomingDamage > 0 &&
+			(attackerHasParry || defenderHasParry)
+		) {
 			const parryChance = bonusValue / 100;
 			if (Math.random() < parryChance) {
 				addTriggeredEffect("Parry");
@@ -1007,7 +1024,19 @@ export function getTriggeredBonuses(
 		else if (processor.applyToIncomingDamage && bonus.name === "Parry") {
 			const attackerWeapon = context.weapon;
 			const isMeleeAttack = meleeCategories.includes(attackerWeapon.category);
-			if (isMeleeAttack) {
+
+			// 检查攻击者的武器是否有Parry特效
+			const attackerHasParry = attackerWeapon.weaponBonuses?.some(
+				(bonus) => bonus.name === "Parry",
+			);
+			// 检查防守者当前使用的武器是否有Parry特效
+			const defenderHasParry =
+				context.targetWeaponSlot &&
+				context.target?.weapons[
+					context.targetWeaponSlot as keyof typeof context.target.weapons
+				]?.weaponBonuses?.some((bonus) => bonus.name === "Parry");
+
+			if (isMeleeAttack && (attackerHasParry || defenderHasParry)) {
 				triggered = true;
 			}
 		}

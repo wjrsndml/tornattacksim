@@ -2623,28 +2623,21 @@ function action(
 
 		// 应用目标的防御性武器特效（如Parry）
 		if (xDMG > 0) {
-			// 检查目标的所有武器是否有防御性特效
-			const targetWeapons = [
-				y.weapons.primary,
-				y.weapons.secondary,
-				y.weapons.melee,
-				y.weapons.temporary,
-			];
-			for (const targetWeapon of targetWeapons) {
-				if (targetWeapon?.weaponBonuses) {
-					xDMG = applyWeaponBonusesToIncomingDamage(xDMG, targetWeapon, {
-						attacker: x,
-						target: y,
-						weapon: currentWeapon, // 攻击者的武器
-						bodyPart: xBP[0],
-						isCritical: xBP[1] >= 1,
-						turn: turn,
-						currentWeaponSlot: xCW,
-						weaponState: xWS,
-						currentLife: { attacker: xCL, target: yCL },
-						targetWeaponSlot: yCW,
-					});
-				}
+			// 只检查目标当前使用的武器是否有防御性特效
+			const targetCurrentWeapon = y.weapons[yCW as keyof typeof y.weapons];
+			if (targetCurrentWeapon?.weaponBonuses) {
+				xDMG = applyWeaponBonusesToIncomingDamage(xDMG, targetCurrentWeapon, {
+					attacker: x,
+					target: y,
+					weapon: currentWeapon, // 攻击者的武器
+					bodyPart: xBP[0],
+					isCritical: xBP[1] >= 1,
+					turn: turn,
+					currentWeaponSlot: xCW,
+					weaponState: xWS,
+					currentLife: { attacker: xCL, target: yCL },
+					targetWeaponSlot: yCW,
+				});
 			}
 		}
 
@@ -2976,31 +2969,26 @@ function action(
 
 						// 应用目标的防御性武器特效（如Parry）到额外攻击
 						if (extraDamage > 0) {
-							const targetWeapons = [
-								y.weapons.primary,
-								y.weapons.secondary,
-								y.weapons.melee,
-								y.weapons.temporary,
-							];
-							for (const targetWeapon of targetWeapons) {
-								if (targetWeapon?.weaponBonuses) {
-									extraDamage = applyWeaponBonusesToIncomingDamage(
-										extraDamage,
-										targetWeapon,
-										{
-											attacker: x,
-											target: y,
-											weapon: currentWeapon,
-											bodyPart: extraBodyPart[0],
-											isCritical: extraBodyPart[1] >= 1,
-											turn: turn,
-											currentWeaponSlot: xCW,
-											weaponState: xWS,
-											currentLife: { attacker: xCL, target: yCL },
-											targetWeaponSlot: yCW,
-										},
-									);
-								}
+							// 只检查目标当前使用的武器是否有防御性特效
+							const targetCurrentWeapon =
+								y.weapons[yCW as keyof typeof y.weapons];
+							if (targetCurrentWeapon?.weaponBonuses) {
+								extraDamage = applyWeaponBonusesToIncomingDamage(
+									extraDamage,
+									targetCurrentWeapon,
+									{
+										attacker: x,
+										target: y,
+										weapon: currentWeapon,
+										bodyPart: extraBodyPart[0],
+										isCritical: extraBodyPart[1] >= 1,
+										turn: turn,
+										currentWeaponSlot: xCW,
+										weaponState: xWS,
+										currentLife: { attacker: xCL, target: yCL },
+										targetWeaponSlot: yCW,
+									},
+								);
 							}
 						}
 

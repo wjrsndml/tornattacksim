@@ -343,7 +343,7 @@ export default function WeaponSelector({
 						<SelectContent>
 							<SelectItem value="Standard">标准弹药</SelectItem>
 							<SelectItem value="TR">追踪弹 (TR) - 精准+10</SelectItem>
-							<SelectItem value="PI">穿甲弹 (PI) - 穿甲x2</SelectItem>
+							<SelectItem value="PI">穿甲弹 (PI) - 穿甲+50%</SelectItem>
 							<SelectItem value="HP">
 								空心弹 (HP) - 伤害+50%, 穿甲/1.5
 							</SelectItem>
