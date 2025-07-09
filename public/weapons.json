@@ -983,8 +983,8 @@
     "1153": {
       "name": "China Lake",
       "category": "Heavy Artillery",
-      "damage_range": [79, 87],
-      "accuracy_range": [47, 53],
+      "damage_range": [74, 79],
+      "accuracy_range": [44, 49],
       "clipsize": 3,
       "rateoffire": [1,1],
       "bonus": {
