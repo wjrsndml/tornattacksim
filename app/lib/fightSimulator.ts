@@ -2103,22 +2103,17 @@ function action(
 						? ` [${triggeredBonuses.join(", ")}]`
 						: "";
 
-				log.push(
-					x.name +
-						" fired " +
-						xRF +
-						" " +
-						getAmmoDisplayName(secondaryWeapon.ammo) +
-						" rounds of their " +
-						xW[xCW].name +
-						" hitting " +
-						y.name +
-						" in the " +
-						xBP[0] +
-						" for " +
-						xDMG +
-						bonusText,
-				);
+				// 保存副武器攻击的日志信息
+				logInfo = {
+					attacker: x.name,
+					rounds: xRF,
+					ammo: getAmmoDisplayName(secondaryWeapon.ammo),
+					weapon: xW[xCW].name,
+					target: y.name,
+					bodyPart: xBP[0],
+					originalDamage: xDMG,
+					bonusText: bonusText,
+				};
 
 				// 处理副武器特�?
 				if (secondaryWeapon.bonus?.name === "Burn") {
@@ -2149,6 +2144,7 @@ function action(
 					}
 				}
 			} else {
+				// miss的情况需要手动生成日志，因为统一日志处理只处理命中
 				log.push(
 					x.name +
 						" fired " +
