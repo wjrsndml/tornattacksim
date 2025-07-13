@@ -2120,7 +2120,7 @@ function action(
 					const x_proc = procBonus(secondaryWeapon.bonus?.proc || 0);
 					if (x_proc === 1) {
 						if (xDOT[0][0] > 0) {
-							if (xDMG >= ((xDOT[0][0] * 0.15) / 5) * (6 - xDOT[0][1])) {
+							if (xDMG >= ((xDOT[0][0] * 0.45) / 3) * (4 - xDOT[0][1])) {
 								xDOT[0] = [xDMG, 0];
 								log.push(`${y.name} is set alight`);
 							}
@@ -2499,7 +2499,7 @@ function action(
 				const x_proc = procBonus(temporaryWeapon.bonus?.proc || 0);
 				if (x_proc === 1) {
 					if (xDOT[3][0] > 0) {
-						if (xDMG >= ((xDOT[3][0] * 0.15) / 5) * (6 - xDOT[3][1])) {
+						if (xDMG >= ((xDOT[3][0] * 0.45) / 3) * (4 - xDOT[3][1])) {
 							xDOT[3] = [xDMG, 0];
 							log.push(`${y.name} is set ablaze`);
 						}
@@ -3053,7 +3053,7 @@ function action(
 				if (dot === 0) {
 					// 燃烧
 					dotDMG = parseInt(
-						(dotEffect[0] * ((0.15 / 5) * (6 - dotEffect[1]))).toString(),
+						(dotEffect[0] * ((0.45 / 3) * (4 - dotEffect[1]))).toString(),
 					);
 					if (
 						y.perks.company.name === "Gas Station" &&
@@ -3104,7 +3104,7 @@ function action(
 				} else if (dot === 3) {
 					// 严重燃烧
 					dotDMG = parseInt(
-						(xDOT[dot][0] * ((0.15 / 5) * (10 - xDOT[dot][1]))).toString(),
+						(xDOT[dot][0] * ((0.45 / 3) * (4 - xDOT[dot][1]))).toString(),
 					);
 					if (dotDMG > yCL - 1) {
 						dotDMG = yCL - 1;
