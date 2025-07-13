@@ -1474,7 +1474,7 @@ function action(
 				if (dot === 0) {
 					// 燃烧
 					dotDMG = parseInt(
-						(dotEffect[0] * ((0.15 / 5) * (6 - dotEffect[1]))).toString(),
+						(dotEffect[0] * ((0.45 / 3) * (4 - dotEffect[1]))).toString(),
 					);
 					if (
 						y.perks.company.name === "Gas Station" &&
@@ -1525,7 +1525,7 @@ function action(
 				} else if (dot === 3) {
 					// 严重燃烧
 					dotDMG = parseInt(
-						(xDOT[dot][0] * ((0.15 / 5) * (10 - xDOT[dot][1]))).toString(),
+						(xDOT[dot][0] * ((0.45 / 3) * (4 - xDOT[dot][1]))).toString(),
 					);
 					if (dotDMG > yCL - 1) {
 						dotDMG = yCL - 1;
