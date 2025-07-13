@@ -1493,7 +1493,7 @@ function action(
 					}
 					log.push(`Burning damaged ${y.name} for ${Math.round(dotDMG)}`);
 
-					if (dotEffect[1] === 5) {
+					if (dotEffect[1] === 3) {
 						xDOT[dot] = [0, 0];
 					}
 				} else if (dot === 1) {
@@ -1534,7 +1534,7 @@ function action(
 						`Severe burning damaged ${y.name} for ${Math.round(dotDMG)}`,
 					);
 
-					if (dotEffect[1] === 9) {
+					if (dotEffect[1] === 3) {
 						xDOT[dot] = [0, 0];
 					}
 				}
@@ -3113,7 +3113,7 @@ function action(
 						`Severe burning damaged ${y.name} for ${Math.round(dotDMG)}`,
 					);
 
-					if (dotEffect[1] === 9) {
+					if (dotEffect[1] === 3) {
 						xDOT[dot] = [0, 0];
 					}
 				}
