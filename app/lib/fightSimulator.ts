@@ -103,6 +103,7 @@ interface AttackLogInfo {
 	ammo?: string;
 	attackType?: "melee" | "ranged";
 	armourEffectsText?: string; // 新增：护甲特效信息
+	delayedEffectMessages?: string[]; // 新增：延迟的特效消息
 }
 
 /**
@@ -2084,7 +2085,10 @@ function action(
 			const xRF = roundsFired(secondaryWeapon, secondaryWeaponState);
 
 			if (xHOM) {
-				// 检测触发的特效
+				// 收集实际触发的特效
+				const triggeredEffects: string[] = [];
+
+				// 检测新特效系统的触发特效
 				const triggeredBonuses = getTriggeredBonuses(secondaryWeapon, {
 					attacker: x,
 					target: y,
@@ -2098,12 +2102,52 @@ function action(
 					targetWeaponSlot: yCW, // 添加目标的武器选择
 				});
 
+				// 添加新特效系统中触发的特效
+				triggeredEffects.push(...triggeredBonuses);
+
+				// 收集延迟的特效消息
+				const delayedEffectMessages: string[] = [];
+
+				// 处理副武器的旧特效系统
+				if (secondaryWeapon.bonus?.name === "Burn") {
+					const x_proc = procBonus(secondaryWeapon.bonus?.proc || 0);
+					if (x_proc === 1) {
+						if (xDOT[0][0] > 0) {
+							if (xDMG >= ((xDOT[0][0] * 0.45) / 3) * (4 - xDOT[0][1])) {
+								xDOT[0] = [xDMG, 0];
+								delayedEffectMessages.push(`${y.name} is set alight`);
+								triggeredEffects.push("Burn"); // 添加到触发特效列表
+							}
+						} else {
+							xDOT[0] = [xDMG, 0];
+							delayedEffectMessages.push(`${y.name} is set alight`);
+							triggeredEffects.push("Burn"); // 添加到触发特效列表
+						}
+					}
+				} else if (secondaryWeapon.bonus?.name === "Poison") {
+					const x_proc = procBonus(secondaryWeapon.bonus?.proc || 0);
+					if (x_proc === 1) {
+						if (xDOT[1][0] > 0) {
+							if (xDMG >= ((xDOT[1][0] * 0.45) / 15) * (16 - xDOT[1][1])) {
+								xDOT[1] = [xDMG, 0];
+								delayedEffectMessages.push(`${y.name} is poisoned`);
+								triggeredEffects.push("Poison"); // 添加到触发特效列表
+							}
+						} else {
+							xDOT[1] = [xDMG, 0];
+							delayedEffectMessages.push(`${y.name} is poisoned`);
+							triggeredEffects.push("Poison"); // 添加到触发特效列表
+						}
+					}
+				}
+
+				// 基于实际触发的特效生成bonusText
 				const bonusText =
-					triggeredBonuses.length > 0
-						? ` [${triggeredBonuses.join(", ")}]`
+					triggeredEffects.length > 0
+						? ` [${triggeredEffects.join(", ")}]`
 						: "";
 
-				// 保存副武器攻击的日志信息
+				// 保存副武器攻击的日志信息（延迟到特效处理完成后）
 				logInfo = {
 					attacker: x.name,
 					rounds: xRF,
@@ -2113,36 +2157,8 @@ function action(
 					bodyPart: xBP[0],
 					originalDamage: xDMG,
 					bonusText: bonusText,
+					delayedEffectMessages: delayedEffectMessages, // 添加延迟的特效消息
 				};
-
-				// 处理副武器特�?
-				if (secondaryWeapon.bonus?.name === "Burn") {
-					const x_proc = procBonus(secondaryWeapon.bonus?.proc || 0);
-					if (x_proc === 1) {
-						if (xDOT[0][0] > 0) {
-							if (xDMG >= ((xDOT[0][0] * 0.45) / 3) * (4 - xDOT[0][1])) {
-								xDOT[0] = [xDMG, 0];
-								log.push(`${y.name} is set alight`);
-							}
-						} else {
-							xDOT[0] = [xDMG, 0];
-							log.push(`${y.name} is set alight`);
-						}
-					}
-				} else if (secondaryWeapon.bonus?.name === "Poison") {
-					const x_proc = procBonus(secondaryWeapon.bonus?.proc || 0);
-					if (x_proc === 1) {
-						if (xDOT[1][0] > 0) {
-							if (xDMG >= ((xDOT[1][0] * 0.45) / 15) * (16 - xDOT[1][1])) {
-								xDOT[1] = [xDMG, 0];
-								log.push(`${y.name} is poisoned`);
-							}
-						} else {
-							xDOT[1] = [xDMG, 0];
-							log.push(`${y.name} is poisoned`);
-						}
-					}
-				}
 			} else {
 				// miss的情况需要手动生成日志，因为统一日志处理只处理命中
 				log.push(
@@ -2778,6 +2794,11 @@ function action(
 					);
 				}
 			}
+
+			// 在攻击日志之后添加延迟的特效消息
+			if (logInfo.delayedEffectMessages) {
+				log.push(...logInfo.delayedEffectMessages);
+			}
 		}
 
 		// 检查Execute特效是否触发
@@ -3072,7 +3093,7 @@ function action(
 					}
 					log.push(`Burning damaged ${y.name} for ${Math.round(dotDMG)}`);
 
-					if (dotEffect[1] === 5) {
+					if (dotEffect[1] === 3) {
 						xDOT[dot] = [0, 0];
 					}
 				} else if (dot === 1) {
