@@ -2808,7 +2808,14 @@ function action(
 		}
 
 		// 应用武器特效的后处理效果（如Bloodlust生命回复）
-		if (xDMG > 0) {
+		// 修改：rage和fury这两个特效在miss时应该也能触发
+		if (
+			xDMG > 0 ||
+			(currentWeapon.weaponBonuses &&
+				currentWeapon.weaponBonuses.some((b) =>
+					["Rage", "Fury"].includes(b.name),
+				))
+		) {
 			// 记录应用前的状态效果，用于检测新触发的效果
 			const triggeredEffectsBefore = getCurrentTurnTriggeredEffects().slice();
 
